@@ -1,0 +1,123 @@
+apply plugin: 'com.android.library'
+
+repositories {
+    jcenter()
+    mavenCentral()
+    maven { url 'https://maven.fabric.io/public' }
+    maven { url 'https://jitpack.io' }
+}
+
+def static renameArtifact(variant, versionName) {
+    variant.outputs.each { output ->
+        def newName = "com.xyfindables.sdk-${versionName}"
+
+        newName = newName.concat(".aar")
+
+        output.outputFile = new File(
+                (String) output.outputFile.parent,
+                (String) output.outputFile.name.replaceAll(output.outputFile.name, newName))
+    }
+}
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+
+    def majorVersion = 1
+    def minorVersion = 0
+    def Properties versionProps = new Properties()
+    def versionPropsFile = file('version.properties')
+    if (versionPropsFile.exists())
+        versionProps.load(new FileInputStream(versionPropsFile))
+    def code = (versionProps['VERSION_CODE'] ?: "0").toInteger() + 1
+    versionProps['VERSION_CODE'] = code.toString()
+    versionProps.store(versionPropsFile.newWriter(), null)
+
+    def versionCodeValue = majorVersion * 100000000 + minorVersion * 1000000 + code
+    def versionNameValue = majorVersion + "." + minorVersion + "." + code
+
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 25
+        versionCode versionCodeValue
+        versionName versionNameValue
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            libraryVariants.all { variant -> renameArtifact(variant, versionNameValue) }
+        }
+        debug {
+            libraryVariants.all { variant -> renameArtifact(variant, versionNameValue) }
+        }
+    }
+
+    libraryVariants.all { variant ->
+        println 'XYLog:Variants All'
+        if (variant.getBuildType().isMinifyEnabled()) {
+            variant.assemble.doLast {
+                println 'XYLog:Copying Mapping: ' + variant.mappingFile
+                println 'XYLog:Copying Mapping: ' + "${rootDir}/proguardTools"
+                println 'XYLog:Copying Mapping: ' + "mapping-${variant.name}.txt"
+                copy {
+                    from variant.mappingFile
+                    into "${rootDir}/proguardTools"
+                    rename { String fileName ->
+                        "mapping-${defaultConfig.versionName}.txt"
+                    }
+                }
+                variant.outputs.each { output ->
+                    println 'XYLog:Copying Output: ' + output.outputFile
+                    println 'XYLog:Copying Output: ' + "${rootDir}/../core-android"
+                    copy {
+                        from output.outputFile
+                        into "${rootDir}/../core-android"
+                        rename { String fileName ->
+                            "com.xyfindables.core.aar"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+        mavenLocal();
+        maven { url 'https://maven.fabric.io/public' }
+    }
+
+    dependencies {
+        // These docs use an open ended version so that our plugin
+        // can be updated quickly in response to Android tooling updates
+
+        // We recommend changing it to the latest version from our changelog:
+        // https://docs.fabric.io/android/changelog.html#fabric-gradle-plugin
+        //noinspection GradleDynamicVersion
+        classpath 'io.fabric.tools:gradle:1+'
+        classpath 'com.android.tools.build:gradle:2.3.0'
+        classpath 'com.google.gms:google-services:3.0.0'
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+
+    compile('io.fabric.sdk.android:fabric:1.3.10@aar') {
+        transitive = true;
+    }
+    compile 'com.github.xycorp:core-android:1.0.3'
+}
+
+apply plugin: 'io.fabric'
+apply plugin: 'com.google.gms.google-services'
