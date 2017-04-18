@@ -20,34 +20,46 @@ dependencies {
 Initialize the XYSDKManager, XYApiSession, and XYSmartScan with the app context:
 
 ```java
+/* Initialize SDK */
 XYSDKManager manager = new XYSDKManager(MyApplication.getAppContext());
-/* Initialize the API Session */
-XYApiSession.Instance().init(this, XY_API_TOKEN, BuildConfig.VERSION_NAME);
 /* Initialize the XY Bluetooth Scanner */
 XYSmartScan.Instance().init(this);
 ```
 Add a listener for the XYSmartScanner:
 
 ```java
-XYSmartScan.Instance().addListener(TAG_NAME, new XYSmartScan.Listener(){
+        XYSmartScan.instance.addListener(String.valueOf(this.hashCode()), new XYSmartScan.Listener() {
+            @Override
             public void entered(XYDevice device) {
-
             }
 
+            @Override
             public void exited(XYDevice device) {
-
             }
 
+            @Override
             public void detected(XYDevice device) {
-
             }
 
-            public void buttonPressed(@NonNull XYDevice device, XYDevice.ButtonType buttonType) {
-
+            @Override
+            public void buttonPressed(XYDevice device, XYDevice.ButtonType buttonType) {
             }
 
+            @Override
             public void buttonRecentlyPressed(XYDevice device, XYDevice.ButtonType buttonType) {
+            }
 
+            @Override
+            public void statusChanged(XYSmartScan.Status status) {
+            }
+
+            @Override
+            public void updated(XYDevice device) {
             }
         });
+```
+Start the bluetooth scanner
+
+```java
+XYSmartScan.instance.startAutoScan(context, 2000/*interval*/, 1000/*duration*/);
 ```
