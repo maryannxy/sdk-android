@@ -12,7 +12,7 @@ and:
 
 ```gradle
 dependencies {
-    compile 'com.xyfindables:xy-android-sdk:{latest version}'
+    compile 'com.xyfindables:sdk-android:{latest version}'
 }
 ```
 ## Using the SDK
