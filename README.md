@@ -465,6 +465,54 @@ public interface Listener {
 
 An interface for Listener to use with the XYDevice class.
 
+### XYDeviceCharacteristic
+
+#### Bluetooth Characteristic Definitions
+
+```java
+static final UUID ControlBuzzer = UUID.fromString("F014FFF1-0439-3000-E001-00001001FFFF");
+static final UUID ControlHandshake = UUID.fromString("F014FFF2-0439-3000-E001-00001001FFFF");
+static final UUID ControlVersion = UUID.fromString("F014FFF4-0439-3000-E001-00001001FFFF");
+static final UUID ControlBuzzerSelect = UUID.fromString("F014FFF6-0439-3000-E001-00001001FFFF");
+static final UUID ControlSurge = UUID.fromString("F014FFF7-0439-3000-E001-00001001FFFF");
+static final UUID ControlButton = UUID.fromString("F014FFF8-0439-3000-E001-00001001FFFF");
+static final UUID ControlDisconnect = UUID.fromString("F014FFF9-0439-3000-E001-00001001FFFF");
+
+static final UUID ExtendedConfigVirtualBeaconSettings = UUID.fromString("F014FF02-0439-3000-E001-00001001FFFF");
+static final UUID ExtendedConfigTone = UUID.fromString("F014FF03-0439-3000-E001-00001001FFFF");
+static final UUID ExtendedConfigRegistration = UUID.fromString("F014FF05-0439-3000-E001-00001001FFFF");
+static final UUID ExtendedConfigInactiveVirtualBeaconSettings = UUID.fromString("F014FF06-0439-3000-E001-00001001FFFF");
+static final UUID ExtendedConfigInactiveInterval = UUID.fromString("F014FF07-0439-3000-E001-00001001FFFF");
+static final UUID ExtendedConfigGPSInterval = UUID.fromString("2ABBAA000-4393-000E-0010-0001001FFFF");
+static final UUID ExtendedConfigGPSMode = UUID.fromString("2A99AA000-4393-000E-0010-0001001FFFF");
+
+static final UUID BasicConfigLockStatus = UUID.fromString("F014EE01-0439-3000-E001-00001001FFFF");
+static final UUID BasicConfigLock = UUID.fromString("F014EE02-0439-3000-E001-00001001FFFF");
+static final UUID BasicConfigUnlock = UUID.fromString("F014EE03-0439-3000-E001-00001001FFFF");
+static final UUID BasicConfigUUID = UUID.fromString("F014EE04-0439-3000-E001-00001001FFFF");
+static final UUID BasicConfigMajor = UUID.fromString("F014EE05-0439-3000-E001-00001001FFFF");
+static final UUID BasicConfigMinor = UUID.fromString("F014EE06-0439-3000-E001-00001001FFFF");
+static final UUID BasicConfigInterval = UUID.fromString("F014EE07-0439-3000-E001-00001001FFFF");
+
+static final UUID ExtendedControlSIMStatus = UUID.fromString("2AEEAA00-0439-3000-E001-00001001FFFF");
+static final UUID ExtendedControlLED = UUID.fromString("2AAAAA00-0439-3000-E001-00001001FFFF");
+
+static final UUID BatteryLevel = UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb");
+```
+
+### XYDeviceService
+
+#### Bluetooth Service Definitions
+
+```java
+static final UUID Control = UUID.fromString("F014ED15-0439-3000-E001-00001001FFFF");
+static final UUID BasicConfig = UUID.fromString("F014EE00-0439-3000-E001-00001001FFFF");
+static final UUID ExtendedConfig = UUID.fromString("F014FF00-0439-3000-E001-00001001FFFF");
+static final UUID CsrOta = UUID.fromString("00001016-D102-11E1-9B23-00025B00A5A5");
+static final UUID BatteryStandard = UUID.fromString("0000180F-0000-1000-8000-00805f9b34fb");
+static final UUID ExtendedControl = UUID.fromString("F014AA00-0439-3000-E001-00001001FFFF");
+```
+
 ### XYSmartScan
 
 #### Definitions
