@@ -319,7 +319,7 @@ device.getId();
 boolean isUpdateSignificant();
 ```
 
-Returns true is the update will be significant (long time since last update).
+Returns true if the update will be significant (long time since last update).
 
 ##### Example
 
@@ -364,7 +364,7 @@ device.getProximity();
 void addListener(String key, Listener listener);
 ```
 
-Used to add a listener which can use methods from the XYDevice class.
+Used to add a listener to the XYDevice class.
 
 ##### Parameters
 
@@ -463,7 +463,7 @@ public interface Listener {
 }
 ```
 
-An interface for listeners to use with the XYDevice class.
+An interface for Listener to use with the XYDevice class.
 
 ### XYSmartScan
 
@@ -480,6 +480,7 @@ int getInterval();
 ```
 
 Returns the autoscan interval.
+This is the time between when a period of scanning finishes and begins.
 
 ##### Example
 
@@ -494,6 +495,7 @@ int getPeriod();
 ```
 
 Returns autoscan period.
+The is the duration of a scan.
 
 ##### Example
 
@@ -507,7 +509,7 @@ XYSmartScan.instance.getPeriod();
 int getOutOfRangePulsesMissed();
 ```
 
-Returns the number of pulses missed because beacon went out of range.
+Returns the number of times a peiod occurred without a connection being made to the device.  
 
 ##### Example
 
@@ -527,7 +529,7 @@ Start a smart scan using bluetooth.
 
 Context context - current context.  
 long currentDeviceId - the unique id of a device.  
-int missedPulsesForOutOfRange - number of pulses missed because beacon went out of range.  
+int missedPulsesForOutOfRange - maximum number of missed pulses before device will be considered out of range.    
 
 ##### Example
 
@@ -559,7 +561,7 @@ XYSmartScan.instance.cleanup(this);
 int getMissedPulsesForOutOfRange();
 ```
 
-Returns missed pulses while device is out of range.
+Returns the number of missed pulses currently set to declare a device out of range.
 
 ##### Example
 
@@ -573,7 +575,7 @@ XYSmartScan.instance.getMissedPulsesForOutOfRange();
 int setMissedPulsesForOutOfRange
 ```
 
-Set the number of pulses missed while device is out of range.
+Set the number of pulses missed in order to declare a device out of range.
 
 ##### Example
 
@@ -653,7 +655,7 @@ Starts a new timer for an auto scan.
 
 final Context context - current context.  
 int interval - how often to scan for device.  
-int period - duration before scan stops.  
+int period - duration of scan.  
 
 ##### Example
 
@@ -733,12 +735,12 @@ List devices = XYSmartScan.instance.getDevices();
 void addListener(final String key, final Listener listener);
 ```
 
-Adds a listener to Hashmap stored in XYSmartScan object.
+Adds a Listener for the XYSmartScan class.
 
 ##### Parameters
 
-String key - key to identify where listener is attached to.  
-Listener listener - a Listener - see Listener interface at bottom of this documentation.  
+String key - key to identify Listener.  
+Listener listener - see Listener interface at bottom of this section.  
 
 ##### Example
 
@@ -752,11 +754,11 @@ XYSmartScan.instance.addListener("key", listener);
 void removeListener(String key);
 ```
 
-Removes listener from Hashmap of XYSmartScan object.
+Removes Listener for XYSmartScan.
 
 ##### Parameters
 
-String key - key to identify where listener is attached to.
+String key - key to identify Listener.
 
 ##### Example
 
@@ -784,7 +786,7 @@ public interface Listener {
 }
 ```
 
-An interface for listeners to be used in the XYSmartScan class.
+An interface for Listener to use with the XYSmartScan class.
 
 #### Overrided Methods of XYDevice Listener
 
@@ -828,4 +830,147 @@ public enum Status {
 }
 ```
 
-Different statuses available within the XYSmartScan class.
+Different statuses available within the XYSmartScan class.  
+
+### XYDeviceAction
+
+All of the java files in the action folder represent different actions you can use.  
+They are all based off of the XYDeviceAction class.  
+To implement any of these other classes, reference this class to see how different methods are being used.  
+XYDeviceAction is an abstract class.  For implementation see specific action Class you wish to use.  
+Find list of all actions at bottom of this section with parameters.  
+
+#### Definitions
+
+```java
+static final int STATUS_QUEUED = 1;
+static final int STATUS_STARTED = 2;
+static final int STATUS_SERVICE_FOUND = 3;
+static final int STATUS_CHARACTERISTIC_FOUND = 4;
+static final int STATUS_CHARACTERISTIC_READ = 5;
+static final int STATUS_CHARACTERISTIC_WRITE = 6;
+static final int STATUS_CHARACTERISTIC_UPDATED = 7;
+static final int STATUS_COMPLETED = 8;
+```
+
+#### XYDeviceAction
+
+```java
+XYDeviceAction(XYDevice device);
+```
+
+Used to create an instance of XYDeviceAction.
+
+##### Parameters
+
+XYDevice device - an instance of an XYDevice object.
+
+##### Example
+
+```java
+XYDeviceAction action = new XYDeviceAction(XYSmartScan.instance.deviceFromId("deviceId"));
+```
+
+#### getDevice
+
+```java
+XYDevice getDevice();
+```
+
+Returns XYDevice object.
+
+##### Example
+
+```java
+XYDeviceAction action = new XYDeviceAction(XYSmartScan.instance.deviceFromId("deviceId"));
+action.getDevice();
+```
+
+#### getKey
+
+```java
+String getKey();
+```
+
+Returns a hashed key for the XYDeviceAction class.  
+
+##### Example
+
+```java
+XYDeviceAction action = new XYDeviceAction(XYSmartScan.instance.deviceFromId("deviceId"));
+action.getKey();
+```
+
+#### start
+
+```java
+void start(final Context context);
+```
+
+Executes the action.  
+
+##### Parameters
+
+final Context context - current context.  
+
+##### Example
+
+```java
+XYDeviceAction action = new XYDeviceAction(XYSmartScan.instance.deviceFromId("deviceId"));
+action.start(currentActivity.this);
+```
+
+#### statusChanged
+
+```java
+boolean statusChanged(int status, BluetoothGatt gatt, BlueToothGattCharacteristic characteristic, boolean success);
+```
+
+Returns true if status changed and false otherwise.  
+
+##### Parameters
+
+int status - a status that is defined at top of this section under definitions.    
+BluetoothGatt gatt - a bluetooth gatt.  
+BlueToothGattCharacteristic characteristic - a bluetooth gatt characteristic.  
+boolean success - you can pass true to immediately confirm status is changed or false to check if status changed.  
+
+For further reading on bluetooth see this link: https://learn.adafruit.com/introduction-to-bluetooth-low-energy/gatt   
+
+##### Example
+
+Override this method when using an action.  
+Look at documentation below to see how to override for a particular action.  
+
+```java
+XYDeviceAction action = new XYDeviceAction(device) {
+
+	@Override
+	public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+		boolean result = super.statusChanged(status, gatt, characteristic, success);
+		switch (status) {
+			case STATUS_STARTED:
+                       		if (success) {
+                               		// do something ...
+                       		} else {
+                               		// do something ...
+                       		}
+                       		break;
+                       	case STATUS_COMPLETED:
+                       		if (success) {
+                               		// do something ...
+                       		} else {
+                               		// do something ...
+                       		}
+                       		break;
+                       	case STATUS_SERVICE_FOUND:
+                       		// do something ...
+                       		break;
+                      	case STATUS_CHARACTERISTIC_FOUND:
+                       		// do something ...
+                       		break;
+               	}
+               	return result;
+            }
+};
+```
