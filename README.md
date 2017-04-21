@@ -1022,3 +1022,815 @@ XYDeviceAction action = new XYDeviceAction(device) {
             }
 };
 ```
+#### List of actions
+
+If the below action has a constructor listed beneath it, that means it requires different parameters than the abstract DeviceAction class.  
+Otherwise, if no constructor is listed, the constructor is the same as XYDeviceAction.  
+Make sure to Override the statusChanged method of each action.  
+The implementations for overriding statusChanged can be found under their respective action.  
+
+##### XYDeviceActionBuzz
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND:
+                characteristic.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                gatt.writeCharacteristic(characteristic);
+                break;
+	}
+	return result;
+}
+```
+
+##### XYDeviceActionBuzzSelect
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND:
+                characteristic.setValue(_index, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                gatt.writeCharacteristic(characteristic);
+                break;
+        }
+	return result;
+}
+```
+
+###### constructor
+
+```java
+XYDeviceActionBuzzSelect(XYDevice device, int index);
+```
+
+##### XYDeviceActionDisconnect
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+	Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND: {
+                characteristic.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                gatt.writeCharacteristic(characteristic);
+                break;
+            }
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionGetBatteryLevel
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                gatt.readCharacteristic(characteristic);
+                break;
+	}
+	return result;
+}
+```
+
+##### XYDeviceActionGetButtonState
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                gatt.readCharacteristic(characteristic);
+                break;
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionGetGPSInterval
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                value = characteristic.getValue();
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                if (!gatt.readCharacteristic(characteristic)) {
+                    XYBase.logError(TAG, "Characteristic Read Failed");
+                }
+                break;
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionGetGPSMode
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                if (!gatt.readCharacteristic(characteristic)) {
+                    XYBase.logError(TAG, "Characteristic Read Failed");
+                }
+                break;
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionGetInactiveInterval
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                if (!gatt.readCharacteristic(characteristic)) {
+                    XYBase.logError(TAG, "Characteristic Read Failed");
+                }
+                break;
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionGetInactiveVirtualBeacon
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                value = characteristic.getValue();
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                gatt.readCharacteristic(characteristic);
+                break;
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionGetInterval
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                if (!gatt.readCharacteristic(characteristic)) {
+                    XYBase.logError(TAG, "Characteristic Read Failed");
+                }
+                break;
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionGetLED
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                value = characteristic.getValue();
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                if (!gatt.readCharacteristic(characteristic)) {
+                    XYBase.logError(TAG, "Characteristic Read Failed");
+                }
+                break;
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionGetLockStatus
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                byte[] versionBytes = characteristic.getValue();
+                if (versionBytes.length > 0) {
+                    value = "";
+                    for (byte b : versionBytes) {
+                        value += String.format("%02x:", b);
+                    }
+                }
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                if (!gatt.readCharacteristic(characteristic)) {
+                    XYBase.logError(TAG, "Characteristic Read Failed");
+                }
+                break;
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionGetMajor
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                if (!gatt.readCharacteristic(characteristic)) {
+                    XYBase.logError(TAG, "Characteristic Read Failed");
+                }
+                break;
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionGetMinor
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                if (!gatt.readCharacteristic(characteristic)) {
+                    XYBase.logError(TAG, "Characteristic Read Failed");
+                }
+                break;
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionGetRegistration
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                value = (characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0) != 0);
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                gatt.readCharacteristic(characteristic);
+                break;
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionGetSIMStatus
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                value = characteristic.getValue();
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                if (!gatt.readCharacteristic(characteristic)) {
+                    XYBase.logError(TAG, "Characteristic Read Failed");
+                }
+                break;
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionGetUUID
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                value = characteristic.getValue();
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                if (!gatt.readCharacteristic(characteristic)) {
+                    XYBase.logError(TAG, "Characteristic Read Failed");
+                }
+                break;
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionGetVersion
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                byte[] versionBytes = characteristic.getValue();
+                if (versionBytes.length > 0) {
+                    value = "";
+                    for (byte b : versionBytes) {
+                        value += String.format("%02x:", b);
+                    }
+                }
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                if (!gatt.readCharacteristic(characteristic)) {
+                    XYBase.logError(TAG, "Characteristic Read Failed");
+                }
+                break;
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionGetVirtualBeacon
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_READ:
+                value = characteristic.getValue();
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                gatt.readCharacteristic(characteristic);
+                break;
+        }
+        return result;
+}
+```
+##### XYDeviceActionSetGPSInterval
+
+###### constructor
+
+```java
+public XYDeviceActionSetGPSInterval(XYDevice device, byte[] value);
+```
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND: {
+                characteristic.setValue(value);
+                gatt.writeCharacteristic(characteristic);
+                break;
+            }
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionSetGPSMode
+
+###### constructor
+
+```java
+public XYDeviceActionSetGPSMode(XYDevice device, int value);
+```
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND: {
+                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                gatt.writeCharacteristic(characteristic);
+                break;
+            }
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionSetInactiveInterval
+
+###### constructor
+
+```java
+XYDeviceActionSetInactiveInterval(XYDevice device, int value);
+```
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND: {
+                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                gatt.writeCharacteristic(characteristic);
+                break;
+            }
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionSetInactiveVirtualBeacon
+
+###### constructor
+
+```java
+XYDeviceActionSetInactiveVirtualBeacon(XYDevice device, byte[] value);
+```
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND: {
+                characteristic.setValue(value);
+                gatt.writeCharacteristic(characteristic);
+                break;
+            }
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionSetInterval
+
+###### constructor
+
+```java
+XYDeviceActionSetInterval(XYDevice device, int value);
+```
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND: {
+                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                gatt.writeCharacteristic(characteristic);
+                break;
+            }
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionSetLED
+
+###### constructor
+
+```java
+XYDeviceActionSetLED(XYDevice device, int value);
+```
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND: {
+                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                gatt.writeCharacteristic(characteristic);
+                break;
+            }
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionSetLock
+
+###### constructor
+
+```java
+XYDeviceActionSetLock(XYDevice device, byte[] value);
+```
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND: {
+                characteristic.setValue(value);
+                gatt.writeCharacteristic(characteristic);
+                break;
+            }
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionSetMajor
+
+###### constructor
+
+```java
+XYDeviceActionSetMajor(XYDevice device, int value);
+```
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND: {
+                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                gatt.writeCharacteristic(characteristic);
+                break;
+            }
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionSetMinor
+
+###### constructor
+
+```java
+XYDeviceActionSetMinor(XYDevice device, int value);
+```
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND: {
+                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                gatt.writeCharacteristic(characteristic);
+                break;
+            }
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionSetRegistration
+
+###### constructor
+
+```java
+XYDeviceActionSetRegistration(XYDevice device, boolean value);
+```
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND: {
+                if (value) {
+                    characteristic.setValue(0x01, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                } else {
+                    characteristic.setValue(0x00, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                }
+                gatt.writeCharacteristic(characteristic);
+                break;
+            }
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionSetUUID
+
+###### constructor
+
+```java
+XYDeviceActionSetUUID(XYDevice device, byte[] value);
+```
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND: {
+                characteristic.setValue(value);
+                gatt.writeCharacteristic(characteristic);
+                break;
+            }
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionSetVirtualBeacon
+
+###### constructor
+
+```java
+XYDeviceActionSetVirtualBeacon(XYDevice device, byte[] value);
+```
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND: {
+                characteristic.setValue(value);
+                gatt.writeCharacteristic(characteristic);
+                break;
+            }
+        }
+        return result;
+}
+```
+
+##### XYDeviceActionSubscribeButton
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_UPDATED: {
+                Log.i(TAG, "statusChanged:Updated:" + characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
+                return true;
+            }
+            case STATUS_CHARACTERISTIC_FOUND: {
+                Log.i(TAG, "statusChanged:Characteristic Found");
+                if (!gatt.setCharacteristicNotification(characteristic, true)) {
+                    XYBase.logError(TAG, "Characteristic Notification Failed");
+                } else {
+                    _gatt = gatt;
+                    _characteristic = characteristic;
+                }
+
+                BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG);
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                gatt.writeDescriptor(descriptor);
+                return true;
+            }
+        }
+        return result;
+}
+```
+##### XYDeviceActionUnlock
+
+###### constructor
+
+```java
+XYDeviceActionUnlock(XYDevice device, byte[] value);
+```
+
+###### statusChanged
+
+```java
+@Override
+public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        boolean result = super.statusChanged(status, gatt, characteristic, success);
+        switch (status) {
+            case STATUS_CHARACTERISTIC_FOUND:
+                characteristic.setValue(value);
+                gatt.writeCharacteristic(characteristic);
+                break;
+        }
+        return result;
+}
+```
