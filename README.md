@@ -465,3 +465,367 @@ public interface Listener {
 
 An interface for listeners to use with the XYDevice class.
 
+### XYSmartScan
+
+#### Definitions
+
+```java
+final static XYSmartScan instance;
+```
+
+#### getInterval
+
+```java
+int getInterval();
+```
+
+Returns the autoscan interval.
+
+##### Example
+
+```java
+XYSmartScan.instance.getInterval();
+```
+
+#### getPeriod
+
+```java
+int getPeriod();
+```
+
+Returns autoscan period.
+
+##### Example
+
+```java
+XYSmartScan.instance.getPeriod();
+```
+
+#### getOutOfRangePulsesMissed
+
+```java
+int getOutOfRangePulsesMissed();
+```
+
+Returns the number of pulses missed because beacon went out of range.
+
+##### Example
+
+```java
+XYSmartScan.instance.getOutOfRangePulsesMissed();
+```
+
+#### init
+
+```java
+void init(Context context, long currentDeviceId, int missedPulsesForOutOfRange);
+```
+
+Start a smart scan using bluetooth.
+
+##### Parameters
+
+Context context - current context.  
+long currentDeviceId - the unique id of a device.  
+int missedPulsesForOutOfRange - number of pulses missed because beacon went out of range.  
+
+##### Example
+
+```java
+XYSmartScan.instance.init(currentActivity.this, deviceId, 30);
+```
+
+#### cleanup
+
+```java
+void cleanup(Context context)
+```
+
+Unregisters receiver and stops auto scanning.
+
+##### Parameters
+
+Context context - current context.
+
+##### Example
+
+```java
+XYSmartScan.instance.cleanup(this);
+```
+
+#### getMissedPulsesForOutOfRange
+
+```java
+int getMissedPulsesForOutOfRange();
+```
+
+Returns missed pulses while device is out of range.
+
+##### Example
+
+```java
+XYSmartScan.instance.getMissedPulsesForOutOfRange();
+```
+
+#### setMissedPulsesForOutOfRange
+
+```java
+int setMissedPulsesForOutOfRange
+```
+
+Set the number of pulses missed while device is out of range.
+
+##### Example
+
+```java
+XYSmartScan.instance.setMissedPulsesForOutOfRange(30);
+```
+
+#### enableBluetooth
+
+```java
+void enableBluetooth(Context context)
+```
+
+Enables bluetooth adapter for device.
+
+##### Example
+
+```java
+XYSmartScan.instance.enableBluetooth(currentActivity.this);
+```
+
+#### deviceFromId
+
+```java
+XYDevice deviceFromId(String id);
+```
+
+Returns an XYDevice after passing in an id for that device.
+
+##### Parameters
+
+String id - id of device.
+
+##### Example
+
+```java
+XYDevice device = XYSmartScan.instance.deviceFromId("id");
+```
+
+#### getCurrentDeviceId
+
+```java
+long getCurrentDeviceId();
+```
+
+Returns id of current instance of XYSmartScan device.
+
+##### Example
+
+```java
+XYSmartScan.instance.getCurrentDeviceId();
+```
+
+#### getCurrentDevice
+
+```java
+XYDevice getCurrentDevice();
+```
+
+Returns current instance of XYDevice.
+
+##### Example
+
+```java
+XYDevice device = XYSmartScan.instance.getCurrentDevice();
+```
+
+#### startAutoScan
+
+```java
+void startAutoScan(final Context context, int interval, int period);
+```
+
+Starts a new timer for an auto scan.
+
+##### Parameters
+
+final Context context - current context.  
+int interval - how often to scan for device.  
+int period - duration before scan stops.  
+
+##### Example
+
+```java
+XYSmartScan.instance.startAutoScan(currentActivity.this, 1500, 1000);
+```
+
+#### stopAutoScan
+
+```java
+void stopAutoScan();
+```
+
+Stops scanning for devices.
+
+##### Example
+
+```java
+XYSmartScan.instance.stopAutoScan()l
+```
+
+#### isLocationAvailable
+
+```java
+static boolean isLocationAvailable(@NonNull Context context);
+```
+
+Returns true if location services are available.  
+Returns false if location are not available.  
+
+##### Parameters
+
+@NonNull Context context - current context.  Cannot be null.  
+
+##### Example
+
+```java
+XYSmartScan.isLocationAvailable(currentActivity);
+```
+
+#### getStatus
+
+```java
+Status getStatus(Context context, boolean refresh);
+```
+
+Returns a Status.  See Status enum below in documentation.
+
+##### Parameters
+
+Context context - current context.  
+boolean refresh - if true is entered default bluetooth adapter will be used.  
+
+##### Example
+
+```java
+XYSmartScan.Status status = XYSmartScan.instance.getStatus(this, true);
+```
+
+#### getDevices
+
+```java
+List<XYDevice> getDevices();
+```
+
+Returns a list of all devices.
+
+##### Example
+
+```java
+List devices = XYSmartScan.instance.getDevices();
+```
+
+#### addListener
+
+```java
+void addListener(final String key, final Listener listener);
+```
+
+Adds a listener to Hashmap stored in XYSmartScan object.
+
+##### Parameters
+
+String key - key to identify where listener is attached to.  
+Listener listener - a Listener - see Listener interface at bottom of this documentation.  
+
+##### Example
+
+```java
+XYSmartScan.instance.addListener("key", listener);
+```
+
+#### removeListener
+
+```java
+void removeListener(String key);
+```
+
+Removes listener from Hashmap of XYSmartScan object.
+
+##### Parameters
+
+String key - key to identify where listener is attached to.
+
+##### Example
+
+```java
+XYSmartScan.instance.removeListener("key");
+```
+
+#### Listener
+
+```java
+public interface Listener {
+        void entered(XYDevice device);
+
+        void exited(XYDevice device);
+
+        void detected(XYDevice device);
+
+        void buttonPressed(XYDevice device, XYDevice.ButtonType buttonType);
+
+        void buttonRecentlyPressed(XYDevice device, XYDevice.ButtonType buttonType);
+
+        void statusChanged(Status status);
+
+        void updated(XYDevice device);
+}
+```
+
+An interface for listeners to be used in the XYSmartScan class.
+
+#### Overrided Methods of XYDevice Listener
+
+```java
+@Override
+public void entered(XYDevice device) {reportEntered(device);}
+
+@Override
+public void exited(XYDevice device) {reportExited(device);}
+
+@Override
+public void detected(XYDevice device) {reportDetected(device);}
+
+@Override
+public void buttonPressed(XYDevice device, XYDevice.ButtonType buttonType) {reportButtonPressed(device, buttonType);}
+
+@Override
+public void buttonRecentlyPressed(XYDevice device, XYDevice.ButtonType buttonType) {reportButtonRecentlyPressed(device, buttonType);}
+
+@Override
+public void connectionStateChanged(XYDevice device, int newState) {
+
+}
+
+@Override
+public void updated(XYDevice device) {
+
+}
+```
+
+#### Status
+
+```java
+public enum Status {
+        None,
+        Enabled,
+        BluetoothUnavailable,
+        BluetoothUnstable,
+        BluetoothDisabled,
+        LocationDisabled
+}
+```
+
+Different statuses available within the XYSmartScan class.
