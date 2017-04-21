@@ -88,22 +88,24 @@ static Comparator<XYDevice> Comparator = new Comparator<XYDevice>() {
             return lhs._id.compareTo(rhs._id);
 	}
 };
+```
+Used to compare the ids of devices.  
+Returns a 0 if they are the same and a positive number is the previous device's id is greater than the next device.  
+It will return a negative number if the previous device's id is lower than the next device.  
+This can be used to sort devices by id.  
 
-Used to compare the ids of devices.
-Returns a 0 if they are the same and a positive number is the previous device's id is greater than the next device.
-It will return a negative number if the previous device's id is lower than the next device.
-This can be used to sort devices by id.
-
+```java
 public final static Comparator<XYDevice> DistanceComparator = new Comparator<XYDevice>() {
         @Override
         public int compare(XYDevice lhs, XYDevice rhs) {
             return Integer.compare(lhs.getRssi(), rhs.getRssi());
         }
 };
+```
+Used to compare distances of devices.  
+This can be used to sort devices by distances from host device.  
 
-Used to compare distances of devices.
-This can be used to sort devices by distances from host device.
-
+```java
 static final int STATE_CONNECTED = BluetoothProfile.STATE_CONNECTED;
 static final int STATE_DISCONNECTED = BluetoothProfile.STATE_DISCONNECTED;
 static final int STATE_DISCONNECTING = BluetoothProfile.STATE_DISCONNECTING;
