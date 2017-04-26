@@ -1130,7 +1130,7 @@ public class XYDevice extends XYBase {
         }
     }
 
-    private void reportDetected() {
+    public void reportDetected() {
         if (_firstDetectedTime == 0) {
             _firstDetectedTime = System.currentTimeMillis();
         }
