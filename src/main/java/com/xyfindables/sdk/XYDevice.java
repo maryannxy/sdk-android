@@ -195,7 +195,7 @@ public class XYDevice extends XYBase {
             XYBase.logError(TAG, "Invalid Family");
             return null;
         }
-        if ((family == Family.XY2) || (family == Family.XY3)) {
+        if ((family == Family.XY2) || (family == Family.XY3) || (family == Family.Gps)) {
             return "xy:" + getPrefix(family) + ":" + uuid.toString() + "." + major + "." + (minor | 0x0004);
         } else {
             return "xy:" + getPrefix(family) + ":" + uuid.toString() + "." + major + "." + minor;
@@ -207,7 +207,7 @@ public class XYDevice extends XYBase {
         UUID uuid = getUUID(id);
         if (uuid != null) {
             Family family = getFamily(uuid);
-            if ((family == Family.XY2) || (family == Family.XY3)) {
+            if ((family == Family.XY2) || (family == Family.XY3) || (family == Family.Gps)) {
                 normalId = "xy:" + getPrefix(id) + ":" + uuid.toString() + "." + getMajor(id) + "." + ((getMinor(id) & 0xfff0) | 0x0004);
             } else {
                 normalId = id;
