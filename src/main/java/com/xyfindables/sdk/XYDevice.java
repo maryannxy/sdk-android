@@ -788,8 +788,12 @@ public class XYDevice extends XYBase {
     }
 
     public void checkBattery(final Context context) {
+        checkBattery(context, false);
+    }
+    
+    public void checkBattery(final Context context, boolean force) {
         Log.v(TAG, "checkBattery");
-        if (_batteryLevel < BATTERYLEVEL_CHECKED) {
+        if (_batteryLevel < BATTERYLEVEL_CHECKED || force == true) {
             _batteryLevel = BATTERYLEVEL_CHECKED;
             XYDeviceActionGetBatteryLevel getBatteryLevel = new XYDeviceActionGetBatteryLevel(this) {
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
@@ -1130,7 +1134,7 @@ public class XYDevice extends XYBase {
         }
     }
 
-    public void reportDetected() {
+    private void reportDetected() {
         if (_firstDetectedTime == 0) {
             _firstDetectedTime = System.currentTimeMillis();
         }
