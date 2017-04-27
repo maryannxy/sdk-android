@@ -932,7 +932,7 @@ public class XYDevice extends XYBase {
             _beaconAddress = scanResult.getDevice().getAddress();
         }
 
-        if (getFamily() == Family.XY3) {
+        if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
             byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
             if ((manufacturerData[21] & 0x08) == 0x08) {
                 handleButtonPulse();
