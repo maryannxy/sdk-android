@@ -21,8 +21,8 @@ public class XYDeviceCharacteristic {
     public static final UUID ExtendedConfigRegistration = UUID.fromString("F014FF05-0439-3000-E001-00001001FFFF");
     public static final UUID ExtendedConfigInactiveVirtualBeaconSettings = UUID.fromString("F014FF06-0439-3000-E001-00001001FFFF");
     public static final UUID ExtendedConfigInactiveInterval = UUID.fromString("F014FF07-0439-3000-E001-00001001FFFF");
-    public static final UUID ExtendedConfigGPSInterval = UUID.fromString("2ABBAA000-4393-000E-0010-0001001FFFF");
-    public static final UUID ExtendedConfigGPSMode = UUID.fromString("2A99AA000-4393-000E-0010-0001001FFFF");
+    public static final UUID ExtendedConfigGPSInterval = UUID.fromString("2ABBAA00-0439-3000-E001-00001001FFFF");
+    public static final UUID ExtendedConfigGPSMode = UUID.fromString("2A99AA00-0439-3000-E001-00001001FFFF");
 
     public static final UUID BasicConfigLockStatus = UUID.fromString("F014EE01-0439-3000-E001-00001001FFFF");
     public static final UUID BasicConfigLock = UUID.fromString("F014EE02-0439-3000-E001-00001001FFFF");
