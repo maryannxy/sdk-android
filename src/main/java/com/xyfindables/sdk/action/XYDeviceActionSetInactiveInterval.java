@@ -28,12 +28,12 @@ public abstract class XYDeviceActionSetInactiveInterval extends XYDeviceAction {
 
     @Override
     public UUID getServiceId() {
-        return XYDeviceService.BasicConfig;
+        return XYDeviceService.ExtendedConfig;
     }
 
     @Override
     public UUID getCharacteristicId() {
-        return XYDeviceCharacteristic.BasicConfigInterval;
+        return XYDeviceCharacteristic.ExtendedConfigInactiveInterval;
     }
 
     @Override
