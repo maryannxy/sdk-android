@@ -364,7 +364,7 @@ public class XYDevice extends XYBase {
 
     private void cancelActionTimer() {
         if (_actionFrameTimer == null) {
-            XYBase.logError(TAG, "Null _actionFrameTimer");
+            XYBase.logError(TAG, "Null _actionFrameTimer", false);
         } else {
             _actionFrameTimer.cancel();
             _actionFrameTimer = null;
@@ -491,27 +491,32 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
                         super.onServicesDiscovered(gatt, status);
-                        if (status == BluetoothGatt.GATT_SUCCESS) {
-                            Log.i(TAG, "onServicesDiscovered:" + status);
-                            _currentAction.statusChanged(XYDeviceAction.STATUS_SERVICE_FOUND, gatt, null, true);
-                            BluetoothGattService service = gatt.getService(_currentAction.getServiceId());
-                            if (service != null) {
-                                BluetoothGattCharacteristic characteristic = service.getCharacteristic(_currentAction.getCharacteristicId());
-                                if (characteristic != null) {
-                                    if (_currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_FOUND, gatt, characteristic, true)) {
-                                        endActionFrame(_currentAction, false);
+                        XYDeviceAction currentAction = _currentAction;
+                        if (currentAction != null) {
+                            if (status == BluetoothGatt.GATT_SUCCESS) {
+                                Log.i(TAG, "onServicesDiscovered:" + status);
+                                currentAction.statusChanged(XYDeviceAction.STATUS_SERVICE_FOUND, gatt, null, true);
+                                BluetoothGattService service = gatt.getService(currentAction.getServiceId());
+                                if (service != null) {
+                                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(currentAction.getCharacteristicId());
+                                    if (characteristic != null) {
+                                        if (currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_FOUND, gatt, characteristic, true)) {
+                                            endActionFrame(currentAction, false);
+                                        }
+                                    } else {
+                                        XYBase.logError(TAG, "statusChanged:characteristic null", false);
+                                        endActionFrame(currentAction, false);
                                     }
                                 } else {
-                                    XYBase.logError(TAG, "statusChanged:characteristic null", false);
-                                    endActionFrame(_currentAction, false);
+                                    XYBase.logError(TAG, "statusChanged:service null", false);
+                                    endActionFrame(currentAction, false);
                                 }
                             } else {
-                                XYBase.logError(TAG, "statusChanged:service null", false);
-                                endActionFrame(_currentAction, false);
+                                XYBase.logError(TAG, "statusChanged:onServicesDiscovered Failed: " + status);
+                                endActionFrame(currentAction, false);
                             }
                         } else {
-                            XYBase.logError(TAG, "statusChanged:onServicesDiscovered Failed: " + status);
-                            endActionFrame(_currentAction, false);
+                            logError(TAG, "null _currentAction");
                         }
                     }
 

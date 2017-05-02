@@ -17,7 +17,6 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.bluetooth.ScanRecordLegacy;
 import com.xyfindables.sdk.bluetooth.ScanResultLegacy;
