@@ -21,6 +21,8 @@ public abstract class XYDeviceActionSetVirtualBeacon extends XYDeviceAction {
 
     public static final byte[] _defaultXY3 = {(byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x03, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00};
 
+    public static final byte[] _defaultXYGps = {(byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x03, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00};
+
     public static final byte[] _custom = {(byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01};
 
     private static final String TAG = XYDeviceActionSetVirtualBeacon.class.getSimpleName();
