@@ -5,9 +5,9 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.util.Log;
 
 import com.xyfindables.core.XYBase;
+import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYDeviceCharacteristic;
 import com.xyfindables.sdk.XYDeviceService;
-import com.xyfindables.sdk.XYDevice;
 
 import java.util.UUID;
 
@@ -15,25 +15,25 @@ import java.util.UUID;
  * Created by arietrouw on 1/2/17.
  */
 
-public abstract class XYDeviceActionGetMinor extends XYDeviceAction {
+public abstract class XYDeviceActionGetSIMId extends XYDeviceAction {
 
-    private static final String TAG = XYDeviceActionGetMinor.class.getSimpleName();
+    private static final String TAG = XYDeviceActionGetSIMId.class.getSimpleName();
 
     public byte[] value;
 
-    public XYDeviceActionGetMinor(XYDevice device) {
+    public XYDeviceActionGetSIMId(XYDevice device) {
         super(device);
         Log.v(TAG, TAG);
     }
 
     @Override
     public UUID getServiceId() {
-        return XYDeviceService.BasicConfig;
+        return XYDeviceService.ExtendedConfig;
     }
 
     @Override
     public UUID getCharacteristicId() {
-        return XYDeviceCharacteristic.BasicConfigMinor;
+        return XYDeviceCharacteristic.ExtendedConfigSIMId;
     }
 
     @Override

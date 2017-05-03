@@ -19,7 +19,7 @@ public abstract class XYDeviceActionGetMajor extends XYDeviceAction {
 
     private static final String TAG = XYDeviceActionGetMajor.class.getSimpleName();
 
-    public int value;
+    public byte[] value;
 
     public XYDeviceActionGetMajor(XYDevice device) {
         super(device);
@@ -42,7 +42,7 @@ public abstract class XYDeviceActionGetMajor extends XYDeviceAction {
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_READ:
-                value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                value = characteristic.getValue();
                 break;
             case STATUS_CHARACTERISTIC_FOUND:
                 if (!gatt.readCharacteristic(characteristic)) {

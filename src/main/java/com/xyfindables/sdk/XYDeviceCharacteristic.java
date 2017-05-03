@@ -23,6 +23,7 @@ public class XYDeviceCharacteristic {
     public static final UUID ExtendedConfigInactiveInterval = UUID.fromString("F014FF07-0439-3000-E001-00001001FFFF");
     public static final UUID ExtendedConfigGPSInterval = UUID.fromString("2ABBAA00-0439-3000-E001-00001001FFFF");
     public static final UUID ExtendedConfigGPSMode = UUID.fromString("2A99AA00-0439-3000-E001-00001001FFFF");
+    public static final UUID ExtendedConfigSIMId = UUID.fromString("2ACCAA00-0439-3000-E001-00001001FFFF");
 
     public static final UUID BasicConfigLockStatus = UUID.fromString("F014EE01-0439-3000-E001-00001001FFFF");
     public static final UUID BasicConfigLock = UUID.fromString("F014EE02-0439-3000-E001-00001001FFFF");
