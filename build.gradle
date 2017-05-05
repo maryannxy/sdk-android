@@ -18,10 +18,11 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         debug {
+            minifyEnabled false
         }
     }
 }
@@ -46,7 +47,7 @@ dependencies {
     compile('io.fabric.sdk.android:fabric:1.3.10@aar') {
         transitive = true;
     }
-    compile 'com.github.xycorp:core-android:1.0.5'
+    compile 'com.github.xycorp:core-android:1.0.6'
 }
 
 apply plugin: 'io.fabric'

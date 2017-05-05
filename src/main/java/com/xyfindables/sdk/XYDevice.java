@@ -22,6 +22,7 @@ import com.xyfindables.sdk.action.XYDeviceAction;
 import com.xyfindables.sdk.action.XYDeviceActionGetBatteryLevel;
 import com.xyfindables.sdk.action.XYDeviceActionGetVersion;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButton;
+import com.xyfindables.sdk.bluetooth.ScanRecordLegacy;
 import com.xyfindables.sdk.bluetooth.ScanResultLegacy;
 
 import java.util.Comparator;
@@ -907,10 +908,15 @@ public class XYDevice extends XYBase {
             _beaconAddress = scanResult.getDevice().getAddress();
         }
 
-        if (getFamily() == Family.XY3) {
-            byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
-            if ((manufacturerData[21] & 0x08) == 0x08) {
-                handleButtonPulse();
+        if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
+            ScanRecordLegacy scanRecord = scanResult.getScanRecord();
+            if (scanRecord != null) {
+                byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
+                if (manufacturerData != null) {
+                    if ((manufacturerData[21] & 0x08) == 0x08) {
+                        handleButtonPulse();
+                    }
+                }
             }
         }
     }
@@ -938,12 +944,16 @@ public class XYDevice extends XYBase {
         }
 
         if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
-            byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
-            if ((manufacturerData[21] & 0x08) == 0x08) {
-                handleButtonPulse();
+            android.bluetooth.le.ScanRecord scanRecord = scanResult.getScanRecord();
+            if (scanRecord != null) {
+                byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
+                if (manufacturerData != null) {
+                    if ((manufacturerData[21] & 0x08) == 0x08) {
+                        handleButtonPulse();
+                    }
+                }
             }
         }
-
     }
 
     public String getId() {
