@@ -327,7 +327,7 @@ public class XYDevice extends XYBase {
                         return result;
                     }
                 };
-                _subscribeButton.start(context);
+                _subscribeButton.start(context.getApplicationContext());
             }
         } else {
             if (_stayConnectedActive) {
@@ -594,7 +594,7 @@ public class XYDevice extends XYBase {
                     Log.i(TAG, "_bleAccess acquiring[" + getId() + "]:" + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
                     //stopping the scan and running the connect in ui thread required for 4.x
                     XYSmartScan.instance.pauseAutoScan(true);
-                    Handler handler = new Handler(context.getMainLooper());
+                    Handler handler = new Handler(context.getApplicationContext().getMainLooper());
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -607,7 +607,7 @@ public class XYDevice extends XYBase {
                                         endActionFrame(_currentAction, false);
                                         _bleAccess.release();
                                     } else {
-                                        BluetoothGatt gatt = bluetoothDevice.connectGatt(context, false, callback);
+                                        BluetoothGatt gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
                                         setGatt(gatt);
                                         if (gatt == null) {
                                             endActionFrame(_currentAction, false);
@@ -739,7 +739,7 @@ public class XYDevice extends XYBase {
     public static final int STATE_DISCONNECTING = BluetoothProfile.STATE_DISCONNECTING;
 
     private BluetoothManager getBluetoothManager(Context context) {
-        return (BluetoothManager)context.getSystemService(Context.BLUETOOTH_SERVICE);
+        return (BluetoothManager)context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
     }
 
     public BluetoothDevice getBluetoothDevice() {
@@ -779,8 +779,8 @@ public class XYDevice extends XYBase {
             final TimerTask checkTimerTask = new TimerTask() {
                 @Override
                 public void run() {
-                    checkBattery(context);
-                    checkVersion(context);
+                    checkBattery(context.getApplicationContext());
+                    checkVersion(context.getApplicationContext());
                 }
             };
 
@@ -794,7 +794,7 @@ public class XYDevice extends XYBase {
     }
 
     public void checkBattery(final Context context) {
-        checkBattery(context, false);
+        checkBattery(context.getApplicationContext(), false);
     }
     
     public void checkBattery(final Context context, boolean force) {
@@ -813,7 +813,7 @@ public class XYDevice extends XYBase {
                     return result;
                 }
             };
-            getBatteryLevel.start(context);
+            getBatteryLevel.start(context.getApplicationContext());
         }
     }
 
@@ -833,7 +833,7 @@ public class XYDevice extends XYBase {
                     return result;
                 }
             };
-            getVersion.start(context);
+            getVersion.start(context.getApplicationContext());
         }
     }
 

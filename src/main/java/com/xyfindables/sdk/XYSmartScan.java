@@ -102,7 +102,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
     private final HashMap<String, Listener> _listeners = new HashMap<>();
 
     protected BluetoothManager getBluetoothManager(Context context) {
-        return (BluetoothManager)context.getSystemService(Context.BLUETOOTH_SERVICE);
+        return (BluetoothManager)context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
     }
 
     private boolean _receiverRegistered = false;
@@ -229,14 +229,16 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
 
             BroadcastReceiver receiver = getReceiver();
 
-            context.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
-            context.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED));
-            context.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED));
-            context.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_STARTED));
-            context.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_LOCAL_NAME_CHANGED));
-            context.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE));
-            context.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_REQUEST_ENABLE));
-            context.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED));
+            Context appContext = context.getApplicationContext();
+
+            appContext.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+            appContext.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED));
+            appContext.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED));
+            appContext.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_STARTED));
+            appContext.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_LOCAL_NAME_CHANGED));
+            appContext.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE));
+            appContext.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_REQUEST_ENABLE));
+            appContext.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED));
 
             _receiverRegistered = true;
         }
@@ -244,7 +246,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
 
     public void cleanup(Context context) {
         if (_receiverRegistered) {
-            context.unregisterReceiver(getReceiver());
+            context.getApplicationContext().unregisterReceiver(getReceiver());
             _receiverRegistered = false;
         }
         stopAutoScan();
@@ -259,7 +261,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
     }
 
     public void enableBluetooth(Context context) {
-        final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context).getAdapter();
+        final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context.getApplicationContext()).getAdapter();
 
         if (bluetoothAdapter == null) {
             Log.i(TAG, "Bluetooth Disabled");
@@ -351,7 +353,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         _autoScanTimerTask = new TimerTask() {
             @Override
             public void run() {
-                scanner.scan(context, _autoScanPeriod);
+                scanner.scan(context.getApplicationContext(), _autoScanPeriod);
             }
         };
         _autoScanTimer = new Timer();
@@ -401,7 +403,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         boolean gps_enabled, network_enabled;
 
         if (lm == null)
-            lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+            lm = (LocationManager) context.getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
 
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
@@ -430,7 +432,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                 _status = Status.BluetoothUnavailable;
             } else {
                 if (bluetoothAdapter.isEnabled()) {
-                    if (isLocationAvailable(context)) {
+                    if (isLocationAvailable(context.getApplicationContext())) {
                         _status = Status.Enabled;
                     } else {
                         _status = Status.LocationDisabled;
@@ -507,7 +509,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
 
     protected void dump(Context context) {
 
-        final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context).getAdapter();
+        final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context.getApplicationContext()).getAdapter();
 
         if (bluetoothAdapter == null) {
             Log.i(TAG, "Bluetooth Disabled");

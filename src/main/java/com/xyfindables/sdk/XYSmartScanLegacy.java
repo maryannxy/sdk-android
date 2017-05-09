@@ -106,7 +106,7 @@ public class XYSmartScanLegacy extends XYSmartScan {
 
         _scanCount++;
 
-        final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context).getAdapter();
+        final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context.getApplicationContext()).getAdapter();
 
         if (bluetoothAdapter == null) {
             Log.i(TAG, "Bluetooth Disabled");
@@ -131,7 +131,7 @@ public class XYSmartScanLegacy extends XYSmartScan {
                 bluetoothAdapter.stopLeScan(_scanCallback);
                 pumpScanResults();
                 notifyDevicesOfScanComplete();
-                dump(context);
+                dump(context.getApplicationContext());
             }
         };
 
