@@ -304,9 +304,6 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
 
         if (device == null) {
             device = new XYDevice(id);
-            if (device.getFamily() == XYDevice.Family.Unknown) {
-                return null;
-            }
             try {
                 if (_devicesLock.tryLock(defaultLockTimeout, defaultLockTimeUnits)) {
                     _devices.put(id, device);
