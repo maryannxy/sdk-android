@@ -347,7 +347,7 @@ public class XYDevice extends XYBase {
             @Override
             public void run() {
                 if (_currentAction == null) {
-                    XYBase.logError(TAG, "Null Action timed out");
+                    XYBase.logError(TAG, "Null Action timed out", false);
                 } else {
                     XYBase.logError(TAG, "Action Timeout:" + _currentAction.getClass().getSuperclass().getSimpleName(), false);
                     endActionFrame(_currentAction, false);
@@ -452,7 +452,7 @@ public class XYDevice extends XYBase {
                                 break;
                             case BluetoothGatt.STATE_DISCONNECTED: {
                                 if (status == 133) {
-                                    XYBase.logError(TAG, "Disconnect with 133");
+                                    XYBase.logError(TAG, "Disconnect with 133", false);
                                     //XYSmartScan.instance.refresh(gatt);
                                 }
                                 Log.i(TAG, "onConnectionStateChange:Disconnected: " + getId());
@@ -607,16 +607,16 @@ public class XYDevice extends XYBase {
                                         endActionFrame(_currentAction, false);
                                         _bleAccess.release();
                                     } else {
-                                        setGatt(bluetoothDevice.connectGatt(context, false, callback));
-                                        BluetoothGatt gatt = getGatt();
+                                        BluetoothGatt gatt = bluetoothDevice.connectGatt(context, false, callback);
+                                        setGatt(gatt);
                                         if (gatt == null) {
                                             endActionFrame(_currentAction, false);
                                             _bleAccess.release();
                                             Log.e(TAG, "released[" + getId() + "]:" + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
                                         } else {
-                                            boolean connected = gatt.connect();
-                                            Log.v(TAG, "Connect:" + connected);
-                                            gatt.discoverServices();
+                                            //boolean connected = gatt.connect();
+                                            //Log.v(TAG, "Connect:" + connected);
+                                            //gatt.discoverServices();
                                         }
                                     }
                                 } else {
@@ -682,7 +682,7 @@ public class XYDevice extends XYBase {
                 Log.v(TAG, "popConnection[" + _connectionCount + "->" + (_connectionCount - 1) + "]:" + getId());
                 _connectionCount--;
                 if (_connectionCount < 0) {
-                    XYBase.logError(TAG, "Negative Connection Count:" + getId());
+                    XYBase.logError(TAG, "Negative Connection Count:" + getId(), false);
                     _connectionCount = 0;
                 }
                 if (_connectionCount == 0) {
@@ -691,10 +691,10 @@ public class XYDevice extends XYBase {
                         _stayConnectedActive = false;
                     }
                     BluetoothGatt gatt = getGatt();
-                    if (gatt != null) {
-                        gatt.disconnect();
-                        closeGatt();
-                    }
+                    //if (gatt != null) {
+                    //    gatt.disconnect();
+                    //    closeGatt();
+                    //}
                 }
             }
         };

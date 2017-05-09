@@ -82,7 +82,7 @@ public abstract class XYDeviceAction extends XYBase {
                 if (!_servicesDiscovered) {
                     _servicesDiscovered = true;
                 } else {
-                    XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Second Service Found Received");
+                    XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Second Service Found Received", false);
                 }
                 break;
             case STATUS_CHARACTERISTIC_FOUND:
@@ -90,7 +90,7 @@ public abstract class XYDeviceAction extends XYBase {
                 if (!_characteristicFound) {
                     _characteristicFound = true;
                 } else {
-                    XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Second Characteristic Found Received");
+                    XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Second Characteristic Found Received", false);
                 }
                 break;
             case STATUS_CHARACTERISTIC_READ:
@@ -99,7 +99,7 @@ public abstract class XYDeviceAction extends XYBase {
                 return true;
             case STATUS_COMPLETED:
                 if (!success) {
-                    XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Completed with Failure");
+                    XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Completed with Failure", false);
                 }
                 break;
         }
