@@ -884,6 +884,19 @@ public class XYDevice extends XYBase {
         XYBase.logExtreme(TAG, "pulse18: " + _id + ":" + scanResult.getRssi());
         _scansMissed = 0;
 
+        if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
+            ScanRecordLegacy scanRecord = scanResult.getScanRecord();
+            if (scanRecord != null) {
+                byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
+                if (manufacturerData != null) {
+                    if ((manufacturerData[21] & 0x08) == 0x08) {
+                        handleButtonPulse();
+                        return;
+                    }
+                }
+            }
+        }
+
         if ((_currentScanResult18 == null) || ((_currentScanResult18.getRssi() == outOfRangeRssi) && (scanResult.getRssi() != outOfRangeRssi))) {
             _currentScanResult18 = scanResult;
             reportEntered();
@@ -907,18 +920,6 @@ public class XYDevice extends XYBase {
         if (_beaconAddress == null) {
             _beaconAddress = scanResult.getDevice().getAddress();
         }
-
-        if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
-            ScanRecordLegacy scanRecord = scanResult.getScanRecord();
-            if (scanRecord != null) {
-                byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
-                if (manufacturerData != null) {
-                    if ((manufacturerData[21] & 0x08) == 0x08) {
-                        handleButtonPulse();
-                    }
-                }
-            }
-        }
     }
 
     @TargetApi(21)
@@ -926,6 +927,19 @@ public class XYDevice extends XYBase {
         android.bluetooth.le.ScanResult scanResult = (android.bluetooth.le.ScanResult)scanResultObject;
         XYBase.logExtreme(TAG, "pulse21: " + _id + ":" + scanResult.getRssi());
         _scansMissed = 0;
+
+        if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
+            android.bluetooth.le.ScanRecord scanRecord = scanResult.getScanRecord();
+            if (scanRecord != null) {
+                byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
+                if (manufacturerData != null) {
+                    if ((manufacturerData[21] & 0x08) == 0x08) {
+                        handleButtonPulse();
+                        return;
+                    }
+                }
+            }
+        }
 
         if ((_currentScanResult21 == null) || ((_currentScanResult21.getRssi() == outOfRangeRssi) && (scanResult.getRssi() != outOfRangeRssi))) {
             _currentScanResult21 = scanResult;
@@ -941,18 +955,6 @@ public class XYDevice extends XYBase {
 
         if (_beaconAddress == null) {
             _beaconAddress = scanResult.getDevice().getAddress();
-        }
-
-        if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
-            android.bluetooth.le.ScanRecord scanRecord = scanResult.getScanRecord();
-            if (scanRecord != null) {
-                byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
-                if (manufacturerData != null) {
-                    if ((manufacturerData[21] & 0x08) == 0x08) {
-                        handleButtonPulse();
-                    }
-                }
-            }
         }
     }
 
