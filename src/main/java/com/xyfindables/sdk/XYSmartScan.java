@@ -376,11 +376,11 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
             return;
         }
         if (pause) {
-            if (_scanningControl.tryAcquire()) {
+            //if (_scanningControl.tryAcquire()) {
                 this.paused = true;
-            }
+            //}
         } else {
-            _scanningControl.release();
+            //_scanningControl.release();
             this.paused = false;
         }
     }

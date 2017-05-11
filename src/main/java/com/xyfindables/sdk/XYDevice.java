@@ -449,6 +449,7 @@ public class XYDevice extends XYBase {
                                 Log.i(TAG, "onConnectionStateChange:Connected: " + getId());
                                 reportConnectionStateChanged(STATE_CONNECTED);
                                 gatt.discoverServices();
+                                Log.v(TAG, "stateConnected: gatt object = " + gatt.hashCode());
                                 break;
                             case BluetoothGatt.STATE_DISCONNECTED: {
                                 if (status == 133) {
@@ -614,9 +615,10 @@ public class XYDevice extends XYBase {
                                             _bleAccess.release();
                                             Log.e(TAG, "released[" + getId() + "]:" + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
                                         } else {
-                                            //boolean connected = gatt.connect();
-                                            //Log.v(TAG, "Connect:" + connected);
-                                            //gatt.discoverServices();
+                                            boolean connected = gatt.connect();
+                                            Log.v(TAG, "Connect:" + connected);
+                                            gatt.discoverServices();
+                                            Log.v(TAG, "Connect:" + connected + " - gatt object = " + gatt.hashCode());
                                         }
                                     }
                                 } else {
@@ -635,7 +637,7 @@ public class XYDevice extends XYBase {
                     if (services.size() > 0) {
                         callback.onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS);
                     } else {
-                        gatt.discoverServices();
+                        Log.v(TAG, "gatt already connect, serivceSize = 0 - gat object = " + gatt.hashCode());
                     }
                 }
                 return null;
@@ -722,7 +724,7 @@ public class XYDevice extends XYBase {
         }
         BluetoothGatt gatt = getGatt();
         if (gatt == null) {
-            XYBase.logError(TAG, "Closing Null Gatt");
+            XYBase.logError(TAG, "Closing Null Gatt", false);
         } else {
             gatt.close();
             setGatt(null);
