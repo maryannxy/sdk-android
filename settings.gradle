@@ -1,0 +1,5 @@
+include ':sdk-android-sample'
+include ':sdk-android-library'
+
+include 'xycore'
+project(':xycore').projectDir = new File(settingsDir, '../core-android/')

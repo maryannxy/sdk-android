@@ -1,0 +1,17 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.xyfindables.sdk">
+
+    <uses-permission android:name="android.permission.BLUETOOTH" android:required="true"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:required="false" />
+
+    <application android:allowBackup="true" android:label="@string/app_name"
+        android:supportsRtl="true">
+
+    <meta-data
+        android:name="io.fabric.ApiKey"
+        android:value="56d31be9d7f80310774b150332565f86e76506c4" />
+
+    </application>
+    <uses-permission android:name="android.permission.INTERNET" />
+
+</manifest>
