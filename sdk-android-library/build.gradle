@@ -7,6 +7,8 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 25
+        defaultPublishConfig 'release'
+        publishNonDefault true
     }
 
     sourceSets {
@@ -19,11 +21,13 @@ android {
 
     buildTypes {
         release {
-            //minifyEnabled true
-            //proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            debuggable false
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         debug {
             minifyEnabled false
+            debuggable = true
         }
     }
 }
@@ -48,7 +52,8 @@ dependencies {
     compile 'com.crashlytics.sdk.android:crashlytics:2.6.8@aar'
     compile 'com.facebook.android:facebook-android-sdk:4.20.0'
     //compile 'com.github.xycorp:core-android:1.0.6'
-    compile project(path: ':xycore')
+    debugCompile project(path: ':xycore', configuration: "debug")
+    releaseCompile project(path: ':xycore', configuration: "release")
 }
 
 apply plugin: 'io.fabric'
