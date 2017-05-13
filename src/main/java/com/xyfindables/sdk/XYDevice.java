@@ -873,12 +873,12 @@ public class XYDevice extends XYBase {
 
     @TargetApi(21)
     private void pulseOutOfRange21() {
-        Log.v(TAG, "pulseOutOfRange21");
-        ScanResult scanResult = _currentScanResult21;
-        if (scanResult != null) {
-            ScanResult newScanResult = new ScanResult(scanResult.getDevice(), scanResult.getScanRecord(), outOfRangeRssi, scanResult.getTimestampNanos());
-            pulse21(newScanResult);
-        }
+            Log.v(TAG, "pulseOutOfRange21: " + _id);
+            ScanResult scanResult = _currentScanResult21;
+            if (scanResult != null) {
+                ScanResult newScanResult = new ScanResult(scanResult.getDevice(), scanResult.getScanRecord(), outOfRangeRssi, scanResult.getTimestampNanos());
+                pulse21(newScanResult);
+            }
     }
 
     @TargetApi(18)
@@ -927,6 +927,7 @@ public class XYDevice extends XYBase {
     @TargetApi(21)
     public void pulse21(Object scanResultObject) {
         android.bluetooth.le.ScanResult scanResult = (android.bluetooth.le.ScanResult)scanResultObject;
+        Log.v(TAG, "pulse21: " + _id + ":" + scanResult.getRssi());
         XYBase.logExtreme(TAG, "pulse21: " + _id + ":" + scanResult.getRssi());
         _scansMissed = 0;
 
@@ -934,13 +935,17 @@ public class XYDevice extends XYBase {
             android.bluetooth.le.ScanRecord scanRecord = scanResult.getScanRecord();
             if (scanRecord != null) {
                 byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
-                if (manufacturerData != null) {
-                    if ((manufacturerData[21] & 0x08) == 0x08) {
-                        handleButtonPulse();
-                        return;
+
+
+                    if (manufacturerData != null) {
+                        if ((manufacturerData[21] & 0x08) == 0x08) {
+                            handleButtonPulse();
+                            return;
+                        }
                     }
                 }
-            }
+
+
         }
 
         if ((_currentScanResult21 == null) || ((_currentScanResult21.getRssi() == outOfRangeRssi) && (scanResult.getRssi() != outOfRangeRssi))) {

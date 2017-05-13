@@ -14,6 +14,7 @@ import com.xyfindables.core.XYBase;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -144,7 +145,19 @@ public class XYSmartScanModern extends XYSmartScan {
 
             @Override
             public void onScanResult(int callbackType, android.bluetooth.le.ScanResult result) {
-                Log.v(TAG, "scan21:onScanResult");
+
+                android.bluetooth.le.ScanRecord scanRecord = result.getScanRecord();
+                byte[] manufacturerData = scanRecord.getManufacturerSpecificData(0x004c);
+                if (manufacturerData != null) {
+                    if ((manufacturerData[0] == 0x02) && (manufacturerData[1] == 0x15)) {
+                        String xyId = xyIdFromAppleBytes(manufacturerData);
+                        if (xyId != null) {
+                            Log.v(TAG, "scan21:onScanResult: " + xyId);
+                        }
+                    }
+                }
+
+
                 _scanResults21.add(result);
                 _pulseCount++;
                 _pulseCountForScan++;
