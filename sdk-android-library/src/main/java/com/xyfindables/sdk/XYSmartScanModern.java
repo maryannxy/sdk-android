@@ -349,7 +349,7 @@ public class XYSmartScanModern extends XYSmartScan {
             Method shutdown = bluetoothAdapter.getClass().getMethod("shutdown");
             shutdown.invoke(bluetoothAdapter);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ex) {
-            XYBase.logException(ex);
+            XYBase.logException(TAG, ex);
         }
     }
 

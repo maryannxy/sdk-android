@@ -212,7 +212,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                 XYBase.logError(TAG, "getDevices failed due to lock:" + _devicesLock.getHoldCount());
             }
         } catch (InterruptedException ex) {
-            XYBase.logException(ex);
+            XYBase.logException(TAG, ex);
         }
     }
 
@@ -296,7 +296,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                 return null;
             }
         } catch (InterruptedException ex) {
-            XYBase.logException(ex);
+            XYBase.logException(TAG, ex);
             return null;
         }
 
@@ -311,7 +311,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                     return null;
                 }
             } catch (InterruptedException ex) {
-                XYBase.logException(ex);
+                XYBase.logException(TAG, ex);
                 return null;
             }
         }
@@ -454,7 +454,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                 return null;
             }
         } catch (InterruptedException ex) {
-            XYBase.logException(ex);
+            XYBase.logException(TAG, ex);
             return null;
         }
     }
@@ -667,7 +667,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
             Method refresh = gatt.getClass().getMethod("refresh");
             refresh.invoke(gatt);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ex) {
-            XYBase.logException(ex);
+            XYBase.logException(TAG, ex);
         }
     }
 
