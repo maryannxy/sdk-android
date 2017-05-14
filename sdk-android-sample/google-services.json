@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:969730376510:android:78a98798f00b5c75",
         "android_client_info": {
-          "package_name": "com.xyfindables.sdk"
+          "package_name": "com.xyfindables.sdk.sample"
         }
       },
       "oauth_client": [
@@ -18,7 +18,7 @@
           "client_id": "969730376510-g09s3ptuah32lnqbv80vp8c5mn6c1d76.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.xyfindables.sdk",
+            "package_name": "com.xyfindables.sdk.sample",
             "certificate_hash": "746ac94c75294f625081841d22b26fefb813ec45"
           }
         },
