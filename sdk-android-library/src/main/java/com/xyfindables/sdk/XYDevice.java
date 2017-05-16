@@ -20,6 +20,7 @@ import com.xyfindables.core.XYSemaphore;
 import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.action.XYDeviceAction;
 import com.xyfindables.sdk.action.XYDeviceActionGetBatteryLevel;
+import com.xyfindables.sdk.action.XYDeviceActionGetSIMId;
 import com.xyfindables.sdk.action.XYDeviceActionGetVersion;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButton;
 import com.xyfindables.sdk.bluetooth.ScanRecordLegacy;
@@ -128,6 +129,7 @@ public class XYDevice extends XYBase {
     };
 
     private String _id;
+    private String _simId;
 
     private int _batteryLevel = BATTERYLEVEL_NOTCHECKED;
     private String _firmwareVersion = null;
@@ -693,10 +695,10 @@ public class XYDevice extends XYBase {
                         _stayConnectedActive = false;
                     }
                     BluetoothGatt gatt = getGatt();
-                    //if (gatt != null) {
-                    //    gatt.disconnect();
-                    //    closeGatt();
-                    //}
+                    if (gatt != null) {
+                        gatt.disconnect();
+                        closeGatt();
+                    }
                 }
             }
         };
@@ -705,7 +707,7 @@ public class XYDevice extends XYBase {
     }
 
     public boolean isConnected() {
-        return (_connectionCount != 0);
+        return (_connectionCount > 0);
     }
 
     private void closeGatt() {
@@ -944,8 +946,6 @@ public class XYDevice extends XYBase {
                         }
                     }
                 }
-
-
         }
 
         if ((_currentScanResult21 == null) || ((_currentScanResult21.getRssi() == outOfRangeRssi) && (scanResult.getRssi() != outOfRangeRssi))) {
@@ -967,6 +967,33 @@ public class XYDevice extends XYBase {
 
     public String getId() {
         return _id;
+    }
+
+    public void checkSIMId(Context context) {
+        XYDeviceActionGetSIMId getSIMId = new XYDeviceActionGetSIMId(this) {
+            @Override
+            public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+                boolean result = super.statusChanged(status, gatt, characteristic, success);
+                if (status == STATUS_CHARACTERISTIC_READ) {
+                    if (success) {
+                        StringBuilder simId = new StringBuilder();
+                        for (byte b : this.value) {
+                            int i = (int)b;
+                            simId.append(String.valueOf((char)i));
+                            _simId = simId.toString();
+
+                        }
+                    }
+                }
+                return result;
+            }
+        };
+        getSIMId.start(context.getApplicationContext());
+    }
+
+    public String getSIMId(Context context) {
+        checkSIMId(context);
+        return _simId;
     }
 
     public static UUID getUUID(String id) {
@@ -1090,6 +1117,8 @@ public class XYDevice extends XYBase {
     public static UUID getUUID(Family family) {
         return family2uuid.get(family);
     }
+
+
 
     public void clearScanResults() {
         _currentScanResult18 = null;
