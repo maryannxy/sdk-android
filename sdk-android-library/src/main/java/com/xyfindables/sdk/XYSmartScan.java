@@ -483,7 +483,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                 return null;
             }
 
-            if (family == XYDevice.Family.XY2 || family == XYDevice.Family.XY3) {
+            if (family == XYDevice.Family.XY2 || family == XYDevice.Family.XY3 || family == XYDevice.Family.Gps) {
                 minor = minor & 0xfff0 | 0x0004;
             }
 
