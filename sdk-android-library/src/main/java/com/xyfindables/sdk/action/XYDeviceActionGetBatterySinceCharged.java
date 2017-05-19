@@ -14,13 +14,13 @@ import java.util.UUID;
  * Created by alex.mcelroy on 5/16/2017.
  */
 
-public abstract class XYDeviceActionGetBatteryService extends XYDeviceAction {
+public abstract class XYDeviceActionGetBatterySinceCharged extends XYDeviceAction {
 
-    private static final String TAG = XYDeviceActionGetBatteryService.class.getSimpleName();
+    private static final String TAG = XYDeviceActionGetBatterySinceCharged.class.getSimpleName();
 
     public int value;
 
-    public XYDeviceActionGetBatteryService(XYDevice device) {
+    public XYDeviceActionGetBatterySinceCharged(XYDevice device) {
         super(device);
         Log.v(TAG, TAG);
     }
@@ -32,7 +32,7 @@ public abstract class XYDeviceActionGetBatteryService extends XYDeviceAction {
 
     @Override
     public UUID getCharacteristicId() {
-        return XYDeviceCharacteristic.BatteryService;
+        return XYDeviceCharacteristic.BatterySinceCharged;
     }
 
     @Override
