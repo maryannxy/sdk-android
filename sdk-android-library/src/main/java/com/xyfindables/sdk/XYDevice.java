@@ -142,6 +142,7 @@ public class XYDevice extends XYBase {
     private ScanResult _currentScanResult21;
 
     private HashMap<String, Listener> _listeners = new HashMap<>();
+    private HashMap<String, GPSListener> _gpsListeners = new HashMap<>();
     private XYDeviceAction _currentAction;
 
     public XYDevice(String id) {
@@ -969,7 +970,7 @@ public class XYDevice extends XYBase {
         return _id;
     }
 
-    public void checkSIMId(Context context) {
+    public void checkSimId(Context context) {
         XYDeviceActionGetSIMId getSIMId = new XYDeviceActionGetSIMId(this) {
             @Override
             public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
@@ -980,9 +981,9 @@ public class XYDevice extends XYBase {
                         for (byte b : this.value) {
                             int i = (int)b;
                             simId.append(String.valueOf((char)i));
-                            _simId = simId.toString();
-
                         }
+                        _simId = simId.toString();
+                        reportSimIdRead();
                     }
                 }
                 return result;
@@ -991,8 +992,7 @@ public class XYDevice extends XYBase {
         getSIMId.start(context.getApplicationContext());
     }
 
-    public String getSIMId(Context context) {
-        checkSIMId(context);
+    public String getSimId() {
         return _simId;
     }
 
@@ -1163,6 +1163,18 @@ public class XYDevice extends XYBase {
         }
     }
 
+    public void addGpsListener(String key, GPSListener listener) {
+        synchronized (_gpsListeners) {
+            _gpsListeners.put(key, listener);
+        }
+    }
+
+    public void removeGpsListener(String key) {
+        synchronized (_gpsListeners) {
+            _gpsListeners.remove(key);
+        }
+    }
+
     public void removeListener(String key) {
         synchronized (_listeners) {
             _listeners.remove(key);
@@ -1254,6 +1266,15 @@ public class XYDevice extends XYBase {
         }
     }
 
+    private void reportSimIdRead() {
+        Log.v(TAG, "reportSimIdRead[" + getId() + "]");
+        synchronized (_gpsListeners) {
+            for (Map.Entry<String, GPSListener> entry : _gpsListeners.entrySet()) {
+                entry.getValue().simIdRead(this);
+            }
+        }
+    }
+
     public enum Family {
         Unknown,
         XY1,
@@ -1296,6 +1317,10 @@ public class XYDevice extends XYBase {
         void connectionStateChanged(final XYDevice device, int newState);
 
         void updated(final XYDevice device);
+    }
+
+    public interface GPSListener extends Listener{
+        void simIdRead(final XYDevice device);
     }
 
     // endregion =========== Listeners ============
