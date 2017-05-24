@@ -18,7 +18,7 @@ public abstract class XYDeviceActionGetBatterySinceCharged extends XYDeviceActio
 
     private static final String TAG = XYDeviceActionGetBatterySinceCharged.class.getSimpleName();
 
-    public int value;
+    public byte[] value;
 
     public XYDeviceActionGetBatterySinceCharged(XYDevice device) {
         super(device);
@@ -41,7 +41,7 @@ public abstract class XYDeviceActionGetBatterySinceCharged extends XYDeviceActio
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_READ:
-                value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                value = characteristic.getValue();
                 break;
             case STATUS_CHARACTERISTIC_FOUND:
                 gatt.readCharacteristic(characteristic);
