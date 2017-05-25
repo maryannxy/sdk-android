@@ -20,6 +20,7 @@ import com.xyfindables.core.XYSemaphore;
 import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.action.XYDeviceAction;
 import com.xyfindables.sdk.action.XYDeviceActionGetBatteryLevel;
+import com.xyfindables.sdk.action.XYDeviceActionGetBatterySinceCharged;
 import com.xyfindables.sdk.action.XYDeviceActionGetSIMId;
 import com.xyfindables.sdk.action.XYDeviceActionGetVersion;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButton;
@@ -132,6 +133,7 @@ public class XYDevice extends XYBase {
     private String _simId;
 
     private int _batteryLevel = BATTERYLEVEL_NOTCHECKED;
+    private long _timeSinceCharged = 0;
     private String _firmwareVersion = null;
     private String _beaconAddress = null;
 
@@ -777,6 +779,10 @@ public class XYDevice extends XYBase {
         return _batteryLevel;
     }
 
+    public long getTimeSinceCharged() {
+        return _timeSinceCharged;
+    }
+
     public void checkBatteryAndVersionInFuture(final Context context) {
         Log.v(TAG, "checkBatteryInFuture");
         if (_batteryLevel == BATTERYLEVEL_NOTCHECKED) {
@@ -820,6 +826,29 @@ public class XYDevice extends XYBase {
             };
             getBatteryLevel.start(context.getApplicationContext());
         }
+    }
+
+    public void checkTimeSinceCharged(final Context context) {
+        Log.v(TAG, "checkTimeSinceCharged");
+        XYDeviceActionGetBatterySinceCharged getTimeSinceCharged = new XYDeviceActionGetBatterySinceCharged(this) {
+            @Override
+            public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+                boolean result = super.statusChanged(status, gatt, characteristic, success);
+                if (status == STATUS_CHARACTERISTIC_READ) {
+                    if (success) {
+                        byte[] value = this.value;
+                        _timeSinceCharged = 0;
+                        for (int i = 0; i < 4; i++) {
+                            _timeSinceCharged <<= 8;
+                            _timeSinceCharged ^= (long) value[i] & 0xFF;
+                        }
+                        reportUpdated();
+                    }
+                }
+                return result;
+            }
+        };
+        getTimeSinceCharged.start(context.getApplicationContext());
     }
 
     public void checkVersion(final Context context) {
@@ -983,6 +1012,8 @@ public class XYDevice extends XYBase {
                             simId.append(String.valueOf((char)i));
                         }
                         _simId = simId.toString();
+                        reportSimIdRead();
+                    } else {
                         reportSimIdRead();
                     }
                 }
