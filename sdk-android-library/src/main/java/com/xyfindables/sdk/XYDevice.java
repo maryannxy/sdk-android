@@ -152,7 +152,7 @@ public class XYDevice extends XYBase {
         _missedPulsesForOutOfRange = XYSmartScan.instance.getMissedPulsesForOutOfRange();
         _instanceCount++;
         _id = normalizeId(id);
-        if (_id == null){
+        if (_id == null) {
             _id = id;
         }
     }
@@ -659,12 +659,11 @@ public class XYDevice extends XYBase {
         if (tx == 0 || rssi == 0 || rssi == outOfRangeRssi) {
             return -1;
         } else {
-            double ratio = rssi*1.0/tx;
+            double ratio = rssi * 1.0 / tx;
             if (ratio < 1.0) {
-                return Math.pow(ratio,10);
-            }
-            else {
-                return (0.89976)*Math.pow(ratio,7.7095) + 0.111;
+                return Math.pow(ratio, 10);
+            } else {
+                return (0.89976) * Math.pow(ratio, 7.7095) + 0.111;
             }
         }
     }
@@ -719,7 +718,7 @@ public class XYDevice extends XYBase {
             XYBase.logError(TAG, "Closing GATT with open connections!", false);
             _connectionCount = 0;
             BluetoothGatt gatt = getGatt();
-            if (gatt != null){
+            if (gatt != null) {
                 gatt.disconnect();
             }
         }
@@ -746,7 +745,7 @@ public class XYDevice extends XYBase {
     public static final int STATE_DISCONNECTING = BluetoothProfile.STATE_DISCONNECTING;
 
     private BluetoothManager getBluetoothManager(Context context) {
-        return (BluetoothManager)context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
+        return (BluetoothManager) context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
     }
 
     public BluetoothDevice getBluetoothDevice() {
@@ -807,7 +806,7 @@ public class XYDevice extends XYBase {
     public void checkBattery(final Context context) {
         checkBattery(context.getApplicationContext(), false);
     }
-    
+
     public void checkBattery(final Context context, boolean force) {
         Log.v(TAG, "checkBattery");
         if (_batteryLevel < BATTERYLEVEL_CHECKED || force == true) {
@@ -853,7 +852,7 @@ public class XYDevice extends XYBase {
 
     public void checkVersion(final Context context) {
         Log.v(TAG, "checkFirmware");
-        if (_firmwareVersion  == null) {
+        if (_firmwareVersion == null) {
             _firmwareVersion = "";
             XYDeviceActionGetVersion getVersion = new XYDeviceActionGetVersion(this) {
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
@@ -905,12 +904,12 @@ public class XYDevice extends XYBase {
 
     @TargetApi(21)
     private void pulseOutOfRange21() {
-            Log.v(TAG, "pulseOutOfRange21: " + _id);
-            ScanResult scanResult = _currentScanResult21;
-            if (scanResult != null) {
-                ScanResult newScanResult = new ScanResult(scanResult.getDevice(), scanResult.getScanRecord(), outOfRangeRssi, scanResult.getTimestampNanos());
-                pulse21(newScanResult);
-            }
+        Log.v(TAG, "pulseOutOfRange21: " + _id);
+        ScanResult scanResult = _currentScanResult21;
+        if (scanResult != null) {
+            ScanResult newScanResult = new ScanResult(scanResult.getDevice(), scanResult.getScanRecord(), outOfRangeRssi, scanResult.getTimestampNanos());
+            pulse21(newScanResult);
+        }
     }
 
     @TargetApi(18)
@@ -958,7 +957,7 @@ public class XYDevice extends XYBase {
 
     @TargetApi(21)
     public void pulse21(Object scanResultObject) {
-        android.bluetooth.le.ScanResult scanResult = (android.bluetooth.le.ScanResult)scanResultObject;
+        android.bluetooth.le.ScanResult scanResult = (android.bluetooth.le.ScanResult) scanResultObject;
         Log.v(TAG, "pulse21: " + _id + ":" + scanResult.getRssi());
         XYBase.logExtreme(TAG, "pulse21: " + _id + ":" + scanResult.getRssi());
         _scansMissed = 0;
@@ -969,13 +968,13 @@ public class XYDevice extends XYBase {
                 byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
 
 
-                    if (manufacturerData != null) {
-                        if ((manufacturerData[21] & 0x08) == 0x08) {
-                            handleButtonPulse();
-                            return;
-                        }
+                if (manufacturerData != null) {
+                    if ((manufacturerData[21] & 0x08) == 0x08) {
+                        handleButtonPulse();
+                        return;
                     }
                 }
+            }
         }
 
         if ((_currentScanResult21 == null) || ((_currentScanResult21.getRssi() == outOfRangeRssi) && (scanResult.getRssi() != outOfRangeRssi))) {
@@ -1004,18 +1003,18 @@ public class XYDevice extends XYBase {
             @Override
             public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
                 boolean result = super.statusChanged(status, gatt, characteristic, success);
-                if (status == STATUS_CHARACTERISTIC_READ) {
-                    if (success) {
+                if (success) {
+                    if (status == STATUS_CHARACTERISTIC_READ) {
                         StringBuilder simId = new StringBuilder();
                         for (byte b : this.value) {
-                            int i = (int)b;
-                            simId.append(String.valueOf((char)i));
+                            int i = (int) b;
+                            simId.append(String.valueOf((char) i));
                         }
                         _simId = simId.toString();
                         reportSimIdRead();
-                    } else {
-                        reportSimIdRead();
                     }
+                } else {
+                    XYBase.logExtreme(TAG, "Failed to read SIMId");
                 }
                 return result;
             }
@@ -1148,7 +1147,6 @@ public class XYDevice extends XYBase {
     public static UUID getUUID(Family family) {
         return family2uuid.get(family);
     }
-
 
 
     public void clearScanResults() {
@@ -1300,6 +1298,11 @@ public class XYDevice extends XYBase {
     private void reportSimIdRead() {
         Log.v(TAG, "reportSimIdRead[" + getId() + "]");
         synchronized (_gpsListeners) {
+            if(_gpsListeners.isEmpty()){
+                Log.e(TAG,"No GPS Listeners");
+            } else if (_gpsListeners.size() > 1) {
+                Log.e(TAG, "GPS Listeners is greater than 1");
+            }
             for (Map.Entry<String, GPSListener> entry : _gpsListeners.entrySet()) {
                 entry.getValue().simIdRead(this);
             }
@@ -1350,7 +1353,7 @@ public class XYDevice extends XYBase {
         void updated(final XYDevice device);
     }
 
-    public interface GPSListener extends Listener{
+    public interface GPSListener extends Listener {
         void simIdRead(final XYDevice device);
     }
 
