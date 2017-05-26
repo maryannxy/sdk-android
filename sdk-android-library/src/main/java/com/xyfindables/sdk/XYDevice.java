@@ -1005,16 +1005,18 @@ public class XYDevice extends XYBase {
                 boolean result = super.statusChanged(status, gatt, characteristic, success);
                 if (success) {
                     if (status == STATUS_CHARACTERISTIC_READ) {
+                        Log.v(TAG, "Building simId string");
                         StringBuilder simId = new StringBuilder();
                         for (byte b : this.value) {
                             int i = (int) b;
                             simId.append(String.valueOf((char) i));
                         }
                         _simId = simId.toString();
+                        Log.v(TAG, "simId = " + _simId);
                         reportSimIdRead();
                     }
                 } else {
-                    XYBase.logExtreme(TAG, "Failed to read SIMId");
+                    XYBase.logExtreme(TAG, "Failed to read simId");
                 }
                 return result;
             }
