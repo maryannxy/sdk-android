@@ -130,7 +130,6 @@ public class XYDevice extends XYBase {
     };
 
     private String _id;
-    private String _simId;
 
     private int _batteryLevel = BATTERYLEVEL_NOTCHECKED;
     private long _timeSinceCharged = 0;
@@ -144,7 +143,6 @@ public class XYDevice extends XYBase {
     private ScanResult _currentScanResult21;
 
     private HashMap<String, Listener> _listeners = new HashMap<>();
-    private HashMap<String, GPSListener> _gpsListeners = new HashMap<>();
     private XYDeviceAction _currentAction;
 
     public XYDevice(String id) {
@@ -600,13 +598,15 @@ public class XYDevice extends XYBase {
                     Log.i(TAG, "_bleAccess acquiring[" + getId() + "]:" + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
                     //stopping the scan and running the connect in ui thread required for 4.x
                     XYSmartScan.instance.pauseAutoScan(true);
-                    Handler handler = new Handler(context.getApplicationContext().getMainLooper());
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                if (_bleAccess.tryAcquire(10, TimeUnit.SECONDS)) {
-                                    Log.i(TAG, "_bleAccess acquired[" + getId() + "]: " + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
+
+                    try {
+                        if (_bleAccess.tryAcquire(10, TimeUnit.SECONDS)) {
+                            Log.i(TAG, "_bleAccess acquired[" + getId() + "]: " + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
+                            //stopping the scan and running the connect in ui thread required for 4.x
+                            Handler handler = new Handler(context.getApplicationContext().getMainLooper());
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
                                     final BluetoothDevice bluetoothDevice = getBluetoothDevice();
                                     if (bluetoothDevice == null) {
                                         XYBase.logError(TAG, "No Bluetooth Adapter!", false);
@@ -626,16 +626,17 @@ public class XYDevice extends XYBase {
                                             Log.v(TAG, "Connect:" + connected + " - gatt object = " + gatt.hashCode());
                                         }
                                     }
-                                } else {
-                                    XYBase.logError(TAG, "_bleAccess not acquired", false);
-                                    endActionFrame(_currentAction, false);
                                 }
-                            } catch (InterruptedException ex) {
-                                XYBase.logError(TAG, "not acquired: interrupted", false);
-                                endActionFrame(_currentAction, false);
-                            }
+                            });
+                        } else {
+                            XYBase.logError(TAG, "_bleAccess not acquired", false);
+                            endActionFrame(_currentAction, false);
                         }
-                    });
+                    } catch (InterruptedException ex) {
+                        XYBase.logError(TAG, "not acquired: interrupted", false);
+                        endActionFrame(_currentAction, false);
+                    }
+
                 } else {
                     Log.i(TAG, "GATT already connect[" + getId() + "]:" + _connectionCount);
                     List<BluetoothGattService> services = gatt.getServices();
@@ -998,36 +999,6 @@ public class XYDevice extends XYBase {
         return _id;
     }
 
-    public void checkSimId(Context context) {
-        XYDeviceActionGetSIMId getSIMId = new XYDeviceActionGetSIMId(this) {
-            @Override
-            public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                boolean result = super.statusChanged(status, gatt, characteristic, success);
-                if (success) {
-                    if (status == STATUS_CHARACTERISTIC_READ) {
-                        Log.v(TAG, "Building simId string");
-                        StringBuilder simId = new StringBuilder();
-                        for (byte b : this.value) {
-                            int i = (int) b;
-                            simId.append(String.valueOf((char) i));
-                        }
-                        _simId = simId.toString();
-                        Log.v(TAG, "simId = " + _simId);
-                        reportSimIdRead();
-                    }
-                } else {
-                    XYBase.logExtreme(TAG, "Failed to read simId");
-                }
-                return result;
-            }
-        };
-        getSIMId.start(context.getApplicationContext());
-    }
-
-    public String getSimId() {
-        return _simId;
-    }
-
     public static UUID getUUID(String id) {
         String[] parts = id.split(":");
         if (parts.length != 3) {
@@ -1194,18 +1165,6 @@ public class XYDevice extends XYBase {
         }
     }
 
-    public void addGpsListener(String key, GPSListener listener) {
-        synchronized (_gpsListeners) {
-            _gpsListeners.put(key, listener);
-        }
-    }
-
-    public void removeGpsListener(String key) {
-        synchronized (_gpsListeners) {
-            _gpsListeners.remove(key);
-        }
-    }
-
     public void removeListener(String key) {
         synchronized (_listeners) {
             _listeners.remove(key);
@@ -1297,20 +1256,6 @@ public class XYDevice extends XYBase {
         }
     }
 
-    private void reportSimIdRead() {
-        Log.v(TAG, "reportSimIdRead[" + getId() + "]");
-        synchronized (_gpsListeners) {
-            if(_gpsListeners.isEmpty()){
-                Log.e(TAG,"No GPS Listeners");
-            } else if (_gpsListeners.size() > 1) {
-                Log.e(TAG, "GPS Listeners is greater than 1");
-            }
-            for (Map.Entry<String, GPSListener> entry : _gpsListeners.entrySet()) {
-                entry.getValue().simIdRead(this);
-            }
-        }
-    }
-
     public enum Family {
         Unknown,
         XY1,
@@ -1354,10 +1299,5 @@ public class XYDevice extends XYBase {
 
         void updated(final XYDevice device);
     }
-
-    public interface GPSListener extends Listener {
-        void simIdRead(final XYDevice device);
-    }
-
     // endregion =========== Listeners ============
 }
