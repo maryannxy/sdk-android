@@ -132,7 +132,7 @@ public class XYDevice extends XYBase {
     private String _id;
 
     private int _batteryLevel = BATTERYLEVEL_NOTCHECKED;
-    private long _timeSinceCharged = 0;
+    private long _timeSinceCharged = -1;
     private String _firmwareVersion = null;
     private String _beaconAddress = null;
 
