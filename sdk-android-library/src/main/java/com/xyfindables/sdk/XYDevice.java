@@ -135,6 +135,7 @@ public class XYDevice extends XYBase {
     private long _timeSinceCharged = -1;
     private String _firmwareVersion = null;
     private String _beaconAddress = null;
+    private Boolean _simActivated = false;
 
     private int _scansMissed;
     private boolean _buttonRecentlyPressed = false;
@@ -612,24 +613,24 @@ public class XYDevice extends XYBase {
 //                            handler.post(new Runnable() {
 //                                @Override
 //                                public void run() {
-                                    final BluetoothDevice bluetoothDevice = getBluetoothDevice();
-                                    if (bluetoothDevice == null) {
-                                        XYBase.logError(TAG, "No Bluetooth Adapter!", false);
-                                        endActionFrame(_currentAction, false);
-                                        releaseBleLock();
-                                    } else {
-                                        BluetoothGatt gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
-                                        setGatt(gatt);
-                                        if (gatt == null) {
-                                            endActionFrame(_currentAction, false);
-                                            releaseBleLock();
-                                        } else {
-                                            boolean connected = gatt.connect();
-                                            Log.v(TAG, "Connect:" + connected);
-                                            gatt.discoverServices();
-                                            Log.v(TAG, "Connect:" + connected + " - gatt object = " + gatt.hashCode());
-                                        }
-                                    }
+                            final BluetoothDevice bluetoothDevice = getBluetoothDevice();
+                            if (bluetoothDevice == null) {
+                                XYBase.logError(TAG, "No Bluetooth Adapter!", false);
+                                endActionFrame(_currentAction, false);
+                                releaseBleLock();
+                            } else {
+                                BluetoothGatt gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
+                                setGatt(gatt);
+                                if (gatt == null) {
+                                    endActionFrame(_currentAction, false);
+                                    releaseBleLock();
+                                } else {
+                                    boolean connected = gatt.connect();
+                                    Log.v(TAG, "Connect:" + connected);
+                                    gatt.discoverServices();
+                                    Log.v(TAG, "Connect:" + connected + " - gatt object = " + gatt.hashCode());
+                                }
+                            }
 //                                }
 //                            });
                         } else {
@@ -1002,6 +1003,13 @@ public class XYDevice extends XYBase {
 
     public String getId() {
         return _id;
+    }
+
+    public Boolean getSimActivated() {
+        return _simActivated;
+    }
+    public void setSimActivated(Boolean active) {
+        _simActivated = active;
     }
 
     public static UUID getUUID(String id) {
