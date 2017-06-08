@@ -25,12 +25,12 @@ public abstract class XYDeviceActionDisconnect extends XYDeviceAction {
 
     @Override
     public UUID getServiceId() {
-        return XYDeviceService.BasicConfig;
+        return XYDeviceService.Control;
     }
 
     @Override
     public UUID getCharacteristicId() {
-        return XYDeviceCharacteristic.BasicConfigLock;
+        return XYDeviceCharacteristic.ControlDisconnect;
     }
 
     @Override
