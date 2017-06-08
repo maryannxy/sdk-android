@@ -232,6 +232,10 @@ public class XYDevice extends XYBase {
         _gatt = gatt;
     }
 
+    public void setStayConnected(boolean connect) {
+        _stayConnected = connect;
+    }
+
     public int getRssi() {
         if (XYSmartScan.instance.legacy()) {
             return getRssi18();

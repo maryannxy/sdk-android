@@ -276,12 +276,14 @@ public class XYSmartScanModern extends XYSmartScan {
         //Log.v(TAG, "processScanResult21");
         _processedPulseCount++;
         android.bluetooth.le.ScanRecord scanRecord = scanResult.getScanRecord();
-        byte[] manufacturerData = scanRecord.getManufacturerSpecificData(0x004c);
-        if (manufacturerData != null) {
-            if ((manufacturerData[0] == 0x02) && (manufacturerData[1] == 0x15)) {
-                String xyId = xyIdFromAppleBytes(manufacturerData);
-                if (xyId != null) {
-                    processScanResult21(xyId, scanResult);
+        if (scanRecord != null) {
+            byte[] manufacturerData = scanRecord.getManufacturerSpecificData(0x004c);
+            if (manufacturerData != null) {
+                if ((manufacturerData[0] == 0x02) && (manufacturerData[1] == 0x15)) {
+                    String xyId = xyIdFromAppleBytes(manufacturerData);
+                    if (xyId != null) {
+                        processScanResult21(xyId, scanResult);
+                    }
                 }
             }
         }
