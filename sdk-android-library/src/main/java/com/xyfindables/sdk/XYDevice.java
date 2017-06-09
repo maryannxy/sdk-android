@@ -146,7 +146,7 @@ public class XYDevice extends XYBase {
     private HashMap<String, Listener> _listeners = new HashMap<>();
     private XYDeviceAction _currentAction;
 
-    public XYDevice(String id) {
+    XYDevice(String id) {
         super();
         _missedPulsesForOutOfRange = XYSmartScan.instance.getMissedPulsesForOutOfRange();
         _instanceCount++;
