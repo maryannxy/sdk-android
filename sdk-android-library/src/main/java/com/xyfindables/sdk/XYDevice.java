@@ -606,7 +606,7 @@ public class XYDevice extends XYBase {
                     try {
                         Log.i(TAG, "_bleAccess acquiring[" + getId() + "]:" + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
                         if (_bleAccess.tryAcquire(10, TimeUnit.SECONDS)) {
-                            Log.i(TAG, "Arie-_bleAccess acquired[" + getId() + "]: " + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
+                            Log.i(TAG, "_bleAccess acquired[" + getId() + "]: " + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
                             // below is commented out to prevent release being called in UI
                             //stopping the scan and running the connect in ui thread required for 4.x
 //                            Handler handler = new Handler(context.getApplicationContext().getMainLooper());
@@ -684,7 +684,7 @@ public class XYDevice extends XYBase {
     }
 
     private void pushConnection() {
-        Log.v(TAG, "Arie-pushConnection[" + _connectionCount + "->" + (_connectionCount + 1) + "]:" + getId());
+        Log.v(TAG, "pushConnection[" + _connectionCount + "->" + (_connectionCount + 1) + "]:" + getId());
         _connectionCount++;
     }
 
@@ -692,7 +692,7 @@ public class XYDevice extends XYBase {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                Log.v(TAG, "Arie-popConnection[" + _connectionCount + "->" + (_connectionCount - 1) + "]:" + getId());
+                Log.v(TAG, "popConnection[" + _connectionCount + "->" + (_connectionCount - 1) + "]:" + getId());
                 _connectionCount--;
                 if (_connectionCount < 0) {
                     XYBase.logError(TAG, "Negative Connection Count:" + getId(), false);
@@ -720,9 +720,9 @@ public class XYDevice extends XYBase {
     }
 
     private void closeGatt() {
-        Log.v(TAG, "Arie-closeGatt");
+        Log.v(TAG, "closeGatt");
         if (_connectionCount > 0) {
-            XYBase.logError(TAG, "Arie-Closing GATT with open connections!", false);
+            XYBase.logError(TAG, "Closing GATT with open connections!", false);
             _connectionCount = 0;
             BluetoothGatt gatt = getGatt();
             if (gatt != null) {
@@ -730,12 +730,12 @@ public class XYDevice extends XYBase {
             }
         }
         if (_connectionCount < 0) {
-            XYBase.logError(TAG, "Arie-Closing GATT with negative connections!", false);
+            XYBase.logError(TAG, "Closing GATT with negative connections!", false);
             _connectionCount = 0;
         }
         BluetoothGatt gatt = getGatt();
         if (gatt == null) {
-            XYBase.logError(TAG, "Arie-Closing Null Gatt", false);
+            XYBase.logError(TAG, "Closing Null Gatt", false);
             releaseBleLock();
         } else {
             gatt.close();
