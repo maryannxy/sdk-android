@@ -46,4 +46,6 @@ public class XYDeviceCharacteristic {
     public static final UUID SensorThreshold = UUID.fromString("F014DD03-0439-3000-E001-00001001FFFF");
     public static final UUID SensorInactive = UUID.fromString("F014DD04-0439-3000-E001-00001001FFFF");
     public static final UUID SensorMovementCount = UUID.fromString("F014DD05-0439-3000-E001-00001001FFFF");
+
+    public static final UUID GpsProfile = UUID.fromString("2abbAA00-0439-3000-E001-00001001FFFF");
 }
