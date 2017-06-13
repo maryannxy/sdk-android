@@ -798,6 +798,7 @@ public class XYDevice extends XYBase {
                 public void run() {
                     checkBattery(context.getApplicationContext());
                     checkVersion(context.getApplicationContext());
+                    checkTimeSinceCharged(context.getApplicationContext());
                 }
             };
 

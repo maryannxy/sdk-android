@@ -32,8 +32,8 @@ public class XYDeviceCharacteristic {
     public static final UUID BasicConfigMajor = UUID.fromString("F014EE05-0439-3000-E001-00001001FFFF");
     public static final UUID BasicConfigMinor = UUID.fromString("F014EE06-0439-3000-E001-00001001FFFF");
     public static final UUID BasicConfigInterval = UUID.fromString("F014EE07-0439-3000-E001-00001001FFFF");
-    public static final UUID BasicConfigOtaWrite = UUID.fromString("0xF014EE0904393000E00100001001FFFF");
-    public static final UUID BasicConfigReboot = UUID.fromString("0xF014EE0A04393000E00100001001FFFF");
+    public static final UUID BasicConfigOtaWrite = UUID.fromString("F014EE09-0439-3000-E001-00001001FFFF");
+    public static final UUID BasicConfigReboot = UUID.fromString("F014EE0A-0439-3000-E001-00001001FFFF");
 
     public static final UUID ExtendedControlSIMStatus = UUID.fromString("2ADDAA00-0439-3000-E001-00001001FFFF");
     public static final UUID ExtendedControlLED = UUID.fromString("2AAAAA00-0439-3000-E001-00001001FFFF");

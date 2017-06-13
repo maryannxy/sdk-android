@@ -46,7 +46,7 @@ public abstract class XYDeviceActionGetVersion extends XYDeviceAction {
                 if (versionBytes.length > 0) {
                     value = "";
                     for (byte b : versionBytes) {
-                        value += String.format("%02x:", b);
+                        value += String.format("%02x", b);
                     }
                 }
                 break;
