@@ -14,6 +14,7 @@ import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.xyfindables.core.XYSemaphore;
@@ -23,6 +24,7 @@ import com.xyfindables.sdk.action.XYDeviceActionGetBatteryLevel;
 import com.xyfindables.sdk.action.XYDeviceActionGetBatterySinceCharged;
 import com.xyfindables.sdk.action.XYDeviceActionGetSIMId;
 import com.xyfindables.sdk.action.XYDeviceActionGetVersion;
+import com.xyfindables.sdk.action.XYDeviceActionOtaWrite;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButton;
 import com.xyfindables.sdk.bluetooth.ScanRecordLegacy;
 import com.xyfindables.sdk.bluetooth.ScanResultLegacy;
@@ -66,6 +68,7 @@ public class XYDevice extends XYBase {
     private int _connectionCount = 0;
     private boolean _stayConnected = false;
     private boolean _stayConnectedActive = false;
+    private boolean _isInOtaMode = false;
 
     private static int _missedPulsesForOutOfRange = 20;
     private static int _actionTimeout = 60000;
@@ -84,7 +87,7 @@ public class XYDevice extends XYBase {
     private long _firstDetectedTime = 0;
 
     static {
-        _threadPool = new ThreadPoolExecutor(10, 50, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+        _threadPool = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
         _instanceCount = 0;
     }
 
@@ -287,6 +290,14 @@ public class XYDevice extends XYBase {
 
     private XYDeviceActionSubscribeButton _subscribeButton = null;
 
+    public void otaMode(boolean value) {
+        Log.v(TAG, "testOta-otaMode set: " + value);
+        if (value == _isInOtaMode) {
+            return;
+        }
+        _isInOtaMode = value;
+    }
+
     public void stayConnected(final Context context, boolean value) {
         Log.v(TAG, "stayConnected:" + value + ":" + getId());
         if (value == _stayConnected) {
@@ -365,6 +376,7 @@ public class XYDevice extends XYBase {
 
         _actionFrameTimer = new Timer("ActionTimer");
         _actionFrameTimer.schedule(timerTask, _actionTimeout);
+        _actionTimeout = 60000;
     }
 
     private void cancelActionTimer() {
@@ -377,55 +389,70 @@ public class XYDevice extends XYBase {
     }
 
     private void releaseBleLock() {
-        Log.i(TAG, "Arie-_bleAccess released[" + getId() + "]: " + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
+        Log.i(TAG, "_bleAccess released[" + getId() + "]: " + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
         _bleAccess.release();
     }
 
     private int startActionFrame(XYDeviceAction action) {
-        Log.v(TAG, "startActionFrame");
+        Log.v(TAG, "testOta-startActionFrame");
         pushConnection();
         action.statusChanged(XYDeviceAction.STATUS_QUEUED, null, null, true);
         try {
             if (!_actionLock.tryAcquire(_actionTimeout, TimeUnit.MILLISECONDS)) {
-                XYBase.logError(TAG, "_actionLock:failed:" + action.getClass().getSuperclass().getSimpleName(), false);
+                XYBase.logError(TAG, "testOta-_actionLock:failed:" + action.getClass().getSuperclass().getSimpleName(), false);
                 return 0;
             } else {
                 Log.v(TAG, "_actionLock[" + getId() + "]:acquired:" + action.getClass().getSuperclass().getSimpleName());
                 action.statusChanged(XYDeviceAction.STATUS_STARTED, null, null, true);
+                Log.i(TAG, "testOta-startActionFrame-action started");
                 _currentAction = action;
                 startActionTimer();
                 return action.hashCode();
             }
         } catch (InterruptedException ex) {
-            XYBase.logError(TAG, "Service Load Semaphore interrupted");
+            XYBase.logError(TAG, "testOta-Service Load Semaphore interrupted");
             return 0;
         }
     }
 
     private void endActionFrame(XYDeviceAction action, boolean success) {
-        Log.v(TAG, "endActionFrame");
-        if (action == null) {
-            XYBase.logError(TAG, "Ending Null Action", false);
-            return;
-        }
-        if (success) {
-            _actionSuccessCount++;
-        } else {
-            _actionFailCount++;
-        }
-        cancelActionTimer();
-        action.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, success);
-        _currentAction = null;
-        Log.v(TAG, "_actionLock[" + getId() + "]:release:" + action.getClass().getSuperclass().getSimpleName());
-        _actionLock.release();
-        XYSmartScan.instance.pauseAutoScan(false);
-        popConnection();
+            Log.v(TAG, "testOta-endActionFrame: success = " + success + ": otaMode = " + _isInOtaMode);
+            if (action == null) {
+                XYBase.logError(TAG, "Ending Null Action", false);
+                return;
+            }
+            if (success) {
+                _actionSuccessCount++;
+            } else {
+                _actionFailCount++;
+            }
+            cancelActionTimer();
+            action.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, success);
+            _currentAction = null;
+            Log.v(TAG, "_actionLock[" + getId() + "]:release:" + action.getClass().getSuperclass().getSimpleName());
+            _actionLock.release();
+            XYSmartScan.instance.pauseAutoScan(false);
+            popConnection();
+            if (_isInOtaMode) {
+                startActionFrame(action);
+                Log.i(TAG, "testOta-isInOtaMode-startActionFrame again, otaMode = " + _isInOtaMode);
+            }
     }
 
+    // pass timeout param if need be, otherwise default at 60000 MS
     public AsyncTask queueAction(final Context context, final XYDeviceAction action) {
+        queueAction(context, action, 0);
+        return null;
+    }
+
+    public AsyncTask queueAction(final Context context, final XYDeviceAction action, final int timeout) {
 
         if (getBluetoothDevice() == null) {
             return null;
+        }
+
+        if (timeout > 0) {
+            _actionTimeout = timeout;
         }
 
         _actionQueueCount++;
@@ -634,7 +661,7 @@ public class XYDevice extends XYBase {
 //                                }
 //                            });
                         } else {
-                            XYBase.logError(TAG, "Arie-_bleAccess not acquired", false);
+                            XYBase.logError(TAG, "_bleAccess not acquired", false);
                             endActionFrame(_currentAction, false);
                         }
                     } catch (InterruptedException ex) {
@@ -649,7 +676,7 @@ public class XYDevice extends XYBase {
                     if (services.size() > 0) {
                         callback.onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS);
                     } else {
-                        Log.v(TAG, "gatt already connect, serivceSize = 0 - gat object = " + gatt.hashCode());
+                        Log.v(TAG, "gatt already connect, serivceSize = 0 - gatt object = " + gatt.hashCode());
                     }
                 }
                 return null;
@@ -825,7 +852,7 @@ public class XYDevice extends XYBase {
                     if (status == STATUS_CHARACTERISTIC_READ) {
                         if (success) {
                             _batteryLevel = this.value;
-                            reportUpdated();
+                            reportDetected();
                         }
                     }
                     return result;
@@ -849,7 +876,7 @@ public class XYDevice extends XYBase {
                             _timeSinceCharged <<= 8;
                             _timeSinceCharged ^= (long) value[i] & 0xFF;
                         }
-                        reportUpdated();
+                        reportDetected();
                     }
                 }
                 return result;
@@ -868,7 +895,7 @@ public class XYDevice extends XYBase {
                     if (status == STATUS_CHARACTERISTIC_READ) {
                         if (success) {
                             _firmwareVersion = this.value;
-                            reportUpdated();
+                            reportDetected();
                         }
                     }
                     return result;
@@ -1164,11 +1191,11 @@ public class XYDevice extends XYBase {
     }
 
     public void scanComplete() {
-        _scansMissed++;
-        if (_scansMissed > _missedPulsesForOutOfRange) {
-            _scansMissed = -999999999; //this is here to prevent double exits
-            pulseOutOfRange();
-        }
+//        _scansMissed++;
+//        if (_scansMissed > _missedPulsesForOutOfRange) {
+//            _scansMissed = -999999999; //this is here to prevent double exits
+//            pulseOutOfRange();
+//        }
     }
 
     // region =========== Listeners ============

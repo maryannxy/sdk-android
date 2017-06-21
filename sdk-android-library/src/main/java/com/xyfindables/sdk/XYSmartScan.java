@@ -404,7 +404,6 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
 
         network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-
         if (gps_enabled && network_enabled) {
             Log.w(TAG, "returning 3");
             return true;

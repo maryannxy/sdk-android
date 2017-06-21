@@ -232,7 +232,7 @@ public class XYSmartScanModern extends XYSmartScan {
                         scanner.stopScan(scanCallback);
                         scanner.flushPendingScanResults(scanCallback);
                     }
-                } catch(IllegalStateException ex) {
+                } catch(IllegalStateException | NullPointerException ex) {
                     //this happens if the bt adapter was turned off after previous check
                     //effectivly, we treat it as no scan results found
                 }

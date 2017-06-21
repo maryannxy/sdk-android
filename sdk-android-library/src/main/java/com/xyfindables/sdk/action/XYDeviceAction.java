@@ -35,7 +35,7 @@ public abstract class XYDeviceAction extends XYBase {
     public static final int STATUS_CHARACTERISTIC_UPDATED = 7;
     public static final int STATUS_COMPLETED = 8;
 
-    private static ThreadPoolExecutor _threadPool;
+    protected static ThreadPoolExecutor _threadPool;
 
     public XYDeviceAction(XYDevice device) {
         _device = device;
