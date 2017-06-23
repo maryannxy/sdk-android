@@ -79,7 +79,6 @@ public abstract class XYDeviceActionOtaWrite extends XYDeviceAction {
             case STATUS_CHARACTERISTIC_WRITE:
                 counter++;
                 if (counter < value.length) {
-//                    Log.i(TAG, "testOta-write: " + counter + " : " + (value[counter][0] << 24 | (value[counter][1] & 0xFF) << 16 | (value[counter][2] & 0xFF) << 8 | (value[counter][3] & 0xFF)) + " : " + success);
                     Log.i(TAG, "testOta-write: " + counter + " : " + success);
                     characteristic.setValue(value[counter]);
                     gatt.writeCharacteristic(characteristic);

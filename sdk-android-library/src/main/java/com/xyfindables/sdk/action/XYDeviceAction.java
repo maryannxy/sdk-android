@@ -59,7 +59,7 @@ public abstract class XYDeviceAction extends XYBase {
             @Override
             protected Void doInBackground(Void... params) {
                 Log.i(TAG, "running...");
-                _device.queueAction(context.getApplicationContext(), XYDeviceAction.this);
+                _device.queueAction(context.getApplicationContext(), XYDeviceAction.this, 50000);
                 return null;
             }
         };

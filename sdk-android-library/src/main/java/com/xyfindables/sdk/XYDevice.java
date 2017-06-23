@@ -357,7 +357,9 @@ public class XYDevice extends XYBase {
     private Timer _actionFrameTimer = null;
 
     private void startActionTimer() {
-
+        if (_isInOtaMode) {
+            return;
+        }
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -416,28 +418,23 @@ public class XYDevice extends XYBase {
     }
 
     private void endActionFrame(XYDeviceAction action, boolean success) {
-            Log.v(TAG, "testOta-endActionFrame: success = " + success + ": otaMode = " + _isInOtaMode);
-            if (action == null) {
-                XYBase.logError(TAG, "Ending Null Action", false);
-                return;
-            }
-            if (success) {
-                _actionSuccessCount++;
-            } else {
-                _actionFailCount++;
-            }
-            cancelActionTimer();
-            action.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, success);
-            _currentAction = null;
-            Log.v(TAG, "_actionLock[" + getId() + "]:release:" + action.getClass().getSuperclass().getSimpleName());
-            _actionLock.release();
-            XYSmartScan.instance.pauseAutoScan(false);
-            popConnection();
-            if (_isInOtaMode) {
-                _isInOtaMode = false;
-                startActionFrame(action);
-                Log.i(TAG, "testOta-isInOtaMode-startActionFrame again, otaMode = " + _isInOtaMode);
-            }
+        Log.v(TAG, "testOta-endActionFrame: success = " + success + ": otaMode = " + _isInOtaMode);
+        if (action == null) {
+            XYBase.logError(TAG, "Ending Null Action", false);
+            return;
+        }
+        if (success) {
+            _actionSuccessCount++;
+        } else {
+            _actionFailCount++;
+        }
+        cancelActionTimer();
+        action.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, success);
+        _currentAction = null;
+        Log.v(TAG, "_actionLock[" + getId() + "]:release:" + action.getClass().getSuperclass().getSimpleName());
+        _actionLock.release();
+        XYSmartScan.instance.pauseAutoScan(false);
+        popConnection();
     }
 
     // pass timeout param if need be, otherwise default at 60000 MS
@@ -1003,7 +1000,6 @@ public class XYDevice extends XYBase {
             if (scanRecord != null) {
                 byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
 
-
                 if (manufacturerData != null) {
                     if ((manufacturerData[21] & 0x08) == 0x08) {
                         handleButtonPulse();
@@ -1037,6 +1033,7 @@ public class XYDevice extends XYBase {
     public Boolean getSimActivated() {
         return _simActivated;
     }
+
     public void setSimActivated(Boolean active) {
         _simActivated = active;
     }
@@ -1192,11 +1189,11 @@ public class XYDevice extends XYBase {
     }
 
     public void scanComplete() {
-//        _scansMissed++;
-//        if (_scansMissed > _missedPulsesForOutOfRange) {
-//            _scansMissed = -999999999; //this is here to prevent double exits
-//            pulseOutOfRange();
-//        }
+        _scansMissed++;
+        if (_scansMissed > _missedPulsesForOutOfRange) {
+            _scansMissed = -999999999; //this is here to prevent double exits
+            pulseOutOfRange();
+        }
     }
 
     // region =========== Listeners ============
