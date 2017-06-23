@@ -43,6 +43,7 @@ public abstract class XYDeviceActionUnlock extends XYDeviceAction {
         Log.v(TAG, "statusChanged:" + status + ":" + success);
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
+
             case STATUS_CHARACTERISTIC_FOUND:
                 characteristic.setValue(value);
                 gatt.writeCharacteristic(characteristic);

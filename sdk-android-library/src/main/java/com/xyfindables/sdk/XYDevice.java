@@ -479,7 +479,7 @@ public class XYDevice extends XYBase {
                         if (_currentAction != null) {
                             Log.i(TAG, "Action:" + _currentAction.getClass().getSuperclass().getSimpleName());
                         }
-                        Log.i(TAG, "onConnectionStateChange:" + status + ":" + newState + ":" + getId());
+                        Log.i(TAG, "testAlex-onConnectionStateChange:" + status + ":" + newState + ":" + getId());
                         switch (newState) {
                             case BluetoothGatt.STATE_CONNECTED:
                                 Log.i(TAG, "onConnectionStateChange:Connected: " + getId());
