@@ -75,17 +75,15 @@ public abstract class XYDeviceActionOtaWrite extends XYDeviceAction {
                 characteristic.setValue(value[counter]);
                 gatt.writeCharacteristic(characteristic);
                 Log.i(TAG, "testOta-value = " + bytesToHex(value[counter]));
-                counter++;
                 break;
             case STATUS_CHARACTERISTIC_WRITE:
+                counter++;
                 if (counter < value.length) {
 //                    Log.i(TAG, "testOta-write: " + counter + " : " + (value[counter][0] << 24 | (value[counter][1] & 0xFF) << 16 | (value[counter][2] & 0xFF) << 8 | (value[counter][3] & 0xFF)) + " : " + success);
                     Log.i(TAG, "testOta-write: " + counter + " : " + success);
-
                     characteristic.setValue(value[counter]);
                     gatt.writeCharacteristic(characteristic);
                     Log.i(TAG, "testOta-value = " + bytesToHex(value[counter]));
-                    counter++;
                     result = false;
                 } else {
                     Log.i(TAG, "testOta-write-FINISHED: " + success + ": otaMode set to false");
@@ -96,7 +94,9 @@ public abstract class XYDeviceActionOtaWrite extends XYDeviceAction {
         }
         return result;
     }
+
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+
     public static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
         for (int j = 0; j < bytes.length; j++) {

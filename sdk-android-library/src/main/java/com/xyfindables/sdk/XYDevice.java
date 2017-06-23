@@ -434,6 +434,7 @@ public class XYDevice extends XYBase {
             XYSmartScan.instance.pauseAutoScan(false);
             popConnection();
             if (_isInOtaMode) {
+                _isInOtaMode = false;
                 startActionFrame(action);
                 Log.i(TAG, "testOta-isInOtaMode-startActionFrame again, otaMode = " + _isInOtaMode);
             }
