@@ -357,12 +357,12 @@ public class XYDevice extends XYBase {
     private Timer _actionFrameTimer = null;
 
     private void startActionTimer() {
-        if (_isInOtaMode) {
-            return;
-        }
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
+                if (_isInOtaMode) {
+                    return;
+                }
                 if (_currentAction == null) {
                     XYBase.logError(TAG, "Null Action timed out", false);
                 } else {
