@@ -2,6 +2,8 @@ package com.xyfindables.sdk.action;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.content.Context;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import com.xyfindables.sdk.XYDeviceCharacteristic;
@@ -20,12 +22,29 @@ public abstract class XYDeviceActionUnlock extends XYDeviceAction {
 
     private static final String TAG = XYDeviceActionUnlock.class.getSimpleName();
 
+    private XYDevice device;
+
     public byte[] value;
 
     public XYDeviceActionUnlock(XYDevice device, byte[] value) {
         super(device);
         this.value = value.clone();
+        this.device = device;
         Log.v(TAG, TAG);
+    }
+
+    @Override
+    public void start(final Context context) {
+        Log.i(TAG, this.getClass().getSuperclass().getSimpleName() + ":starting...");
+        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                Log.i(TAG, "running...");
+                device.queueAction(context.getApplicationContext(), XYDeviceActionUnlock.this, 20000);
+                return null;
+            }
+        };
+        asyncTask.executeOnExecutor(_threadPool);
     }
 
     @Override

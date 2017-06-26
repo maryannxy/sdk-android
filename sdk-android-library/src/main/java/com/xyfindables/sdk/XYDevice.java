@@ -975,7 +975,10 @@ public class XYDevice extends XYBase {
             _currentScanResult18 = null;
             reportExited();
         } else if (scanResult.getRssi() != outOfRangeRssi) {
-            _currentScanResult18 = scanResult;
+            // & 0x02 is used to check if the advertiseFlag is connectable
+            if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
+                _currentScanResult18 = scanResult;
+            }
             reportDetected();
             if (!_stayConnectedActive && _stayConnected) {
                 _stayConnectedActive = true;
@@ -1017,7 +1020,10 @@ public class XYDevice extends XYBase {
             _currentScanResult21 = null;
             reportExited();
         } else if (scanResult.getRssi() != outOfRangeRssi) {
-            _currentScanResult21 = scanResult;
+            // & 0x02 is used to check if the advertiseFlag is connectable
+            if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
+                _currentScanResult21 = scanResult;
+            }
             reportDetected();
         }
 
