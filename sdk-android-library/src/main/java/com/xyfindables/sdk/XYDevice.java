@@ -477,7 +477,7 @@ public class XYDevice extends XYBase {
                         if (_currentAction != null) {
                             Log.i(TAG, "Action:" + _currentAction.getClass().getSuperclass().getSimpleName());
                         }
-                        Log.i(TAG, "testAlex-onConnectionStateChange:" + status + ":" + newState + ":" + getId());
+                        Log.i(TAG, "onConnectionStateChange:" + status + ":" + newState + ":" + getId());
                         switch (newState) {
                             case BluetoothGatt.STATE_CONNECTED:
                                 Log.i(TAG, "onConnectionStateChange:Connected: " + getId());
@@ -669,6 +669,17 @@ public class XYDevice extends XYBase {
 
                 } else {
                     BluetoothGatt gatt = getGatt();
+                    setGatt(gatt);
+                    if (gatt == null) {
+                        Log.i(TAG, "gatt is null");
+                        endActionFrame(_currentAction, false);
+                        releaseBleLock();
+                    } else {
+                        boolean connected = gatt.connect();
+                        Log.v(TAG, "Connect:" + connected);
+                        gatt.discoverServices();
+                        Log.v(TAG, "Connect:" + connected + " - gatt object = " + gatt.hashCode());
+                    }
                     Log.i(TAG, "GATT already connect[" + getId() + "]:" + _connectionCount);
                     List<BluetoothGattService> services = gatt.getServices();
                     if (services.size() > 0) {
@@ -794,7 +805,6 @@ public class XYDevice extends XYBase {
     }
 
     public void pulseOutOfRange() {
-        Log.v(TAG, "pulseOutOfRange");
         if (_stayConnectedActive) {
             _stayConnectedActive = false;
             popConnection();
@@ -815,7 +825,7 @@ public class XYDevice extends XYBase {
     }
 
     public void checkBatteryAndVersionInFuture(final Context context) {
-        Log.v(TAG, "checkBatteryInFuture");
+//        Log.v(TAG, "checkBatteryInFuture");
         if (_batteryLevel == BATTERYLEVEL_NOTCHECKED) {
             _batteryLevel = BATTERYLEVEL_SCHEDULED;
             final TimerTask checkTimerTask = new TimerTask() {
@@ -937,7 +947,7 @@ public class XYDevice extends XYBase {
 
     @TargetApi(21)
     private void pulseOutOfRange21() {
-        Log.v(TAG, "pulseOutOfRange21: " + _id);
+//        Log.v(TAG, "pulseOutOfRange21: " + _id);
         ScanResult scanResult = _currentScanResult21;
         if (scanResult != null) {
             ScanResult newScanResult = new ScanResult(scanResult.getDevice(), scanResult.getScanRecord(), outOfRangeRssi, scanResult.getTimestampNanos());
@@ -976,9 +986,10 @@ public class XYDevice extends XYBase {
             reportExited();
         } else if (scanResult.getRssi() != outOfRangeRssi) {
             // & 0x02 is used to check if the advertiseFlag is connectable
-            if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
-                _currentScanResult18 = scanResult;
-            }
+//            if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
+//                _currentScanResult18 = scanResult;
+//            }
+            _currentScanResult18 = scanResult;
             reportDetected();
             if (!_stayConnectedActive && _stayConnected) {
                 _stayConnectedActive = true;
@@ -994,7 +1005,6 @@ public class XYDevice extends XYBase {
     @TargetApi(21)
     public void pulse21(Object scanResultObject) {
         android.bluetooth.le.ScanResult scanResult = (android.bluetooth.le.ScanResult) scanResultObject;
-        Log.v(TAG, "pulse21: " + _id + ":" + scanResult.getRssi());
         XYBase.logExtreme(TAG, "pulse21: " + _id + ":" + scanResult.getRssi());
         _scansMissed = 0;
 
@@ -1021,9 +1031,10 @@ public class XYDevice extends XYBase {
             reportExited();
         } else if (scanResult.getRssi() != outOfRangeRssi) {
             // & 0x02 is used to check if the advertiseFlag is connectable
-            if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
-                _currentScanResult21 = scanResult;
-            }
+//            if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
+//                _currentScanResult21 = scanResult;
+//            }
+            _currentScanResult21 = scanResult;
             reportDetected();
         }
 
@@ -1247,7 +1258,7 @@ public class XYDevice extends XYBase {
     }
 
     private void handleButtonPulse() {
-        Log.v(TAG, "handleButtonPulse");
+//        Log.v(TAG, "handleButtonPulse");
         if (_buttonRecentlyPressed) {
             reportButtonRecentlyPressed(ButtonType.Single);
         } else {
@@ -1266,7 +1277,7 @@ public class XYDevice extends XYBase {
     }
 
     private void reportButtonPressed(ButtonType buttonType) {
-        Log.v(TAG, "reportButtonPressed");
+//        Log.v(TAG, "reportButtonPressed");
         synchronized (_listeners) {
             for (Map.Entry<String, Listener> entry : _listeners.entrySet()) {
                 entry.getValue().buttonPressed(this, buttonType);
@@ -1275,7 +1286,7 @@ public class XYDevice extends XYBase {
     }
 
     private void reportButtonRecentlyPressed(ButtonType buttonType) {
-        Log.v(TAG, "reportButtonRecentlyPressed");
+//        Log.v(TAG, "reportButtonRecentlyPressed");
         synchronized (_listeners) {
             for (Map.Entry<String, Listener> entry : _listeners.entrySet()) {
                 entry.getValue().buttonRecentlyPressed(this, buttonType);
