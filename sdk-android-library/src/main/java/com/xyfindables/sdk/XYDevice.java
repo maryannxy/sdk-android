@@ -647,6 +647,7 @@ public class XYDevice extends XYBase {
                                 BluetoothGatt gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
                                 setGatt(gatt);
                                 if (gatt == null) {
+                                    Log.i(TAG, "gatt is null");
                                     endActionFrame(_currentAction, false);
                                     releaseBleLock();
                                 } else {
@@ -772,6 +773,7 @@ public class XYDevice extends XYBase {
         BluetoothGatt gatt = getGatt();
         if (gatt == null) {
             XYBase.logError(TAG, "Closing Null Gatt", false);
+            Log.e(TAG, "Closing Null Gatt");
             releaseBleLock();
         } else {
             gatt.close();
@@ -1206,7 +1208,11 @@ public class XYDevice extends XYBase {
     }
 
     public void scanComplete() {
-        _scansMissed++;
+        if (isConnected()) {
+            _scansMissed = 0;
+        } else {
+            _scansMissed++;
+        }
         if (_scansMissed > _missedPulsesForOutOfRange) {
             _scansMissed = -999999999; //this is here to prevent double exits
             pulseOutOfRange();
