@@ -780,7 +780,8 @@ public class XYDevice extends XYBase {
         }
         BluetoothGatt gatt = getGatt();
         if (gatt == null) {
-            XYBase.logError(TAG, "Closing Null Gatt", false);
+            // no false because debug should throw runtime
+            XYBase.logError(TAG, "Closing Null Gatt");
             Log.e(TAG, "Closing Null Gatt");
             releaseBleLock();
         } else {
