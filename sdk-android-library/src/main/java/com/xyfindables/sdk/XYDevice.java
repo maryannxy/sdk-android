@@ -443,6 +443,11 @@ public class XYDevice extends XYBase {
         return null;
     }
 
+    public final void runOnUiThread(final Context context, Runnable action) {
+        Handler handler = new Handler(context.getMainLooper());
+        handler.post(action);
+    }
+
     public AsyncTask queueAction(final Context context, final XYDeviceAction action, final int timeout) {
 
         if (getBluetoothDevice() == null) {
@@ -644,18 +649,23 @@ public class XYDevice extends XYBase {
                                 endActionFrame(_currentAction, false);
                                 releaseBleLock();
                             } else {
-                                BluetoothGatt gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
-                                setGatt(gatt);
-                                if (gatt == null) {
-                                    Log.i(TAG, "gatt is null");
-                                    endActionFrame(_currentAction, false);
-                                    releaseBleLock();
-                                } else {
-                                    boolean connected = gatt.connect();
-                                    Log.v(TAG, "Connect:" + connected);
-                                    gatt.discoverServices();
-                                    Log.v(TAG, "Connect:" + connected + " - gatt object = " + gatt.hashCode());
-                                }
+                                runOnUiThread(context, new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        BluetoothGatt gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
+                                        setGatt(gatt);
+                                        if (gatt == null) {
+                                            Log.i(TAG, "gatt is null");
+                                            endActionFrame(_currentAction, false);
+                                            releaseBleLock();
+                                        } else {
+                                            boolean connected = gatt.connect();
+                                            Log.v(TAG, "Connect:" + connected);
+                                            gatt.discoverServices();
+                                            Log.v(TAG, "Connect:" + connected + " - gatt object = " + gatt.hashCode());
+                                        }
+                                    }
+                                });
                             }
 //                                }
 //                            });
@@ -721,7 +731,7 @@ public class XYDevice extends XYBase {
     }
 
     private void pushConnection() {
-        Log.v(TAG, "pushConnection[" + _connectionCount + "->" + (_connectionCount + 1) + "]:" + getId());
+        Log.v(TAG, "arie-pushConnection[" + _connectionCount + "->" + (_connectionCount + 1) + "]:" + getId());
         _connectionCount++;
     }
 
@@ -729,7 +739,7 @@ public class XYDevice extends XYBase {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                Log.v(TAG, "popConnection[" + _connectionCount + "->" + (_connectionCount - 1) + "]:" + getId());
+                Log.v(TAG, "arie-popConnection[" + _connectionCount + "->" + (_connectionCount - 1) + "]:" + getId());
                 _connectionCount--;
                 if (_connectionCount < 0) {
                     XYBase.logError(TAG, "Negative Connection Count:" + getId(), false);
@@ -757,7 +767,7 @@ public class XYDevice extends XYBase {
     }
 
     private void closeGatt() {
-        Log.v(TAG, "closeGatt");
+        Log.v(TAG, "arie-closeGatt");
         if (_connectionCount > 0) {
             XYBase.logError(TAG, "Closing GATT with open connections!", false);
             _connectionCount = 0;
