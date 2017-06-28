@@ -492,15 +492,18 @@ public class XYDevice extends XYBase {
                                 break;
                             case BluetoothGatt.STATE_DISCONNECTED: {
                                 if (status == 133) {
+                                    /* Ignoring the 133 seems to keep the connection alive.
+                                    No idea why, but it does on Android 5.1 */
                                     XYBase.logError(TAG, "Disconnect with 133", false);
                                     //XYSmartScan.instance.refresh(gatt);
-                                }
-                                Log.i(TAG, "onConnectionStateChange:Disconnected: " + getId());
-                                XYDeviceAction currentAction = _currentAction;
-                                closeGatt();
-                                if (currentAction != null) {
-                                    XYBase.logError(TAG, "statusChanged:disconnected", false);
-                                    endActionFrame(currentAction, false);
+                                } else {
+                                    Log.i(TAG, "onConnectionStateChange:Disconnected: " + getId());
+                                    XYDeviceAction currentAction = _currentAction;
+                                    closeGatt();
+                                    if (currentAction != null) {
+                                        XYBase.logError(TAG, "statusChanged:disconnected", false);
+                                        endActionFrame(currentAction, false);
+                                    }
                                 }
                                 break;
                             }
@@ -649,23 +652,18 @@ public class XYDevice extends XYBase {
                                 endActionFrame(_currentAction, false);
                                 releaseBleLock();
                             } else {
-                                runOnUiThread(context, new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        BluetoothGatt gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
-                                        setGatt(gatt);
-                                        if (gatt == null) {
-                                            Log.i(TAG, "gatt is null");
-                                            endActionFrame(_currentAction, false);
-                                            releaseBleLock();
-                                        } else {
-                                            boolean connected = gatt.connect();
-                                            Log.v(TAG, "Connect:" + connected);
-                                            gatt.discoverServices();
-                                            Log.v(TAG, "Connect:" + connected + " - gatt object = " + gatt.hashCode());
-                                        }
-                                    }
-                                });
+                                BluetoothGatt gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
+                                setGatt(gatt);
+                                if (gatt == null) {
+                                    Log.i(TAG, "gatt is null");
+                                    endActionFrame(_currentAction, false);
+                                    releaseBleLock();
+                                } else {
+                                    boolean connected = gatt.connect();
+                                    Log.v(TAG, "Connect:" + connected);
+                                    gatt.discoverServices();
+                                    Log.v(TAG, "Connect:" + connected + " - gatt object = " + gatt.hashCode());
+                                }
                             }
 //                                }
 //                            });
