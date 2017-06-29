@@ -451,6 +451,7 @@ public class XYDevice extends XYBase {
     public AsyncTask queueAction(final Context context, final XYDeviceAction action, final int timeout) {
 
         if (getBluetoothDevice() == null) {
+            Log.e(TAG, "null BlueToothDevice");
             return null;
         }
 
