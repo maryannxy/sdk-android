@@ -295,6 +295,11 @@ public class XYDevice extends XYBase {
         if (value == _isInOtaMode) {
             return;
         }
+        if (value) {
+            XYSmartScan.instance.pauseAutoScan(true);
+        } else {
+            XYSmartScan.instance.pauseAutoScan(false);
+        }
         _isInOtaMode = value;
     }
 
