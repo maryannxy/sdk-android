@@ -689,13 +689,13 @@ public class XYDevice extends XYBase {
                         gatt.discoverServices();
                         Log.v(TAG, "Connect:" + connected + " - gatt object = " + gatt.hashCode());
                     }
-                    Log.i(TAG, "GATT already connect[" + getId() + "]:" + _connectionCount);
-                    List<BluetoothGattService> services = gatt.getServices();
-                    if (services.size() > 0) {
-                        callback.onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS);
-                    } else {
-                        Log.v(TAG, "gatt already connect, serivceSize = 0 - gatt object = " + gatt.hashCode());
-                    }
+//                    Log.i(TAG, "GATT already connect[" + getId() + "]:" + _connectionCount);
+//                    List<BluetoothGattService> services = gatt.getServices();
+//                    if (services.size() > 0) {
+//                        callback.onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS);
+//                    } else {
+//                        Log.v(TAG, "gatt already connect, serivceSize = 0 - gatt object = " + gatt.hashCode());
+//                    }
                 }
                 return null;
             }
