@@ -401,6 +401,9 @@ public class XYDevice extends XYBase {
     }
 
     private int startActionFrame(XYDeviceAction action) {
+        if (_isInOtaMode && action != _currentAction) {
+            return 0;
+        }
         Log.v(TAG, "testOta-startActionFrame");
         pushConnection();
         action.statusChanged(XYDeviceAction.STATUS_QUEUED, null, null, true);
@@ -420,6 +423,16 @@ public class XYDevice extends XYBase {
             XYBase.logError(TAG, "testOta-Service Load Semaphore interrupted");
             return 0;
         }
+    }
+
+    public void endOta() {
+        otaMode(false);
+        if (_currentAction != null) {
+            _currentAction.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, false);
+        }
+        _currentAction = null;
+        _actionLock.release();
+        popConnection();
     }
 
     private void endActionFrame(XYDeviceAction action, boolean success) {
@@ -456,7 +469,7 @@ public class XYDevice extends XYBase {
     public AsyncTask queueAction(final Context context, final XYDeviceAction action, final int timeout) {
 
         if (getBluetoothDevice() == null) {
-            Log.e(TAG, "null BlueToothDevice");
+//            Log.e(TAG, "testScanResult-null BlueToothDevice");
             return null;
         }
 
@@ -481,7 +494,7 @@ public class XYDevice extends XYBase {
                     return null;
                 }
 
-                final BluetoothGattCallback callback = new BluetoothGattCallback() {
+                BluetoothGattCallback callback = new BluetoothGattCallback() {
                     @Override
                     public void onConnectionStateChange(final BluetoothGatt gatt, int status, int newState) {
                         super.onConnectionStateChange(gatt, status, newState);
@@ -652,7 +665,7 @@ public class XYDevice extends XYBase {
 //                            handler.post(new Runnable() {
 //                                @Override
 //                                public void run() {
-                            final BluetoothDevice bluetoothDevice = getBluetoothDevice();
+                            BluetoothDevice bluetoothDevice = getBluetoothDevice();
                             if (bluetoothDevice == null) {
                                 XYBase.logError(TAG, "No Bluetooth Adapter!", false);
                                 endActionFrame(_currentAction, false);
@@ -817,7 +830,6 @@ public class XYDevice extends XYBase {
         if (bluetoothDevice == null) {
             Log.i(TAG, "getBluetoothDevice - None Found");
         }
-
         return bluetoothDevice;
     }
 
@@ -1003,10 +1015,16 @@ public class XYDevice extends XYBase {
             reportExited();
         } else if (scanResult.getRssi() != outOfRangeRssi) {
             // & 0x02 is used to check if the advertiseFlag is connectable
-//            if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
-//                _currentScanResult18 = scanResult;
-//            }
-            _currentScanResult18 = scanResult;
+            if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
+                if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
+//                    byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
+//                    if (manufacturerData != null) {
+//                        if ((manufacturerData[21] & 0x04) == 0x04) {
+                    _currentScanResult18 = scanResult;
+//                        }
+//                    }
+                }
+            }
             reportDetected();
             if (!_stayConnectedActive && _stayConnected) {
                 _stayConnectedActive = true;
@@ -1022,6 +1040,7 @@ public class XYDevice extends XYBase {
     @TargetApi(21)
     public void pulse21(Object scanResultObject) {
         android.bluetooth.le.ScanResult scanResult = (android.bluetooth.le.ScanResult) scanResultObject;
+//        Log.i(TAG, "testScanResult- " + scanResult);
         XYBase.logExtreme(TAG, "pulse21: " + _id + ":" + scanResult.getRssi());
         _scansMissed = 0;
 
@@ -1045,13 +1064,22 @@ public class XYDevice extends XYBase {
             reportDetected();
         } else if ((_currentScanResult21.getRssi() != outOfRangeRssi) && (scanResult.getRssi() == outOfRangeRssi)) {
             _currentScanResult21 = null;
+//            Log.i(TAG, "testScanResult-exit event causing _currentScanResult = null " + getId());
             reportExited();
         } else if (scanResult.getRssi() != outOfRangeRssi) {
-            // & 0x02 is used to check if the advertiseFlag is connectable
-//            if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
-//                _currentScanResult21 = scanResult;
-//            }
-            _currentScanResult21 = scanResult;
+//            & 0x02 is used to check if the advertiseFlag is connectable
+            if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
+                if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
+//                    byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
+//                    if (manufacturerData != null) {
+//                        if ((manufacturerData[21] & 0x04) == 0x04) {
+                    _currentScanResult21 = scanResult;
+//                        }
+//                    }
+                }
+            } else {
+                _currentScanResult21 = scanResult;
+            }
             reportDetected();
         }
 
