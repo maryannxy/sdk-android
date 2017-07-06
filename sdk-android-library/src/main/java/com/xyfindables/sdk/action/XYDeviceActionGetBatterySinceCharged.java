@@ -44,7 +44,9 @@ public abstract class XYDeviceActionGetBatterySinceCharged extends XYDeviceActio
                 value = characteristic.getValue();
                 break;
             case STATUS_CHARACTERISTIC_FOUND:
-                gatt.readCharacteristic(characteristic);
+                if (!gatt.readCharacteristic(characteristic)) {
+                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                }
                 break;
         }
         return result;

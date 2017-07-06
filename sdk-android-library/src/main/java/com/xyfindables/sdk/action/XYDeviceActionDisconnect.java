@@ -40,7 +40,9 @@ public abstract class XYDeviceActionDisconnect extends XYDeviceAction {
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND: {
                 characteristic.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                gatt.writeCharacteristic(characteristic);
+                if (!gatt.writeCharacteristic(characteristic)) {
+                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                }
                 break;
             }
         }

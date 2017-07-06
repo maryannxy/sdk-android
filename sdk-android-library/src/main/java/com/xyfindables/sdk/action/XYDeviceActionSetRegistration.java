@@ -47,7 +47,9 @@ public abstract class XYDeviceActionSetRegistration extends XYDeviceAction {
                 } else {
                     characteristic.setValue(0x00, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                 }
-                gatt.writeCharacteristic(characteristic);
+                if (!gatt.writeCharacteristic(characteristic)) {
+                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                }
                 break;
             }
         }

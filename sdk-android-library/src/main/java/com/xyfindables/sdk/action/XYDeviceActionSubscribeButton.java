@@ -70,10 +70,11 @@ public abstract class XYDeviceActionSubscribeButton extends XYDeviceAction {
                     _gatt = gatt;
                     _characteristic = characteristic;
                 }
-
                 BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG);
                 descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                gatt.writeDescriptor(descriptor);
+                if (!gatt.writeDescriptor(descriptor)) {
+                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                }
                 return true;
             }
         }

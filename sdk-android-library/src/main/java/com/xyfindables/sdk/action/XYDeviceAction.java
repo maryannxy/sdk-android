@@ -2,8 +2,11 @@ package com.xyfindables.sdk.action;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.content.Context;
+import android.media.audiofx.AudioEffect;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.xyfindables.core.XYBase;
@@ -59,7 +62,7 @@ public abstract class XYDeviceAction extends XYBase {
             @Override
             protected Void doInBackground(Void... params) {
                 Log.i(TAG, "running...");
-                _device.queueAction(context.getApplicationContext(), XYDeviceAction.this, 50000);
+                _device.queueAction(context.getApplicationContext(), XYDeviceAction.this);
                 return null;
             }
         };
@@ -70,6 +73,43 @@ public abstract class XYDeviceAction extends XYBase {
     abstract public UUID getCharacteristicId();
 
     public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+        if (!success) {
+            XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":statusChanged(failed):" + status, false);
+        }
+        switch (status) {
+            case STATUS_QUEUED:
+                break;
+            case STATUS_STARTED:
+                break;
+            case STATUS_SERVICE_FOUND:
+                if (!_servicesDiscovered) {
+                    _servicesDiscovered = true;
+                } else {
+                    XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Second Service Found Received", false);
+                }
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+
+                if (!_characteristicFound) {
+                    _characteristicFound = true;
+                } else {
+                    XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Second Characteristic Found Received", false);
+                }
+                break;
+            case STATUS_CHARACTERISTIC_READ:
+                return true;
+            case STATUS_CHARACTERISTIC_WRITE:
+                return true;
+            case STATUS_COMPLETED:
+                if (!success) {
+                    XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Completed with Failure", false);
+                }
+                break;
+        }
+        return false;
+    }
+
+    public boolean statusChanged(BluetoothGattDescriptor descriptor ,int status, BluetoothGatt gatt, boolean success) {
         if (!success) {
             XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":statusChanged(failed):" + status, false);
         }

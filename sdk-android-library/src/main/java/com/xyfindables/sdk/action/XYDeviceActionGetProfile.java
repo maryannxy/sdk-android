@@ -43,7 +43,9 @@ public class XYDeviceActionGetProfile extends XYDeviceAction {
                 value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                 break;
             case STATUS_CHARACTERISTIC_FOUND:
-                gatt.readCharacteristic(characteristic);
+                if (!gatt.readCharacteristic(characteristic)) {
+                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                }
                 break;
         }
         return result;
