@@ -1051,6 +1051,8 @@ public class XYDevice extends XYBase {
 //                        }
 //                    }
                 }
+            } else {
+                _currentScanResult18 = scanResult;
             }
             reportDetected();
             if (!_stayConnectedActive && _stayConnected) {
@@ -1092,7 +1094,6 @@ public class XYDevice extends XYBase {
             reportDetected();
         } else if ((_currentScanResult21.getRssi() != outOfRangeRssi) && (scanResult.getRssi() == outOfRangeRssi)) {
             _currentScanResult21 = null;
-//            Log.i(TAG, "testScanResult-exit event causing _currentScanResult = null " + getId());
             reportExited();
         } else if (scanResult.getRssi() != outOfRangeRssi) {
 //            & 0x02 is used to check if the advertiseFlag is connectable
