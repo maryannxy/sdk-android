@@ -401,7 +401,7 @@ public class XYDevice extends XYBase {
     }
 
     private void releaseActionLock() {
-        Log.i(TAG, " _actionLock" + _actionLock.availablePermits());
+        Log.i(TAG, "_actionLock" + _actionLock.availablePermits());
         _actionLock.release();
     }
 
@@ -712,7 +712,6 @@ public class XYDevice extends XYBase {
                         XYBase.logError(TAG, "not acquired: interrupted", false);
                         endActionFrame(_currentAction, false);
                     }
-
                 } else {
                     BluetoothGatt gatt = getGatt();
                     if (gatt == null) {
@@ -722,19 +721,16 @@ public class XYDevice extends XYBase {
                     } else {
                         boolean connected = gatt.connect();
                         Log.v(TAG, "Connect:" + connected + " " + _currentAction.getClass().getSuperclass().getSimpleName());
-                        if (!gatt.discoverServices()) {
-                            Log.v(TAG, "FAIL discoverServices");
-                            endActionFrame(_currentAction, false);
+                        List<BluetoothGattService> services = gatt.getServices();
+                        if (services.size() > 0) {
+                            callback.onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS);
+                        } else {
+                            if (!gatt.discoverServices()) {
+                                Log.v(TAG, "FAIL discoverServices");
+                                endActionFrame(_currentAction, false);
+                            }
                         }
-                        Log.v(TAG, "Connect:" + connected + " - gatt object = " + gatt.hashCode());
                     }
-//                    Log.i(TAG, "GATT already connect[" + getId() + "]:" + _connectionCount);
-//                    List<BluetoothGattService> services = gatt.getServices();
-//                    if (services.size() > 0) {
-//                        callback.onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS);
-//                    } else {
-//                        Log.v(TAG, "gatt already connect, serivceSize = 0 - gatt object = " + gatt.hashCode());
-//                    }
                 }
                 return null;
             }
