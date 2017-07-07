@@ -1110,6 +1110,10 @@ public class XYDevice extends XYBase {
                 _currentScanResult21 = scanResult;
             }
             reportDetected();
+            if (!_stayConnectedActive && _stayConnected) {
+                _stayConnectedActive = true;
+                pushConnection();
+            }
         }
 
         if (_beaconAddress == null) {
