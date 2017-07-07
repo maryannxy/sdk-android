@@ -419,13 +419,13 @@ public class XYDevice extends XYBase {
 //            } else {
 
         // acquireUninterruptibly is used so lock is not release when thread expires (due to calling discoverServices)
-            _actionLock.acquireUninterruptibly();
-                Log.v(TAG, "_actionLock[" + getId() + "]:acquired:" + action.getClass().getSuperclass().getSimpleName());
-                action.statusChanged(XYDeviceAction.STATUS_STARTED, null, null, true);
-                Log.i(TAG, "startActionFrame-action started" + " " + action.getClass().getSuperclass().getSimpleName());
-                _currentAction = action;
-                startActionTimer();
-                return action.hashCode();
+        _actionLock.acquireUninterruptibly();
+        Log.v(TAG, "_actionLock[" + getId() + "]:acquired:" + action.getClass().getSuperclass().getSimpleName());
+        action.statusChanged(XYDeviceAction.STATUS_STARTED, null, null, true);
+        Log.i(TAG, "startActionFrame-action started" + " " + action.getClass().getSuperclass().getSimpleName());
+        _currentAction = action;
+        startActionTimer();
+        return action.hashCode();
 //            }
 //        } catch (InterruptedException ex) {
 //            XYBase.logError(TAG, "Service Load Semaphore interrupted");
@@ -1083,6 +1083,7 @@ public class XYDevice extends XYBase {
                     }
                 }
             }
+
         }
 
         if ((_currentScanResult21 == null) || ((_currentScanResult21.getRssi() == outOfRangeRssi) && (scanResult.getRssi() != outOfRangeRssi))) {
@@ -1096,15 +1097,13 @@ public class XYDevice extends XYBase {
         } else if (scanResult.getRssi() != outOfRangeRssi) {
 //            & 0x02 is used to check if the advertiseFlag is connectable
             if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
-                if (getId().equals("xy:gps:9474f7c6-47a4-11e6-beb8-9e71128cae77.264.260")) {
-                    if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
+                if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
 //                    byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
 //                    if (manufacturerData != null) {
 //                        if ((manufacturerData[21] & 0x04) == 0x04) {
-                        _currentScanResult21 = scanResult;
+                    _currentScanResult21 = scanResult;
 //                        }
 //                    }
-                    }
                 }
             } else {
                 _currentScanResult21 = scanResult;
@@ -1306,7 +1305,7 @@ public class XYDevice extends XYBase {
     }
 
     private void reportEntered() {
-        Log.i(TAG, "reportEntered");
+//        Log.i(TAG, "reportEntered");
         _enterCount++;
         synchronized (_listeners) {
             for (Map.Entry<String, Listener> entry : _listeners.entrySet()) {
@@ -1316,7 +1315,7 @@ public class XYDevice extends XYBase {
     }
 
     private void reportExited() {
-        Log.i(TAG, "reportExit");
+//        Log.i(TAG, "reportExit");
         _exitCount++;
         synchronized (_listeners) {
             for (Map.Entry<String, Listener> entry : _listeners.entrySet()) {
@@ -1326,7 +1325,7 @@ public class XYDevice extends XYBase {
     }
 
     private void reportDetected() {
-        Log.i(TAG, "reportDetected");
+//        Log.i(TAG, "reportDetected");
         if (_firstDetectedTime == 0) {
             _firstDetectedTime = System.currentTimeMillis();
         }
