@@ -37,6 +37,7 @@ public class XYDeviceCharacteristic {
 
     public static final UUID ExtendedControlSIMStatus = UUID.fromString("2ADDAA00-0439-3000-E001-00001001FFFF");
     public static final UUID ExtendedControlLED = UUID.fromString("2AAAAA00-0439-3000-E001-00001001FFFF");
+    public static final UUID ExtendedControlSelfTest = UUID.fromString("2a77AA00-0439-3000-E001-00001001FFFF");
 
     public static final UUID BatteryLevel = UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb");
     public static final UUID BatterySinceCharged = UUID.fromString("00002a20-0000-1000-8000-00805f9b34fb");
