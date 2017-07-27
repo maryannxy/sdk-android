@@ -1,3 +1,4 @@
+
 package com.xyfindables.sdk.action;
 
 import android.bluetooth.BluetoothGatt;
@@ -14,13 +15,13 @@ import java.util.UUID;
  * Created by alex.mcelroy on 7/21/2017.
  */
 
-public class XYDeviceActionSelfTest extends XYDeviceAction{
+public class XYDeviceActionGetSelfTest extends XYDeviceAction {
 
-    private static final String TAG = com.xyfindables.sdk.action.XYDeviceActionSelfTest.class.getSimpleName();
+    private static final String TAG = com.xyfindables.sdk.action.XYDeviceActionGetSelfTest.class.getSimpleName();
 
     public byte[] value;
 
-    public XYDeviceActionSelfTest(XYDevice device) {
+    public XYDeviceActionGetSelfTest(XYDevice device) {
         super(device);
         Log.v(TAG, TAG);
     }
@@ -51,6 +52,4 @@ public class XYDeviceActionSelfTest extends XYDeviceAction{
         }
         return result;
     }
-
-
 }
