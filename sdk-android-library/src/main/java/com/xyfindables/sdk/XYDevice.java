@@ -796,7 +796,7 @@ public class XYDevice extends XYBase {
         }
     }
 
-    private void popConnection() {
+    public void popConnection() {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
