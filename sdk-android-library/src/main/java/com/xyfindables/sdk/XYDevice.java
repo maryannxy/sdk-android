@@ -299,7 +299,6 @@ public class XYDevice extends XYBase {
 
     public void didReboot(Context context) {
         endOta();
-        _connectionCount = 0;
         stayConnected(context, true);
         XYDeviceActionSetRegistration setRegistration = new XYDeviceActionSetRegistration(this, true) {
             @Override
@@ -588,7 +587,7 @@ public class XYDevice extends XYBase {
 
                     @Override
                     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-                       
+
                         super.onServicesDiscovered(gatt, status);
                         XYDeviceAction currentAction = _currentAction;
                         if (currentAction != null) {
