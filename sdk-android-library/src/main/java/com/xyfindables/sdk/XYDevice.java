@@ -44,6 +44,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static android.bluetooth.BluetoothDevice.TRANSPORT_AUTO;
 import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 
 /**
@@ -486,7 +487,7 @@ public class XYDevice extends XYBase {
                         if (getBluetoothDevice() == null) {
                             Log.e(TAG, "connTest-null BlueToothDevice-try again- count " + i);
                             try {
-                                Thread.sleep(3000);
+                                Thread.sleep(5000);
                             } catch (InterruptedException ex) {
                                 Log.e(TAG, ex.toString());
                             }
@@ -495,16 +496,19 @@ public class XYDevice extends XYBase {
                             break;
                         }
                     }
+//                    if (getBluetoothDevice() == null) {
+//                        return null;
+//                    }
                 }
 
-                Log.i(TAG, "connect[" + getId() + "]:" + _connectionCount);
+                Log.i(TAG, "connTest-connect[" + getId() + "]:" + _connectionCount);
                 int actionLock = startActionFrame(action);
                 if (actionLock == 0) {
                     XYDeviceAction currentAction = _currentAction;
                     closeGatt();
                     Log.v(TAG, "connTest-closeGatt2");
                     if (currentAction != null) {
-                        XYBase.logError(TAG, "statusChanged:failed to get actionLock", false);
+                        XYBase.logError(TAG, "connTest-statusChanged:failed to get actionLock", false);
                         endActionFrame(currentAction, false);
                     }
                     return null;
@@ -514,10 +518,10 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onConnectionStateChange(final BluetoothGatt gatt, int status, int newState) {
                         super.onConnectionStateChange(gatt, status, newState);
-                        if (_currentAction != null) {
-                            Log.i(TAG, "connTest-Action:" + _currentAction.getClass().getSuperclass().getSimpleName());
-                        }
                         Log.i(TAG, "connTest-onConnectionStateChange:" + status + ":" + newState + ":" + getId());
+                        if (_currentAction != null) {
+                            Log.i(TAG, "connTest-currentAction != null:" + _currentAction.getClass().getSuperclass().getSimpleName());
+                        }
                         switch (newState) {
                             case BluetoothGatt.STATE_CONNECTED:
                                 Log.v(TAG, "connTest-STATE_CONNECTED status is " + status);
@@ -590,6 +594,7 @@ public class XYDevice extends XYBase {
 
                         super.onServicesDiscovered(gatt, status);
                         XYDeviceAction currentAction = _currentAction;
+                        Log.v(TAG, "connTest-onServicesDiscovered");
                         if (currentAction != null) {
                             if (status == BluetoothGatt.GATT_SUCCESS) {
                                 Log.i(TAG, "onServicesDiscovered:" + status);
@@ -732,9 +737,9 @@ public class XYDevice extends XYBase {
 //                                    _connectIntent = true;
                                     Log.v(TAG, "connTest-_connectIntent = " + _connectIntent);
                                     boolean connected = gatt.connect();
-                                    Log.v(TAG, "Connect:" + connected + " " + _currentAction.getClass().getSuperclass().getSimpleName());
+                                    Log.v(TAG, "connTest-Connect:" + connected + " " + _currentAction.getClass().getSuperclass().getSimpleName());
                                     gatt.discoverServices();
-                                    Log.v(TAG, "Connect:" + connected + " - gatt object = " + gatt.hashCode());
+                                    Log.v(TAG, "connTest-Connect:" + connected + " - gatt object = " + gatt.hashCode());
                                 }
                             }
 //                                }
@@ -758,13 +763,13 @@ public class XYDevice extends XYBase {
                     } else {
                         // should already be connected but just in case
                         boolean connected = gatt.connect();
-                        Log.v(TAG, "Connect:" + connected);
+                        Log.v(TAG, "connTest-Connect:" + connected);
                         List<BluetoothGattService> services = gatt.getServices();
                         if (services.size() > 0) {
                             callback.onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS);
                         } else {
                             if (!gatt.discoverServices()) {
-                                Log.v(TAG, "FAIL discoverServices");
+                                Log.v(TAG, "connTest-FAIL discoverServices");
                                 endActionFrame(_currentAction, false);
                             }
                         }
@@ -1447,7 +1452,7 @@ public class XYDevice extends XYBase {
     private void handleButtonPulse() {
 //        Log.v(TAG, "handleButtonPulse");
         if (_buttonRecentlyPressed) {
-            reportButtonRecentlyPressed(ButtonType.Single);
+            //reportButtonRecentlyPressed(ButtonType.Single);
         } else {
             reportButtonPressed(ButtonType.Single);
             _buttonRecentlyPressed = true;
