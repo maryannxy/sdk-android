@@ -487,7 +487,7 @@ public class XYDevice extends XYBase {
                         if (getBluetoothDevice() == null) {
                             Log.e(TAG, "connTest-null BlueToothDevice-try again- count " + i);
                             try {
-                                Thread.sleep(5000);
+                                Thread.sleep(3000);
                             } catch (InterruptedException ex) {
                                 Log.e(TAG, ex.toString());
                             }
@@ -1068,7 +1068,7 @@ public class XYDevice extends XYBase {
                 if (manufacturerData != null) {
                     if ((manufacturerData[21] & 0x08) == 0x08) {
                         handleButtonPulse();
-                        if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
+                        if (getFamily() == Family.Gps && (scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
                             _currentScanResult18 = scanResult;
                             reportEntered();
                             reportDetected();
@@ -1136,7 +1136,7 @@ public class XYDevice extends XYBase {
                 if (manufacturerData != null) {
                     if ((manufacturerData[21] & 0x08) == 0x08) {
                         handleButtonPulse();
-                        if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
+                        if (getFamily() == Family.Gps && (scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
                             _currentScanResult21 = scanResult;
                             reportEntered();
                             reportDetected();

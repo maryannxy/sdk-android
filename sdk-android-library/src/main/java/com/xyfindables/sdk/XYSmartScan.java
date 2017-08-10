@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -398,7 +399,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         boolean gps_enabled, network_enabled;
 
         if (lm == null)
-            lm = (LocationManager) context.getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+            lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
