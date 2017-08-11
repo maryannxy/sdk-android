@@ -1068,7 +1068,7 @@ public class XYDevice extends XYBase {
                 if (manufacturerData != null) {
                     if ((manufacturerData[21] & 0x08) == 0x08) {
                         handleButtonPulse();
-                        if (getFamily() == Family.Gps && (scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
+                        if (getFamily() == Family.Gps) {
                             _currentScanResult18 = scanResult;
                             reportEntered();
                             reportDetected();
@@ -1092,21 +1092,7 @@ public class XYDevice extends XYBase {
             _currentScanResult18 = null;
             reportExited();
         } else if (scanResult.getRssi() != outOfRangeRssi) {
-            // & 0x02 is used to check if the advertiseFlag is connectable
-            if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
-                if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
-//                    byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
-//                    if (manufacturerData != null) {
-//                        if ((manufacturerData[21] & 0x04) == 0x04) {
-                    _currentScanResult18 = scanResult;
-//                        }
-//                    }
-                } else {
-                    Log.v(TAG, "connTest-TEST");
-                }
-            } else {
-                _currentScanResult18 = scanResult;
-            }
+            _currentScanResult18 = scanResult;
             reportDetected();
             if (!_stayConnectedActive && _stayConnected) {
                 _stayConnectedActive = true;
@@ -1114,7 +1100,6 @@ public class XYDevice extends XYBase {
                 pushConnection();
             }
         }
-
         if (_beaconAddress == null) {
             _beaconAddress = scanResult.getDevice().getAddress();
         }
@@ -1136,7 +1121,7 @@ public class XYDevice extends XYBase {
                 if (manufacturerData != null) {
                     if ((manufacturerData[21] & 0x08) == 0x08) {
                         handleButtonPulse();
-                        if (getFamily() == Family.Gps && (scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
+                        if (getFamily() == Family.Gps) {
                             _currentScanResult21 = scanResult;
                             reportEntered();
                             reportDetected();
@@ -1161,22 +1146,7 @@ public class XYDevice extends XYBase {
             _currentScanResult21 = null;
             reportExited();
         } else if (scanResult.getRssi() != outOfRangeRssi) {
-//            & 0x02 is used to check if the advertiseFlag is connectable
-            if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
-                if ((scanResult.getScanRecord().getAdvertiseFlags() & 0x02) == 0x02) {
-//                    byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
-//                    if (manufacturerData != null) {
-//                        if ((manufacturerData[21] & 0x04) == 0x04) {
-                    _currentScanResult21 = scanResult;
-//                        }
-//                    }
-                } else {
-
-                    Log.v(TAG, "connTest-TEST");
-                }
-            } else {
-                _currentScanResult21 = scanResult;
-            }
+            _currentScanResult21 = scanResult;
             reportDetected();
             if (!_stayConnectedActive && _stayConnected) {
                 _stayConnectedActive = true;
@@ -1184,7 +1154,6 @@ public class XYDevice extends XYBase {
                 pushConnection();
             }
         }
-
         if (_beaconAddress == null) {
             _beaconAddress = scanResult.getDevice().getAddress();
         }

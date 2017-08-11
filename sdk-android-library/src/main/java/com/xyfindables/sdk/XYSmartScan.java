@@ -410,19 +410,19 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
 
         if (gps_enabled && network_enabled) {
             Log.w(TAG, "returning 3");
-            setStatus(None);
+            setStatus(Status.None);
             return true;
         } else if (gps_enabled) {
             Log.w(TAG, "returning 2");
-            setStatus(LocationDisabled);
+            setStatus(Status.LocationDisabled);
             return false;
         } else if (network_enabled) {
             Log.w(TAG, "returning 1");
-            setStatus(LocationDisabled);
+            setStatus(Status.LocationDisabled);
             return false;
         } else {
             Log.w(TAG, "returning 0");
-            setStatus(LocationDisabled);
+            setStatus(Status.LocationDisabled);
             return false;
         }
     }
