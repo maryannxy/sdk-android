@@ -28,6 +28,7 @@ import com.xyfindables.sdk.action.XYDeviceActionGetVersion;
 import com.xyfindables.sdk.action.XYDeviceActionOtaWrite;
 import com.xyfindables.sdk.action.XYDeviceActionSetRegistration;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButton;
+import com.xyfindables.sdk.action.XYDeviceActionUnlock;
 import com.xyfindables.sdk.bluetooth.ScanRecordLegacy;
 import com.xyfindables.sdk.bluetooth.ScanResultLegacy;
 
@@ -297,18 +298,6 @@ public class XYDevice extends XYBase {
     }
 
     private XYDeviceActionSubscribeButton _subscribeButton = null;
-
-    public void didReboot(Context context) {
-        endOta();
-        stayConnected(context, true);
-        XYDeviceActionSetRegistration setRegistration = new XYDeviceActionSetRegistration(this, true) {
-            @Override
-            public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                return super.statusChanged(status, gatt, characteristic, success);
-            }
-        };
-        setRegistration.start(context);
-    }
 
     public void otaMode(boolean value) {
         Log.v(TAG, "otaMode set: " + value);
