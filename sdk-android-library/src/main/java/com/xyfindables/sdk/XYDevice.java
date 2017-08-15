@@ -1110,6 +1110,7 @@ public class XYDevice extends XYBase {
                 if (manufacturerData != null) {
                     if ((manufacturerData[21] & 0x08) == 0x08) {
                         handleButtonPulse();
+                        Log.v(TAG, "handleButtonPulse");
                         if (getFamily() == Family.Gps) {
                             _currentScanResult21 = scanResult;
                             reportEntered();
