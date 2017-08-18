@@ -373,8 +373,8 @@ public class XYDevice extends XYBase {
     }
 
     private void releaseBleLock() {
-        Log.i(TAG, "connTest_bleAccess released[" + getId() + "]: " + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
         _bleAccess.release();
+        Log.i(TAG, "connTest_bleAccess released[" + getId() + "]: " + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
     }
 
     private void releaseActionLock() {
