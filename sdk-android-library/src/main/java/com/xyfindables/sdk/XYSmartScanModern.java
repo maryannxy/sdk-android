@@ -158,8 +158,10 @@ public class XYSmartScanModern extends XYSmartScan {
                         }
                     }
 
-
                     _scanResults21.add(result);
+                    if (_scanResults21.size() > 50) {
+                        Log.e(TAG, "_scanResults large size! = " + _scanResults21.size());
+                    }
                     _pulseCount++;
                     _pulseCountForScan++;
                 }

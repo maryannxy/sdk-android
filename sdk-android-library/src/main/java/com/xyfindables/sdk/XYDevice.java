@@ -73,6 +73,10 @@ public class XYDevice extends XYBase {
 
     private boolean _connectIntent = false;
 
+    public void setConnectIntent(boolean value) {
+        _connectIntent = value;
+    }
+
     private int _connectionCount = 0;
     private boolean _stayConnected = false;
     private boolean _stayConnectedActive = false;
@@ -322,7 +326,7 @@ public class XYDevice extends XYBase {
         if (_stayConnected) {
             if (!_stayConnectedActive) {
                 _stayConnectedActive = true;
-                startSubscribeButton();
+                startSubscribeButton(this);
                 pushConnection();
             }
         } else {
@@ -797,10 +801,9 @@ public class XYDevice extends XYBase {
 
     private void pushConnection() {
         if (_currentScanResult21 != null || _currentScanResult18 != null) {
-            Log.v(TAG, "connTest-pushConnection[" + _connectionCount + "->" + (_connectionCount + 1) + "]:" + getId());
             _connectionCount++;
         } else {
-            Log.v(TAG, "connTest-pushConnection-no scan result");
+            Log.e(TAG, "connTest-pushConnection-no scan result");
         }
     }
 
@@ -1045,6 +1048,7 @@ public class XYDevice extends XYBase {
         }
     }
 
+    // Do not litter this function with excess logic, it needs to execute quickly since it is called often
     @TargetApi(18)
     public void pulse18(ScanResultLegacy scanResult) {
         XYBase.logExtreme(TAG, "pulse18: " + _id + ":" + scanResult.getRssi());
@@ -1072,28 +1076,21 @@ public class XYDevice extends XYBase {
             _currentScanResult18 = scanResult;
             reportEntered();
             reportDetected();
-            if (!_stayConnectedActive && _stayConnected) {
-                _stayConnectedActive = true;
-                startSubscribeButton();
-                pushConnection();
-            }
+            checkStayConnected(this);
         } else if ((_currentScanResult18.getRssi() != outOfRangeRssi) && (scanResult.getRssi() == outOfRangeRssi)) {
             _currentScanResult18 = null;
             reportExited();
         } else if (scanResult.getRssi() != outOfRangeRssi) {
             _currentScanResult18 = scanResult;
             reportDetected();
-            if (!_stayConnectedActive && _stayConnected) {
-                _stayConnectedActive = true;
-                startSubscribeButton();
-                pushConnection();
-            }
+            checkStayConnected(this);
         }
         if (_beaconAddress == null) {
             _beaconAddress = scanResult.getDevice().getAddress();
         }
     }
 
+    // Do not litter this function with excess logic, it needs to execute quickly since it is called often
     @TargetApi(21)
     public void pulse21(Object scanResultObject) {
 
@@ -1120,32 +1117,36 @@ public class XYDevice extends XYBase {
                     }
                 }
             }
-
         }
 
         if ((_currentScanResult21 == null) || ((_currentScanResult21.getRssi() == outOfRangeRssi) && (scanResult.getRssi() != outOfRangeRssi))) {
             _currentScanResult21 = scanResult;
             reportEntered();
             reportDetected();
-            if (!_stayConnectedActive && _stayConnected) {
-                _stayConnectedActive = true;
-                startSubscribeButton();
-                pushConnection();
-            }
+            checkStayConnected(this);
         } else if ((_currentScanResult21.getRssi() != outOfRangeRssi) && (scanResult.getRssi() == outOfRangeRssi)) {
             _currentScanResult21 = null;
             reportExited();
         } else if (scanResult.getRssi() != outOfRangeRssi) {
             _currentScanResult21 = scanResult;
             reportDetected();
-            if (!_stayConnectedActive && _stayConnected) {
-                _stayConnectedActive = true;
-                startSubscribeButton();
-                pushConnection();
-            }
+            checkStayConnected(this);
         }
         if (_beaconAddress == null) {
             _beaconAddress = scanResult.getDevice().getAddress();
+        }
+    }
+
+    private void checkStayConnected(final XYDevice device) {
+        if (!_stayConnectedActive && _stayConnected) {
+            _stayConnectedActive = true;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    startSubscribeButton(device);
+                }
+            }).start();
+            pushConnection();
         }
     }
 
@@ -1153,8 +1154,8 @@ public class XYDevice extends XYBase {
         return _id;
     }
 
-    private void startSubscribeButton() {
-        _subscribeButton = new XYDeviceActionSubscribeButton(this) {
+    private void startSubscribeButton(XYDevice device) {
+        _subscribeButton = new XYDeviceActionSubscribeButton(device) {
             @Override
             public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
                 boolean result = super.statusChanged(status, gatt, characteristic, success);
@@ -1411,7 +1412,7 @@ public class XYDevice extends XYBase {
     private void handleButtonPulse() {
 //        Log.v(TAG, "handleButtonPulse");
         if (_buttonRecentlyPressed) {
-            //reportButtonRecentlyPressed(ButtonType.Single);
+//            reportButtonRecentlyPressed(ButtonType.Single);
         } else {
             reportButtonPressed(ButtonType.Single);
             _buttonRecentlyPressed = true;
