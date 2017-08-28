@@ -11,6 +11,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.os.AsyncTask;
@@ -32,6 +33,8 @@ import com.xyfindables.sdk.action.XYDeviceActionUnlock;
 import com.xyfindables.sdk.bluetooth.ScanRecordLegacy;
 import com.xyfindables.sdk.bluetooth.ScanResultLegacy;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -1059,7 +1062,7 @@ public class XYDevice extends XYBase {
             if (scanRecord != null) {
                 byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
                 if (manufacturerData != null) {
-                    if ((manufacturerData[21] & 0x08) == 0x08) {
+                    if ((manufacturerData[21] & 0x08) == 0x08 && scanResult.getRssi() != outOfRangeRssi) {
                         handleButtonPulse();
                         if (getFamily() == Family.Gps) {
                             _currentScanResult18 = scanResult;
@@ -1105,7 +1108,7 @@ public class XYDevice extends XYBase {
                 byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
 
                 if (manufacturerData != null) {
-                    if ((manufacturerData[21] & 0x08) == 0x08) {
+                    if ((manufacturerData[21] & 0x08) == 0x08 && scanResult.getRssi() != outOfRangeRssi) {
                         handleButtonPulse();
                         Log.v(TAG, "handleButtonPulse");
                         if (getFamily() == Family.Gps) {
