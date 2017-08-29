@@ -371,9 +371,6 @@ public class XYDevice extends XYBase {
         }
         Log.v(TAG, "startActionFrame" + action.getClass().getSuperclass().getSimpleName());
         pushConnection();
-        if (getId().equals("xy:gps:9474f7c6-47a4-11e6-beb8-9e71128cae77.22144.4")) {
-            Log.v(TAG, "connTest-PUSHEDGPSstartactionframe");
-        }
         action.statusChanged(XYDeviceAction.STATUS_QUEUED, null, null, true);
 //        try {
 //            if (!_actionLock.tryAcquire(_actionTimeout, TimeUnit.MILLISECONDS)) {
@@ -1150,9 +1147,6 @@ public class XYDevice extends XYBase {
 
     private void startSubscribeButton(final XYDevice device) {
         pushConnection();
-        if (getId().equals("xy:gps:9474f7c6-47a4-11e6-beb8-9e71128cae77.22144.4")) {
-            Log.v(TAG, "connTest-PUSHEDGPSstartsubscribebutton");
-        }
         new Thread(new Runnable() {
             @Override
             public void run() {
