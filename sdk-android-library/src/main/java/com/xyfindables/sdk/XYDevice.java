@@ -496,13 +496,28 @@ public class XYDevice extends XYBase {
                         }
                         switch (newState) {
                             case BluetoothGatt.STATE_CONNECTED:
-                                Log.v(TAG, "connTest-STATE_CONNECTED status is " + status);
-                                Log.v(TAG, "connTest-_connectIntent = " + _connectIntent);
+                                if (status == 62) {
+                                    // try to disconnect when get 62, means HCI failed to establish connected, so device doesn't think its connected
+                                    Log.i(TAG, "onConnectionStateChange:Connected:62 " + getId());
+                                    XYDeviceAction currentAction = _currentAction;
+                                    if (currentAction != null) {
+                                        endActionFrame(currentAction, false);
+                                    } else {
+                                        if (gatt != null) {
+                                            popConnection();
+                                            Log.v(TAG, "connTest-popConnection on connect:62 " + getId());
+                                        }
+                                    }
+                                    reportConnectionStateChanged(STATE_DISCONNECTED);
+                                } else {
+                                    Log.v(TAG, "connTest-STATE_CONNECTED status is " + status);
+                                    Log.v(TAG, "connTest-_connectIntent = " + _connectIntent);
 //                                _connectIntent = false;
-                                Log.i(TAG, "onConnectionStateChange:Connected: " + getId());
-                                reportConnectionStateChanged(STATE_CONNECTED);
-                                gatt.discoverServices();
-                                Log.v(TAG, "stateConnected: gatt object = " + gatt.hashCode());
+                                    Log.i(TAG, "onConnectionStateChange:Connected: " + getId());
+                                    reportConnectionStateChanged(STATE_CONNECTED);
+                                    gatt.discoverServices();
+                                    Log.v(TAG, "stateConnected: gatt object = " + gatt.hashCode());
+                                }
                                 break;
                             case BluetoothGatt.STATE_DISCONNECTED: {
                                 if (status == 133) {
@@ -527,7 +542,7 @@ public class XYDevice extends XYBase {
                                         XYBase.logError(TAG, "statusChanged:disconnected", false);
                                         endActionFrame(currentAction, false);
                                     } else {
-                                        if (gatt != null && _connectionCount > 0) {
+                                        if (gatt != null) {
                                             popConnection();
                                             Log.v(TAG, "connTest-popConnection on disconnect " + getId());
                                         }
@@ -802,7 +817,9 @@ public class XYDevice extends XYBase {
                 if (_connectionCount == 0) {
                     if (_stayConnectedActive) {
                         _subscribeButton = null;
+                        _stayConnected = false;
                         _stayConnectedActive = false;
+                        Log.v(TAG, "connTest-resetting stayConnected");
                     }
                     BluetoothGatt gatt = getGatt();
                     if (gatt != null) {
@@ -918,7 +935,7 @@ public class XYDevice extends XYBase {
             final Timer pumpTimer = new Timer();
             Random random = new Random(new Date().getTime());
             //random check in next 6-12 minutes
-            int delay = random.nextInt(3600000) + 3600000;
+            int delay = random.nextInt(360000) + 360000;
             Log.v(TAG, "checkBatteryInFuture:" + delay);
             pumpTimer.schedule(checkTimerTask, delay);
         }
@@ -1147,14 +1164,17 @@ public class XYDevice extends XYBase {
 
     private void startSubscribeButton(final XYDevice device) {
         pushConnection();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
                 _subscribeButton = new XYDeviceActionSubscribeButton(device) {
                     @Override
                     public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
                         boolean result = super.statusChanged(status, gatt, characteristic, success);
                         if (status == STATUS_CHARACTERISTIC_UPDATED) {
+                            if (!success) {
+                                Log.e(TAG, "subscribeButton failed to update!!!");
+                            }
                             int buttonValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                             Log.v(TAG, "ButtonCharacteristicUpdated:" + buttonValue);
                             _buttonRecentlyPressed = true;
@@ -1185,8 +1205,8 @@ public class XYDevice extends XYBase {
                     }
                 };
                 _subscribeButton.start(_connectedContext.getApplicationContext());
-            }
-        }).start();
+//            }
+//        }).start();
     }
 
     public Boolean getSimActivated() {
