@@ -73,6 +73,10 @@ public class XYDevice extends XYBase {
 
     private boolean _connectIntent = false;
 
+    public void setConnectIntent(boolean value) {
+        _connectIntent = value;
+    }
+
     private int _connectionCount = 0;
     private boolean _stayConnected = false;
     private boolean _stayConnectedActive = false;
@@ -544,7 +548,7 @@ public class XYDevice extends XYBase {
                                         XYBase.logError(TAG, "statusChanged:disconnected", false);
                                         endActionFrame(currentAction, false);
                                     } else {
-                                        if (gatt != null && _connectionCount > 0) {
+                                        if (gatt != null) {
                                             popConnection();
                                             Log.v(TAG, "connTest-popConnection on disconnect");
                                         }
@@ -930,7 +934,7 @@ public class XYDevice extends XYBase {
             final Timer pumpTimer = new Timer();
             Random random = new Random(new Date().getTime());
             //random check in next 6-12 minutes
-            int delay = random.nextInt(3600000) + 3600000;
+            int delay = random.nextInt(360000) + 360000;
             Log.v(TAG, "checkBatteryInFuture:" + delay);
             pumpTimer.schedule(checkTimerTask, delay);
         }
@@ -1055,7 +1059,7 @@ public class XYDevice extends XYBase {
             if (scanRecord != null) {
                 byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
                 if (manufacturerData != null) {
-                    if ((manufacturerData[21] & 0x08) == 0x08) {
+                    if ((manufacturerData[21] & 0x08) == 0x08 && scanResult.getRssi() != outOfRangeRssi) {
                         handleButtonPulse();
                         if (getFamily() == Family.Gps) {
                             _currentScanResult18 = scanResult;
@@ -1108,7 +1112,7 @@ public class XYDevice extends XYBase {
                 byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
 
                 if (manufacturerData != null) {
-                    if ((manufacturerData[21] & 0x08) == 0x08) {
+                    if ((manufacturerData[21] & 0x08) == 0x08 && scanResult.getRssi() != outOfRangeRssi) {
                         handleButtonPulse();
                         Log.v(TAG, "handleButtonPulse");
                         if (getFamily() == Family.Gps) {
