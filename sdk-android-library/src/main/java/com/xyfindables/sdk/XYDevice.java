@@ -14,6 +14,7 @@ import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -32,6 +33,8 @@ import com.xyfindables.sdk.action.XYDeviceActionUnlock;
 import com.xyfindables.sdk.bluetooth.ScanRecordLegacy;
 import com.xyfindables.sdk.bluetooth.ScanResultLegacy;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -45,7 +48,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static android.bluetooth.BluetoothDevice.TRANSPORT_AUTO;
 import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 
 /**
@@ -65,7 +67,7 @@ public class XYDevice extends XYBase {
 
     public static final HashMap<XYDevice.Family, String> family2prefix;
 
-    private static final int MAX_BLECONNECTIONS = 4;
+    private static final int MAX_BLECONNECTIONS = 5;
     private static final XYSemaphore _bleAccess = new XYSemaphore(MAX_BLECONNECTIONS, true);
 
     private static final int MAX_ACTIONS = 1;
@@ -318,6 +320,7 @@ public class XYDevice extends XYBase {
 
     public void stayConnected(final Context context, boolean value) {
         _connectedContext = context;
+
         Log.v(TAG, "stayConnected:" + value + ":" + getId());
         if (value == _stayConnected) {
             return;
@@ -325,9 +328,7 @@ public class XYDevice extends XYBase {
         _stayConnected = value;
         if (_stayConnected) {
             if (!_stayConnectedActive) {
-                _stayConnectedActive = true;
                 startSubscribeButton();
-                pushConnection();
             }
         } else {
             if (_stayConnectedActive) {
@@ -527,6 +528,8 @@ public class XYDevice extends XYBase {
                                 break;
                             case BluetoothGatt.STATE_DISCONNECTED: {
                                 if (status == 133) {
+                                    // 133 may disconnect device -> in this case stayConnected can leave us with surplus connectionCount and no way to re-subscribe to button
+                                    stayConnected(null, false);
                                     Log.v(TAG, "connTest-133-_connectIntent = " + _connectIntent);
                                     /* Ignoring the 133 seems to keep the connection alive.
                                     No idea why, but it does on Android 5.1 */
@@ -540,6 +543,7 @@ public class XYDevice extends XYBase {
                                             endActionFrame(currentAction, false);
                                         }
                                     }
+
                                     //XYSmartScan.instance.refresh(gatt);
                                 } else {
                                     Log.i(TAG, "onConnectionStateChange:Disconnected: " + getId());
@@ -918,6 +922,13 @@ public class XYDevice extends XYBase {
         return _timeSinceCharged;
     }
 
+    public void checkBatteryAndVersion(final Context context) {
+        Log.v(TAG, "checkBatteryAndVersion");
+        checkBattery(context, true);
+        checkVersion(context);
+        checkTimeSinceCharged(context);
+    }
+
     public void checkBatteryAndVersionInFuture(final Context context) {
         Log.v(TAG, "checkBatteryInFuture");
         if (_batteryLevel == BATTERYLEVEL_NOTCHECKED) {
@@ -1077,9 +1088,7 @@ public class XYDevice extends XYBase {
             reportEntered();
             reportDetected();
             if (!_stayConnectedActive && _stayConnected) {
-                _stayConnectedActive = true;
                 startSubscribeButton();
-                pushConnection();
             }
         } else if ((_currentScanResult18.getRssi() != outOfRangeRssi) && (scanResult.getRssi() == outOfRangeRssi)) {
             _currentScanResult18 = null;
@@ -1088,9 +1097,7 @@ public class XYDevice extends XYBase {
             _currentScanResult18 = scanResult;
             reportDetected();
             if (!_stayConnectedActive && _stayConnected) {
-                _stayConnectedActive = true;
                 startSubscribeButton();
-                pushConnection();
             }
         }
         if (_beaconAddress == null) {
@@ -1132,9 +1139,7 @@ public class XYDevice extends XYBase {
             reportEntered();
             reportDetected();
             if (!_stayConnectedActive && _stayConnected) {
-                _stayConnectedActive = true;
                 startSubscribeButton();
-                pushConnection();
             }
         } else if ((_currentScanResult21.getRssi() != outOfRangeRssi) && (scanResult.getRssi() == outOfRangeRssi)) {
             _currentScanResult21 = null;
@@ -1143,9 +1148,7 @@ public class XYDevice extends XYBase {
             _currentScanResult21 = scanResult;
             reportDetected();
             if (!_stayConnectedActive && _stayConnected) {
-                _stayConnectedActive = true;
                 startSubscribeButton();
-                pushConnection();
             }
         }
         if (_beaconAddress == null) {
@@ -1158,6 +1161,14 @@ public class XYDevice extends XYBase {
     }
 
     private void startSubscribeButton() {
+        if (_connectedContext == null) {
+            return;
+        }
+        if (_bleAccess.availablePermits() < 2) {
+            return;
+        }
+        _stayConnectedActive = true;
+        pushConnection();
         _subscribeButton = new XYDeviceActionSubscribeButton(this) {
             @Override
             public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
