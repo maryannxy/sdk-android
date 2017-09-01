@@ -939,7 +939,7 @@ public class XYDevice extends XYBase {
         checkTimeSinceCharged(context);
     }
 
-    public void checkBatteryAndVersionInFuture(final Context context) {
+    public void checkBatteryAndVersionInFuture(final Context context, boolean repeat) {
         Log.v(TAG, "checkBatteryInFuture");
         if (_batteryLevel == BATTERYLEVEL_NOTCHECKED) {
             _batteryLevel = BATTERYLEVEL_SCHEDULED;
@@ -957,7 +957,11 @@ public class XYDevice extends XYBase {
             //random check in next 6-12 minutes
             int delay = random.nextInt(360000) + 360000;
             Log.v(TAG, "checkBatteryInFuture:" + delay);
-            pumpTimer.schedule(checkTimerTask, delay);
+            if (repeat) {
+                pumpTimer.schedule(checkTimerTask, delay, delay);
+            } else {
+                pumpTimer.schedule(checkTimerTask, delay);
+            }
         }
     }
 
@@ -1174,7 +1178,7 @@ public class XYDevice extends XYBase {
         if (_connectedContext == null) {
             return;
         }
-        if (_bleAccess.availablePermits() < 2) {
+        if (_bleAccess.availablePermits() <= 1) {
             return;
         }
         _stayConnectedActive = true;
