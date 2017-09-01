@@ -83,6 +83,11 @@ public class XYDevice extends XYBase {
     private boolean _stayConnected = false;
     private boolean _stayConnectedActive = false;
     private boolean _isInOtaMode = false;
+    private boolean _debug = false;
+
+    public void setDebug(boolean value) {
+        _debug = value;
+    }
 
     private static int _missedPulsesForOutOfRange = 20;
     private static int _actionTimeout = 60000;
@@ -402,7 +407,7 @@ public class XYDevice extends XYBase {
 
         // acquireUninterruptibly is used so lock is not release when thread expires (due to calling discoverServices)
         _actionLock.acquireUninterruptibly();
-        _connectIntent = true;
+//        _connectIntent = true;
         Log.v(TAG, "_actionLock[" + getId() + "]:acquired:" + action.getClass().getSuperclass().getSimpleName());
         action.statusChanged(XYDeviceAction.STATUS_STARTED, null, null, true);
         Log.i(TAG, "startActionFrame-action started" + " " + action.getClass().getSuperclass().getSimpleName());
@@ -443,7 +448,7 @@ public class XYDevice extends XYBase {
         action.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, success);
         Log.v(TAG, "_actionLock[" + getId() + "]:release:" + action.getClass().getSuperclass().getSimpleName());
         _currentAction = null;
-        _connectIntent = false;
+//        _connectIntent = false;
         releaseActionLock();
         XYSmartScan.instance.pauseAutoScan(false);
         popConnection();
@@ -534,8 +539,7 @@ public class XYDevice extends XYBase {
                                     /* Ignoring the 133 seems to keep the connection alive.
                                     No idea why, but it does on Android 5.1 */
                                     XYBase.logError(TAG, "connTest-Disconnect with 133", false);
-                                    // this is to treat 133 as disconnect in case it happens while not onboarding and while not in ota
-                                    if ((!_isInOtaMode && !_connectIntent) || _connectionCount > 1) {
+                                    if (!_isInOtaMode && !_connectIntent && !_debug && (_connectionCount <= 1)) {
 //                                        popConnection();
                                         Log.e(TAG, "connTest-disconnect inside 133");
                                         XYDeviceAction currentAction = _currentAction;
