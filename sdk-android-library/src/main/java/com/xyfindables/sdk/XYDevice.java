@@ -534,9 +534,10 @@ public class XYDevice extends XYBase {
                                     /* Ignoring the 133 seems to keep the connection alive.
                                     No idea why, but it does on Android 5.1 */
                                     XYBase.logError(TAG, "connTest-Disconnect with 133", false);
-                                    if (!_isInOtaMode && !_connectIntent) {
+                                    // this is to treat 133 as disconnect in case it happens while not onboarding and while not in ota
+                                    if ((!_isInOtaMode && !_connectIntent) || _connectionCount > 1) {
 //                                        popConnection();
-//                                        Log.v(TAG, "connTest-gatt.close after 133");
+                                        Log.e(TAG, "connTest-disconnect inside 133");
                                         XYDeviceAction currentAction = _currentAction;
                                         if (currentAction != null) {
                                             XYBase.logError(TAG, "statusChanged:disconnected", false);
@@ -806,6 +807,11 @@ public class XYDevice extends XYBase {
     private void pushConnection() {
         if (_currentScanResult21 != null || _currentScanResult18 != null) {
             Log.v(TAG, "connTest-pushConnection[" + _connectionCount + "->" + (_connectionCount + 1) + "]:" + getId());
+            if (_currentAction != null) {
+                Log.e(TAG, "connTest-action: " + _currentAction.getClass().getSuperclass().getSimpleName());
+            } else {
+                Log.e(TAG, "connTest-null currentAction");
+            }
             _connectionCount++;
         } else {
             Log.v(TAG, "connTest-pushConnection-no scan result");
@@ -884,15 +890,15 @@ public class XYDevice extends XYBase {
         reportConnectionStateChanged(STATE_DISCONNECTED);
     }
 
-    public static final int STATE_CONNECTED = BluetoothProfile.STATE_CONNECTED;
-    public static final int STATE_DISCONNECTED = BluetoothProfile.STATE_DISCONNECTED;
-    public static final int STATE_DISCONNECTING = BluetoothProfile.STATE_DISCONNECTING;
+    private static final int STATE_CONNECTED = BluetoothProfile.STATE_CONNECTED;
+    private static final int STATE_DISCONNECTED = BluetoothProfile.STATE_DISCONNECTED;
+    private static final int STATE_DISCONNECTING = BluetoothProfile.STATE_DISCONNECTING;
 
     private BluetoothManager getBluetoothManager(Context context) {
         return (BluetoothManager) context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
     }
 
-    public BluetoothDevice getBluetoothDevice() {
+    private BluetoothDevice getBluetoothDevice() {
         BluetoothDevice bluetoothDevice;
         bluetoothDevice = getBluetoothDevice21();
         if (bluetoothDevice == null) {
@@ -951,7 +957,7 @@ public class XYDevice extends XYBase {
         }
     }
 
-    public void checkBattery(final Context context) {
+    private void checkBattery(final Context context) {
         checkBattery(context.getApplicationContext(), false);
     }
 
@@ -975,7 +981,7 @@ public class XYDevice extends XYBase {
         }
     }
 
-    public void checkTimeSinceCharged(final Context context) {
+    private void checkTimeSinceCharged(final Context context) {
         Log.v(TAG, "checkTimeSinceCharged");
         XYDeviceActionGetBatterySinceCharged getTimeSinceCharged = new XYDeviceActionGetBatterySinceCharged(this) {
             @Override
@@ -998,7 +1004,7 @@ public class XYDevice extends XYBase {
         getTimeSinceCharged.start(context.getApplicationContext());
     }
 
-    public void checkVersion(final Context context) {
+    private void checkVersion(final Context context) {
         Log.v(TAG, "checkFirmware");
         if (_firmwareVersion == null) {
             _firmwareVersion = "";
@@ -1290,6 +1296,10 @@ public class XYDevice extends XYBase {
     }
 
     private int _updateCounter = 0;
+
+    public int getUpdateCounter() {
+        return _updateCounter;
+    }
 
     public boolean isUpdateSignificant() {
         if (_updateCounter >= 100) {
