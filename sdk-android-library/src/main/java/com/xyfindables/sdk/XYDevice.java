@@ -939,14 +939,18 @@ public class XYDevice extends XYBase {
         checkTimeSinceCharged(context);
     }
 
-    public void checkBatteryAndVersionInFuture(final Context context, boolean repeat) {
+    public void checkBatteryAndVersionInFuture(final Context context, final boolean repeat) {
         Log.v(TAG, "checkBatteryInFuture");
         if (_batteryLevel == BATTERYLEVEL_NOTCHECKED) {
             _batteryLevel = BATTERYLEVEL_SCHEDULED;
             final TimerTask checkTimerTask = new TimerTask() {
                 @Override
                 public void run() {
-                    checkBattery(context.getApplicationContext());
+                    if (repeat) {
+                        checkBattery(context.getApplicationContext(), true);
+                    } else {
+                        checkBattery(context.getApplicationContext());
+                    }
                     checkVersion(context.getApplicationContext());
                     checkTimeSinceCharged(context.getApplicationContext());
                 }
@@ -973,6 +977,7 @@ public class XYDevice extends XYBase {
         Log.v(TAG, "checkBattery");
         if (_batteryLevel < BATTERYLEVEL_CHECKED || force) {
             _batteryLevel = BATTERYLEVEL_CHECKED;
+            Log.v(TAG, "batteryTest-read battery level for id = " + getId());
             XYDeviceActionGetBatteryLevel getBatteryLevel = new XYDeviceActionGetBatteryLevel(this) {
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
