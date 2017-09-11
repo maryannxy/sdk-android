@@ -43,7 +43,9 @@ public abstract class XYDeviceActionSetMinor extends XYDeviceAction {
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND: {
                 characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT16, 0);
-                gatt.writeCharacteristic(characteristic);
+                if (!gatt.writeCharacteristic(characteristic)) {
+                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                }
                 break;
             }
         }

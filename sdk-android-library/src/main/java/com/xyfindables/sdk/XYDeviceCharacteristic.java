@@ -32,9 +32,12 @@ public class XYDeviceCharacteristic {
     public static final UUID BasicConfigMajor = UUID.fromString("F014EE05-0439-3000-E001-00001001FFFF");
     public static final UUID BasicConfigMinor = UUID.fromString("F014EE06-0439-3000-E001-00001001FFFF");
     public static final UUID BasicConfigInterval = UUID.fromString("F014EE07-0439-3000-E001-00001001FFFF");
+    public static final UUID BasicConfigOtaWrite = UUID.fromString("F014EE09-0439-3000-E001-00001001FFFF");
+    public static final UUID BasicConfigReboot = UUID.fromString("F014EE0A-0439-3000-E001-00001001FFFF");
 
     public static final UUID ExtendedControlSIMStatus = UUID.fromString("2ADDAA00-0439-3000-E001-00001001FFFF");
     public static final UUID ExtendedControlLED = UUID.fromString("2AAAAA00-0439-3000-E001-00001001FFFF");
+    public static final UUID ExtendedControlSelfTest = UUID.fromString("2a77AA00-0439-3000-E001-00001001FFFF");
 
     public static final UUID BatteryLevel = UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb");
     public static final UUID BatterySinceCharged = UUID.fromString("00002a20-0000-1000-8000-00805f9b34fb");
@@ -44,4 +47,6 @@ public class XYDeviceCharacteristic {
     public static final UUID SensorThreshold = UUID.fromString("F014DD03-0439-3000-E001-00001001FFFF");
     public static final UUID SensorInactive = UUID.fromString("F014DD04-0439-3000-E001-00001001FFFF");
     public static final UUID SensorMovementCount = UUID.fromString("F014DD05-0439-3000-E001-00001001FFFF");
+
+    public static final UUID GpsProfile = UUID.fromString("2abbAA00-0439-3000-E001-00001001FFFF");
 }

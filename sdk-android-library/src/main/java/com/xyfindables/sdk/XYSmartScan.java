@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -35,6 +36,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import io.fabric.sdk.android.Fabric;
+
+import static com.xyfindables.sdk.XYSmartScan.Status.LocationDisabled;
+import static com.xyfindables.sdk.XYSmartScan.Status.None;
 
 /**
  * Created by arietrouw on 12/20/16.
@@ -393,17 +397,46 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         }
     }
 
-    public static boolean isLocationAvailable(@NonNull Context context) {
+    public boolean areLocationServicesAvailable(@NonNull Context context) {
         LocationManager lm = null;
         boolean gps_enabled, network_enabled;
 
         if (lm == null)
-            lm = (LocationManager) context.getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+            lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
         network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
+        if (gps_enabled && network_enabled) {
+            Log.w(TAG, "returning 3");
+            setStatus(Status.None);
+            return true;
+        } else if (gps_enabled) {
+            Log.w(TAG, "returning 2");
+            setStatus(Status.LocationDisabled);
+            return false;
+        } else if (network_enabled) {
+            Log.w(TAG, "returning 1");
+            setStatus(Status.LocationDisabled);
+            return false;
+        } else {
+            Log.w(TAG, "returning 0");
+            setStatus(Status.LocationDisabled);
+            return false;
+        }
+    }
+
+    public static boolean isLocationAvailable(@NonNull Context context) {
+        LocationManager lm = null;
+        boolean gps_enabled, network_enabled;
+
+        if (lm == null)
+            lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+
+        gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+        network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
         if (gps_enabled && network_enabled) {
             Log.w(TAG, "returning 3");

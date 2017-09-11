@@ -43,7 +43,9 @@ public abstract class XYDeviceActionSetUUID extends XYDeviceAction {
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND: {
                 characteristic.setValue(value);
-                gatt.writeCharacteristic(characteristic);
+                if (!gatt.writeCharacteristic(characteristic)) {
+                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                }
                 break;
             }
         }

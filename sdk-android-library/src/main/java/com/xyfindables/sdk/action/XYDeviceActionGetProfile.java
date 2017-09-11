@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.util.Log;
 
-import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYDeviceCharacteristic;
 import com.xyfindables.sdk.XYDeviceService;
@@ -12,28 +11,27 @@ import com.xyfindables.sdk.XYDeviceService;
 import java.util.UUID;
 
 /**
- * Created by alex.mcelroy on 5/4/2017.
+ * Created by alex.mcelroy on 6/13/2017.
  */
 
-public abstract class XYDeviceActionGetAccelerometerInactive extends XYDeviceAction {
-
-    private static final String TAG = XYDeviceActionGetAccelerometerTimeout.class.getSimpleName();
+public class XYDeviceActionGetProfile extends XYDeviceAction {
+    private static final String TAG = XYDeviceActionGetProfile.class.getSimpleName();
 
     public int value;
 
-    public XYDeviceActionGetAccelerometerInactive(XYDevice device) {
+    public XYDeviceActionGetProfile(XYDevice device) {
         super(device);
         Log.v(TAG, TAG);
     }
 
     @Override
     public UUID getServiceId() {
-        return XYDeviceService.Sensor;
+        return XYDeviceService.ExtendedControl;
     }
 
     @Override
     public UUID getCharacteristicId() {
-        return XYDeviceCharacteristic.SensorInactive;
+        return XYDeviceCharacteristic.GpsProfile;
     }
 
     @Override
@@ -46,7 +44,6 @@ public abstract class XYDeviceActionGetAccelerometerInactive extends XYDeviceAct
                 break;
             case STATUS_CHARACTERISTIC_FOUND:
                 if (!gatt.readCharacteristic(characteristic)) {
-                    XYBase.logError(TAG, "Characteristic Read Failed");
                     statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                 }
                 break;

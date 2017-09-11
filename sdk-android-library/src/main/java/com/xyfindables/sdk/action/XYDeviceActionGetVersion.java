@@ -46,13 +46,14 @@ public abstract class XYDeviceActionGetVersion extends XYDeviceAction {
                 if (versionBytes.length > 0) {
                     value = "";
                     for (byte b : versionBytes) {
-                        value += String.format("%02x:", b);
+                        value += String.format("%x", b);
                     }
                 }
                 break;
             case STATUS_CHARACTERISTIC_FOUND:
                 if (!gatt.readCharacteristic(characteristic)) {
                     XYBase.logError(TAG, "Characteristic Read Failed");
+                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                 }
                 break;
         }
