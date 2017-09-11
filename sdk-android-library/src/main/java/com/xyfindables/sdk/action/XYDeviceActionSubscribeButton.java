@@ -26,7 +26,7 @@ public abstract class XYDeviceActionSubscribeButton extends XYDeviceAction {
     public static final int BUTTONPRESS_LONG = 3;
 
     private BluetoothGatt _gatt = null;
-    BluetoothGattCharacteristic _characteristic = null;
+    private BluetoothGattCharacteristic _characteristic = null;
 
     public XYDeviceActionSubscribeButton(XYDevice device) {
         super(device);

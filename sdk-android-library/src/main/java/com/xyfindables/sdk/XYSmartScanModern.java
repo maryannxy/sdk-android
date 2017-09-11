@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 
 @TargetApi(21)
-public class XYSmartScanModern extends XYSmartScan {
+class XYSmartScanModern extends XYSmartScan {
 
     final private static String TAG = XYSmartScanModern.class.getSimpleName();
 
@@ -35,11 +35,11 @@ public class XYSmartScanModern extends XYSmartScan {
 
     private boolean _pumpScanResults21Active = false;
 
-    protected int _pulseCountForScan = 0;
+    private int _pulseCountForScan = 0;
 
     private ConcurrentLinkedQueue<android.bluetooth.le.ScanResult> _scanResults21;
 
-    protected XYSmartScanModern() {
+    private XYSmartScanModern() {
         super();
         Log.v(TAG, "XYSmartScanModern");
 
@@ -51,7 +51,7 @@ public class XYSmartScanModern extends XYSmartScan {
         return false;
     }
 
-    protected final BroadcastReceiver _receiver21 = new BroadcastReceiver() {
+    private final BroadcastReceiver _receiver21 = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
@@ -326,7 +326,7 @@ public class XYSmartScanModern extends XYSmartScan {
         });*/
     }
 
-    public void reset(Context context) {
+    private void reset(Context context) {
         Log.i(TAG, "reset");
         XYBase.logError(TAG, "resetting bluetooth adapter", false);
         /*if (Build.VERSION.SDK_INT == 21) {
