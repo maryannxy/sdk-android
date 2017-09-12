@@ -39,7 +39,7 @@ class XYSmartScanModern extends XYSmartScan {
 
     private ConcurrentLinkedQueue<android.bluetooth.le.ScanResult> _scanResults21;
 
-    private XYSmartScanModern() {
+    public XYSmartScanModern() {
         super();
         Log.v(TAG, "XYSmartScanModern");
 
