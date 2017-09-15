@@ -14,6 +14,7 @@ import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.xyfindables.core.XYSemaphore;
@@ -349,7 +350,7 @@ public class XYDevice extends XYBase {
                 if (_currentAction == null) {
                     XYBase.logError(TAG, "Null Action timed out", false);
                 } else {
-                    XYBase.logError(TAG, "Action Timeout:" + _currentAction.getClass().getSuperclass().getSimpleName(), false);
+                    XYBase.logError(TAG, "Action Timeout", false);
                     endActionFrame(_currentAction, false);
                 }
                 if (_actionFrameTimer != null) {
@@ -510,7 +511,7 @@ public class XYDevice extends XYBase {
                         super.onConnectionStateChange(gatt, status, newState);
                         Log.i(TAG, "connTest-onConnectionStateChange:" + status + ":" + newState + ":" + getId());
                         if (_currentAction != null) {
-                            Log.i(TAG, "connTest-currentAction != null:" + _currentAction.getClass().getSuperclass().getSimpleName());
+                            Log.i(TAG, "connTest-currentAction != null");
                         }
                         switch (newState) {
                             case BluetoothGatt.STATE_CONNECTED:
@@ -634,7 +635,7 @@ public class XYDevice extends XYBase {
                     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
                         super.onCharacteristicWrite(gatt, characteristic, status);
                         if (status == BluetoothGatt.GATT_SUCCESS) {
-                            Log.i(TAG, "onCharacteristicWrite:" + status + " " + _currentAction.getClass().getSuperclass().getSimpleName());
+                            Log.i(TAG, "onCharacteristicWrite:" + status);
                             if (_currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, characteristic, true)) {
                                 endActionFrame(_currentAction, true);
                             }
@@ -730,7 +731,7 @@ public class XYDevice extends XYBase {
 //                                    _connectIntent = true;
                                     Log.v(TAG, "connTest-_connectIntent = " + _connectIntent);
                                     boolean connected = gatt.connect();
-                                    Log.v(TAG, "connTest-Connect:" + connected + " " + _currentAction.getClass().getSuperclass().getSimpleName());
+                                    Log.v(TAG, "connTest-Connect:" + connected);
                                     gatt.discoverServices();
                                     Log.v(TAG, "connTest-Connect:" + connected + " - gatt object = " + gatt.hashCode());
                                 }
@@ -803,7 +804,7 @@ public class XYDevice extends XYBase {
         if (_currentScanResult21 != null || _currentScanResult18 != null) {
             Log.v(TAG, "connTest-pushConnection[" + _connectionCount + "->" + (_connectionCount + 1) + "]:" + getId());
             if (_currentAction != null) {
-                Log.e(TAG, "connTest-action: " + _currentAction.getClass().getSuperclass().getSimpleName());
+                Log.e(TAG, "connTest-action");
             } else {
                 Log.e(TAG, "connTest-null currentAction");
             }
@@ -878,13 +879,12 @@ public class XYDevice extends XYBase {
             // could make difference in case connectionCount is 0 when it should be 1
             gatt.disconnect();
             // may be a timing issue calling close immediately after disconnect - try waiting 100 ms
-            final Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    gatt.close();
-                }
-            }, 100);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                Log.e(TAG, ex.toString());
+            }
+            gatt.close();
             Log.v(TAG, "connTest-gatt.close inside closeGatt");
             setGatt(null);
             releaseBleLock();
