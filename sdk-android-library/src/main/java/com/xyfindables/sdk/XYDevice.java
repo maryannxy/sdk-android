@@ -419,7 +419,7 @@ public class XYDevice extends XYBase {
             _currentAction.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, false);
         }
         _currentAction = null;
-        releaseActionLock();
+        releaseActionLock(); // ?? necessary ??
         popConnection();
         Log.v(TAG, "connTest-popConnection2");
     }
@@ -823,20 +823,21 @@ public class XYDevice extends XYBase {
                 if (_connectionCount < 0) {
                     XYBase.logError(TAG, "Negative Connection Count:" + getId(), false);
                     _connectionCount = 0;
-                }
-                if (_connectionCount == 0) {
-                    if (_stayConnectedActive) {
-                        _subscribeButton = null;
-                        _stayConnectedActive = false;
-                    }
-                    BluetoothGatt gatt = getGatt();
-                    if (gatt != null) {
-                        Log.v(TAG, "gatt.disconnect");
-                        gatt.disconnect();
-                        Log.v(TAG, "connTest-closeGatt1");
-                        closeGatt();
-                    } else {
-                        Log.e(TAG, "popConnection gat is null!");
+                } else {
+                    if (_connectionCount == 0) {
+                        if (_stayConnectedActive) {
+                            _subscribeButton = null;
+                            _stayConnectedActive = false;
+                        }
+                        BluetoothGatt gatt = getGatt();
+                        if (gatt != null) {
+                            Log.v(TAG, "gatt.disconnect");
+                            gatt.disconnect();
+                            Log.v(TAG, "connTest-closeGatt1");
+                            closeGatt();
+                        } else {
+                            Log.e(TAG, "popConnection gat is null!");
+                        }
                     }
                 }
             }
@@ -869,7 +870,6 @@ public class XYDevice extends XYBase {
         }
         final BluetoothGatt gatt = getGatt();
         if (gatt == null) {
-            // no false because debug should throw runtime
             XYBase.logError(TAG, "Closing Null Gatt");
             Log.e(TAG, "Closing Null Gatt");
             releaseBleLock();
