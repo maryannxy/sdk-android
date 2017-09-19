@@ -16,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -234,7 +235,8 @@ class XYSmartScanModern extends XYSmartScan {
                         scanner.stopScan(scanCallback);
                         scanner.flushPendingScanResults(scanCallback);
                     }
-                } catch(IllegalStateException | NullPointerException ex) {
+                } catch(IllegalStateException | NullPointerException |
+                ConcurrentModificationException ex) {
                     //this happens if the bt adapter was turned off after previous check
                     //effectivly, we treat it as no scan results found
                 }

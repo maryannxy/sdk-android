@@ -48,6 +48,8 @@ public abstract class XYDeviceActionGetVersion extends XYDeviceAction {
                     for (byte b : versionBytes) {
                         value += String.format("%x", b);
                     }
+                    Long intValue = Long.parseLong(value, 16);
+                    value = intValue.toString();
                 }
                 break;
             case STATUS_CHARACTERISTIC_FOUND:
