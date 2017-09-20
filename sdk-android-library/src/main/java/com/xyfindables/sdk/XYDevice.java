@@ -385,9 +385,7 @@ public class XYDevice extends XYBase {
     }
 
     private int startActionFrame(XYDeviceAction action) {
-        if (_isInOtaMode && action != _currentAction) {
-            return 0;
-        }
+
         Log.v(TAG, "startActionFrame" + action.getClass().getSuperclass().getSimpleName());
         pushConnection();
         action.statusChanged(XYDeviceAction.STATUS_QUEUED, null, null, true);
