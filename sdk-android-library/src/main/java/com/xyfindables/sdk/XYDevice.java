@@ -386,7 +386,7 @@ public class XYDevice extends XYBase {
 
     private int startActionFrame(XYDeviceAction action) {
 
-        Log.v(TAG, "startActionFrame" + action.getClass().getSuperclass().getSimpleName());
+        Log.v(TAG, "startActionFrame");
         pushConnection();
         action.statusChanged(XYDeviceAction.STATUS_QUEUED, null, null, true);
 //        try {
@@ -398,9 +398,9 @@ public class XYDevice extends XYBase {
         // acquireUninterruptibly is used so lock is not release when thread expires (due to calling discoverServices)
         _actionLock.acquireUninterruptibly();
 //        _connectIntent = true;
-        Log.v(TAG, "_actionLock[" + getId() + "]:acquired:" + action.getClass().getSuperclass().getSimpleName());
+        Log.v(TAG, "_actionLock[" + getId() + "]:acquired");
         action.statusChanged(XYDeviceAction.STATUS_STARTED, null, null, true);
-        Log.i(TAG, "startActionFrame-action started" + " " + action.getClass().getSuperclass().getSimpleName());
+        Log.i(TAG, "startActionFrame-action started");
         _currentAction = action;
         startActionTimer();
         return action.hashCode();
@@ -423,7 +423,7 @@ public class XYDevice extends XYBase {
     }
 
     private void endActionFrame(XYDeviceAction action, boolean success) {
-        Log.v(TAG, "endActionFrame: success = " + success + ": otaMode = " + _isInOtaMode + " " + action.getClass().getSuperclass().getSimpleName());
+        Log.v(TAG, "endActionFrame: success = " + success + ": otaMode = " + _isInOtaMode);
         if (action == null) {
             XYBase.logError(TAG, "Ending Null Action", false);
             return;
@@ -436,7 +436,7 @@ public class XYDevice extends XYBase {
         }
         cancelActionTimer();
         action.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, success);
-        Log.v(TAG, "_actionLock[" + getId() + "]:release:" + action.getClass().getSuperclass().getSimpleName());
+        Log.v(TAG, "_actionLock[" + getId() + "]:release");
         _currentAction = null;
 //        _connectIntent = false;
         releaseActionLock();
