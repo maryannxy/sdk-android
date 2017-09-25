@@ -54,7 +54,7 @@ repositories {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
 
-    compile 'com.github.xycorp:core-android:1.0.23'
+    compile 'com.github.xycorp:core-android:1.0.24'
     //debugCompile project(path: ':xycore', configuration: "debug")
     //releaseCompile project(path: ':xycore', configuration: "release")
     compile 'io.fabric.sdk.android:fabric:1.3.10@aar'
