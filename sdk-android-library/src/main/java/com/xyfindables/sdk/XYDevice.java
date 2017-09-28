@@ -508,9 +508,6 @@ public class XYDevice extends XYBase {
                     public void onConnectionStateChange(final BluetoothGatt gatt, int status, int newState) {
                         super.onConnectionStateChange(gatt, status, newState);
                         Log.i(TAG, "connTest-onConnectionStateChange:" + status + ":" + newState + ":" + getId());
-                        if (_currentAction != null) {
-                            Log.i(TAG, "connTest-currentAction != null");
-                        }
                         switch (newState) {
                             case BluetoothGatt.STATE_CONNECTED:
                                 Log.v(TAG, "connTest-STATE_CONNECTED status is " + status);
@@ -609,6 +606,11 @@ public class XYDevice extends XYBase {
                             } else {
                                 XYBase.logError(TAG, "statusChanged:onServicesDiscovered Failed: " + status);
                                 endActionFrame(currentAction, false);
+                            }
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException ex) {
+                                Log.e(TAG, "connTest-" + ex.toString());
                             }
                         } else {
                             logError(TAG, "null _currentAction");
@@ -880,7 +882,7 @@ public class XYDevice extends XYBase {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException ex) {
-                Log.e(TAG, ex.toString());
+                Log.e(TAG, "connTest-" + ex.toString());
             }
             gatt.close();
             Log.v(TAG, "connTest-gatt.close inside closeGatt");
