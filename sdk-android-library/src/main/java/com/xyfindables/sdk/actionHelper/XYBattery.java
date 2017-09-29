@@ -17,7 +17,11 @@ public class XYBattery extends XYActionHelper {
 
     private static final String TAG = XYBeep.class.getSimpleName();
 
-    protected XYBattery(XYDevice device, final Callback callback) {
+    public interface Callback extends XYActionHelper.Callback {
+        void started(boolean success, int value);
+    }
+
+    public XYBattery(XYDevice device, final Callback callback) {
         if (device.getFamily() == XYDevice.Family.XY4) {
             action = new XYDeviceActionGetBatteryLevelModern(device) {
                 @Override
@@ -26,8 +30,8 @@ public class XYBattery extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_READ:
-                            callback.started(success);
                             value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                            callback.started(success, value);
                             break;
                         case STATUS_CHARACTERISTIC_FOUND:
                             if (!gatt.readCharacteristic(characteristic)) {
@@ -49,8 +53,8 @@ public class XYBattery extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_READ:
-                            callback.started(success);
                             value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                            callback.started(success, value);
                             break;
                         case STATUS_CHARACTERISTIC_FOUND:
                             if (!gatt.readCharacteristic(characteristic)) {

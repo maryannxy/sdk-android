@@ -127,8 +127,10 @@ public class XYSmartScanLegacy extends XYSmartScan {
             public void run() {
                 Log.v(TAG, "stopTimerTask");
                 pumpTimer.cancel();
-                bluetoothAdapter.stopLeScan(_scanCallback);
-                pumpScanResults();
+                if (bluetoothAdapter != null) {
+                    bluetoothAdapter.stopLeScan(_scanCallback);
+                    pumpScanResults();
+                }
                 notifyDevicesOfScanComplete();
                 dump(context.getApplicationContext());
             }

@@ -17,6 +17,10 @@ public class XYFirmware extends XYActionHelper {
 
     private static final String TAG = XYFirmware.class.getSimpleName();
 
+    public interface Callback extends XYActionHelper.Callback {
+        void started(boolean success, String value);
+    }
+
     public XYFirmware(XYDevice device, final Callback callback) {
         if (device.getFamily() == XYDevice.Family.XY4) {
             action = new XYDeviceActionGetVersionModern(device) {
@@ -33,9 +37,9 @@ public class XYFirmware extends XYActionHelper {
                                     value += String.format("%x", b);
                                 }
                             }
+                            callback.started(success, value);
                             break;
                         case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
                             if (!gatt.readCharacteristic(characteristic)) {
                                 XYBase.logError(TAG, "Characteristic Read Failed");
                                 statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
@@ -63,9 +67,9 @@ public class XYFirmware extends XYActionHelper {
                                     value += String.format("%x", b);
                                 }
                             }
+                            callback.started(success, value);
                             break;
                         case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
                             if (!gatt.readCharacteristic(characteristic)) {
                                 XYBase.logError(TAG, "Characteristic Read Failed");
                                 statusChanged(STATUS_COMPLETED, gatt, characteristic, false);

@@ -4,23 +4,22 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.util.Log;
 
+import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYDeviceCharacteristic;
 import com.xyfindables.sdk.XYDeviceService;
-import com.xyfindables.sdk.XYDevice;
 
 import java.util.UUID;
 
 /**
- * Created by arietrouw on 1/1/17.
+ * Created by alex.mcelroy on 9/28/2017.
  */
 
-public abstract class XYDeviceActionBuzzSelect extends XYDeviceAction {
-
-    private static final String TAG = XYDeviceActionBuzzSelect.class.getSimpleName();
+public abstract class XYDeviceActionBuzzSelectModern extends XYDeviceAction {
+    private static final String TAG = XYDeviceActionBuzzSelectModern.class.getSimpleName();
 
     private int _index;
 
-    protected XYDeviceActionBuzzSelect(XYDevice device, int index) {
+    protected XYDeviceActionBuzzSelectModern(XYDevice device, int index) {
         super(device);
         _index = index;
         Log.v(TAG, TAG);
@@ -28,18 +27,18 @@ public abstract class XYDeviceActionBuzzSelect extends XYDeviceAction {
 
     @Override
     public UUID getServiceId() {
-        return XYDeviceService.Control;
+        return XYDeviceService.XY4Primary;
     }
 
     @Override
     public UUID getCharacteristicId() {
-        return XYDeviceCharacteristic.ControlBuzzerSelect;
+        return XYDeviceCharacteristic.XY4PrimaryBuzzer;
     }
 
     @Override
-    public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-        Log.v(TAG, "statusChanged:" + status + ":" + success);
-        boolean result = super.statusChanged(status, gatt, characteristic, success);
+    public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean succes) {
+        Log.v(TAG, "statusChanged:" + status + ":" + succes);
+        boolean result = super.statusChanged(status, gatt, characteristic, succes);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND:
                 characteristic.setValue(_index, BluetoothGattCharacteristic.FORMAT_UINT8, 0);

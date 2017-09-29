@@ -16,6 +16,10 @@ import com.xyfindables.sdk.action.XYDeviceActionSetRegistrationModern;
 public class XYStayAwake extends XYActionHelper {
     private static final String TAG = XYStayAwake.class.getSimpleName();
 
+    public interface Callback extends XYActionHelper.Callback {
+        void started(boolean success, boolean value);
+    }
+
     public XYStayAwake(XYDevice device, final Callback callback) {
         if (device.getFamily() == XYDevice.Family.XY4) {
             action = new XYDeviceActionGetRegistrationModern(device) {
@@ -24,13 +28,13 @@ public class XYStayAwake extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
                             if (!gatt.readCharacteristic(characteristic)) {
                                 statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                             }
                             break;
                         case STATUS_CHARACTERISTIC_READ:
                             value = (characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0) != 0);
+                            callback.started(success, value);
                             break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
@@ -47,13 +51,13 @@ public class XYStayAwake extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
                             if (!gatt.readCharacteristic(characteristic)) {
                                 statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                             }
                             break;
                         case STATUS_CHARACTERISTIC_READ:
                             value = (characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0) != 0);
+                            callback.started(success, value);
                             break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
@@ -73,7 +77,6 @@ public class XYStayAwake extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_FOUND: {
-                            callback.started(success);
                             if (value) {
                                 characteristic.setValue(0x01, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                             } else {
@@ -99,7 +102,6 @@ public class XYStayAwake extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_FOUND: {
-                            callback.started(success);
                             if (value) {
                                 characteristic.setValue(0x01, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                             } else {

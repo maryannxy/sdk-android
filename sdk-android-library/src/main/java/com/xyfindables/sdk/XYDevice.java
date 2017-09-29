@@ -108,6 +108,7 @@ public class XYDevice extends XYBase {
         uuid2family.put(UUID.fromString("a500248c-abc2-4206-9bd7-034f4fc9ed10"), XYDevice.Family.XY1);
         uuid2family.put(UUID.fromString("07775dd0-111b-11e4-9191-0800200c9a66"), XYDevice.Family.XY2);
         uuid2family.put(UUID.fromString("08885dd0-111b-11e4-9191-0800200c9a66"), XYDevice.Family.XY3);
+        uuid2family.put(UUID.fromString("a44eacf4-0104-0000-0000-5f784c9977b5"), XYDevice.Family.XY4);
         uuid2family.put(UUID.fromString("735344c9-e820-42ec-9da7-f43a2b6802b9"), XYDevice.Family.Mobile);
         uuid2family.put(UUID.fromString("9474f7c6-47a4-11e6-beb8-9e71128cae77"), XYDevice.Family.Gps);
 
@@ -115,6 +116,7 @@ public class XYDevice extends XYBase {
         family2uuid.put(XYDevice.Family.XY1, UUID.fromString("a500248c-abc2-4206-9bd7-034f4fc9ed10"));
         family2uuid.put(XYDevice.Family.XY2, UUID.fromString("07775dd0-111b-11e4-9191-0800200c9a66"));
         family2uuid.put(XYDevice.Family.XY3, UUID.fromString("08885dd0-111b-11e4-9191-0800200c9a66"));
+        family2uuid.put(XYDevice.Family.XY4, UUID.fromString("a44eacf4-0104-0000-0000-5f784c9977b5"));
         family2uuid.put(XYDevice.Family.Mobile, UUID.fromString("735344c9-e820-42ec-9da7-f43a2b6802b9"));
         family2uuid.put(XYDevice.Family.Gps, UUID.fromString("9474f7c6-47a4-11e6-beb8-9e71128cae77"));
 
@@ -122,6 +124,7 @@ public class XYDevice extends XYBase {
         family2prefix.put(XYDevice.Family.XY1, "ibeacon");
         family2prefix.put(XYDevice.Family.XY2, "ibeacon");
         family2prefix.put(XYDevice.Family.XY3, "ibeacon");
+        family2prefix.put(XYDevice.Family.XY4, "ibeacon");
         family2prefix.put(XYDevice.Family.Mobile, "mobiledevice");
         family2prefix.put(XYDevice.Family.Gps, "gps");
         family2prefix.put(XYDevice.Family.Near, "near");
@@ -215,7 +218,7 @@ public class XYDevice extends XYBase {
             XYBase.logError(TAG, "Invalid Family");
             return null;
         }
-        if ((family == Family.XY2) || (family == Family.XY3) || (family == Family.Gps)) {
+        if ((family == Family.XY2) || (family == Family.XY3) || (family == Family.Gps) || (family == Family.XY4)) {
             return "xy:" + getPrefix(family) + ":" + uuid.toString() + "." + major + "." + (minor | 0x0004);
         } else {
             return "xy:" + getPrefix(family) + ":" + uuid.toString() + "." + major + "." + minor;
@@ -227,7 +230,7 @@ public class XYDevice extends XYBase {
         UUID uuid = getUUID(id);
         if (uuid != null) {
             Family family = getFamily(uuid);
-            if ((family == Family.XY2) || (family == Family.XY3) || (family == Family.Gps)) {
+            if ((family == Family.XY2) || (family == Family.XY3) || (family == Family.Gps) || (family == Family.XY4)) {
                 normalId = "xy:" + getPrefix(id) + ":" + uuid.toString() + "." + getMajor(id) + "." + ((getMinor(id) & 0xfff0) | 0x0004);
             } else {
                 normalId = id;
@@ -1346,8 +1349,6 @@ public class XYDevice extends XYBase {
         } else {
             String prefix = getPrefix();
             switch (prefix) {
-                case "gps":
-                    return Family.Gps;
                 case "near":
                     return Family.Near;
                 case "mobiledevice":
