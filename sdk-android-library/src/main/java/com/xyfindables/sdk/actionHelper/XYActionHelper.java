@@ -15,7 +15,7 @@ public abstract class XYActionHelper {
 
     public XYDeviceAction action = null;
 
-    protected interface Callback {
+    public interface Callback {
         void completed(boolean success);
     }
 

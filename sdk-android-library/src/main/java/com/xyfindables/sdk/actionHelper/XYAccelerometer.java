@@ -63,6 +63,9 @@ public class XYAccelerometer extends XYActionHelper {
                             statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                         }
                         break;
+                    case STATUS_COMPLETED:
+                        callback.completed(success);
+                        break;
                 }
                 return result;
             }
@@ -85,6 +88,9 @@ public class XYAccelerometer extends XYActionHelper {
                             XYBase.logError(TAG, "Characteristic Read Failed");
                             statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                         }
+                        break;
+                    case STATUS_COMPLETED:
+                        callback.completed(success);
                         break;
                 }
                 return result;
@@ -109,6 +115,9 @@ public class XYAccelerometer extends XYActionHelper {
                             statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                         }
                         break;
+                    case STATUS_COMPLETED:
+                        callback.completed(success);
+                        break;
                 }
                 return result;
             }
@@ -132,6 +141,9 @@ public class XYAccelerometer extends XYActionHelper {
                             statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                         }
                         break;
+                    case STATUS_COMPLETED:
+                        callback.completed(success);
+                        break;
                 }
                 return result;
             }
@@ -154,6 +166,9 @@ public class XYAccelerometer extends XYActionHelper {
                             XYBase.logError(TAG, "Characteristic Read Failed");
                             statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                         }
+                        break;
+                    case STATUS_COMPLETED:
+                        callback.completed(success);
                         break;
                 }
                 return result;

@@ -24,6 +24,7 @@ import com.xyfindables.sdk.action.XYDeviceActionGetBatteryLevel;
 import com.xyfindables.sdk.action.XYDeviceActionGetBatterySinceCharged;
 import com.xyfindables.sdk.action.XYDeviceActionGetVersion;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButton;
+import com.xyfindables.sdk.actionHelper.XYBattery;
 import com.xyfindables.sdk.bluetooth.ScanRecordLegacy;
 import com.xyfindables.sdk.bluetooth.ScanResultLegacy;
 
@@ -985,19 +986,21 @@ public class XYDevice extends XYBase {
         if (_batteryLevel < BATTERYLEVEL_CHECKED || force) {
             _batteryLevel = BATTERYLEVEL_CHECKED;
             Log.v(TAG, "batteryTest-read battery level for id = " + getId());
-            XYDeviceActionGetBatteryLevel getBatteryLevel = new XYDeviceActionGetBatteryLevel(this) {
-                public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    boolean result = super.statusChanged(status, gatt, characteristic, success);
-                    if (status == STATUS_CHARACTERISTIC_READ) {
-                        if (success) {
-                            _batteryLevel = this.value;
-                            reportDetected();
-                        }
+            XYBattery battery = new XYBattery(this, new XYBattery.Callback() {
+                @Override
+                public void started(boolean success, int value) {
+                    if (success) {
+                        _batteryLevel = value;
+                        reportDetected();
                     }
-                    return result;
                 }
-            };
-            getBatteryLevel.start(context.getApplicationContext());
+
+                @Override
+                public void completed(boolean success) {
+
+                }
+            });
+            battery.start(context.getApplicationContext());
         }
     }
 

@@ -27,7 +27,6 @@ public class XYSelfTest extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
                             if (!gatt.readCharacteristic(characteristic)) {
                                 statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                             }
@@ -49,7 +48,6 @@ public class XYSelfTest extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
                             if (!gatt.readCharacteristic(characteristic)) {
                                 statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                             }
@@ -75,7 +73,6 @@ public class XYSelfTest extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
                             characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                             if (!gatt.writeCharacteristic(characteristic)) {
                                 statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
@@ -96,7 +93,6 @@ public class XYSelfTest extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
                             characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                             if (!gatt.writeCharacteristic(characteristic)) {
                                 statusChanged(STATUS_COMPLETED, gatt, characteristic, false);

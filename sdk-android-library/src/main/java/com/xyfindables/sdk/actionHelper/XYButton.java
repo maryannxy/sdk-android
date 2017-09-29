@@ -23,6 +23,10 @@ public class XYButton extends XYActionHelper {
 
     private static final String TAG = XYBeep.class.getSimpleName();
 
+    public interface Callback extends XYActionHelper.Callback {
+        void started(boolean success, int value);
+    }
+
     protected XYButton(XYDevice device, final Callback callback) {
         if (device.getFamily() == XYDevice.Family.XY4) {
             action = new XYDeviceActionGetButtonStateModern(device) {
@@ -35,7 +39,7 @@ public class XYButton extends XYActionHelper {
                             value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                             break;
                         case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
+                            callback.started(success, value);
                             if (!gatt.readCharacteristic(characteristic)) {
                                 statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                             }
@@ -58,7 +62,7 @@ public class XYButton extends XYActionHelper {
                             value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                             break;
                         case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
+                            callback.started(success, value);
                             if (!gatt.readCharacteristic(characteristic)) {
                                 statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                             }

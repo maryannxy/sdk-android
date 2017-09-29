@@ -27,7 +27,6 @@ public class XYUnlock extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
                             characteristic.setValue(value);
                             if (!gatt.writeCharacteristic(characteristic)) {
                                 statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
@@ -48,7 +47,6 @@ public class XYUnlock extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
                             characteristic.setValue(value);
                             if (!gatt.writeCharacteristic(characteristic)) {
                                 statusChanged(STATUS_COMPLETED, gatt, characteristic, false);

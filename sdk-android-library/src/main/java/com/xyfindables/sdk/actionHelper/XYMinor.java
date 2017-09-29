@@ -28,7 +28,6 @@ public class XYMinor extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_READ:
-                            callback.started(success);
                             value = characteristic.getValue();
                             break;
                         case STATUS_CHARACTERISTIC_FOUND:
@@ -52,7 +51,6 @@ public class XYMinor extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_READ:
-                            callback.started(success);
                             value = characteristic.getValue();
                             break;
                         case STATUS_CHARACTERISTIC_FOUND:
@@ -79,7 +77,6 @@ public class XYMinor extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_FOUND: {
-                            callback.started(success);
                             characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT16, 0);
                             if (!gatt.writeCharacteristic(characteristic)) {
                                 statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
@@ -101,7 +98,6 @@ public class XYMinor extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_FOUND: {
-                            callback.started(success);
                             characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT16, 0);
                             if (!gatt.writeCharacteristic(characteristic)) {
                                 statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
