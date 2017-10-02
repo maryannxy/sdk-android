@@ -83,7 +83,7 @@ public class XYDevice extends XYBase {
     }
 
     private static int _missedPulsesForOutOfRange = 20;
-    private static int _actionTimeout = 60000;
+    private static int _actionTimeout = 15000;
 
     private BluetoothGatt _gatt;
 
@@ -1317,18 +1317,18 @@ public class XYDevice extends XYBase {
         return Integer.parseInt(parts2[2]);
     }
 
-    private int _updateCounter = 0;
-
-    public int getUpdateCounter() {
-        return _updateCounter;
-    }
+    private long _lastUpdateTime = 0;
 
     public boolean isUpdateSignificant() {
-        if (_updateCounter >= 100) {
-            _updateCounter = 0;
+        if (_lastUpdateTime == 0) {
+            _lastUpdateTime = System.currentTimeMillis();
+            return false;
+        }
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - _lastUpdateTime > 1800000) {
+            _lastUpdateTime = currentTime;
             return true;
         } else {
-            _updateCounter++;
             return false;
         }
     }
