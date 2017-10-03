@@ -29,14 +29,7 @@ public class XYGPSInterval extends XYActionHelper {
                 boolean result = super.statusChanged(status, gatt, characteristic, success);
                 switch (status) {
                     case STATUS_CHARACTERISTIC_READ:
-                        value = characteristic.getValue();
                         callback.started(success, value);
-                        break;
-                    case STATUS_CHARACTERISTIC_FOUND:
-                        if (!gatt.readCharacteristic(characteristic)) {
-                            XYBase.logError(TAG, "Characteristic Read Failed");
-                            statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                        }
                         break;
                     case STATUS_COMPLETED:
                         callback.completed(success);
@@ -54,13 +47,6 @@ public class XYGPSInterval extends XYActionHelper {
                 Log.v(TAG, "statusChanged:" + status + ":" + success);
                 boolean result = super.statusChanged(status, gatt, characteristic, success);
                 switch (status) {
-                    case STATUS_CHARACTERISTIC_FOUND: {
-                        characteristic.setValue(value);
-                        if (!gatt.writeCharacteristic(characteristic)) {
-                            statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                        }
-                        break;
-                    }
                     case STATUS_COMPLETED:
                         callback.completed(success);
                         break;

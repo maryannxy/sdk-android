@@ -30,20 +30,7 @@ public class XYFirmware extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_READ:
-                            byte[] versionBytes = characteristic.getValue();
-                            if (versionBytes.length > 0) {
-                                value = "";
-                                for (byte b : versionBytes) {
-                                    value += String.format("%x", b);
-                                }
-                            }
                             callback.started(success, value);
-                            break;
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            if (!gatt.readCharacteristic(characteristic)) {
-                                XYBase.logError(TAG, "Characteristic Read Failed");
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
                             break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
@@ -60,20 +47,7 @@ public class XYFirmware extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_READ:
-                            byte[] versionBytes = characteristic.getValue();
-                            if (versionBytes.length > 0) {
-                                value = "";
-                                for (byte b : versionBytes) {
-                                    value += String.format("%x", b);
-                                }
-                            }
                             callback.started(success, value);
-                            break;
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            if (!gatt.readCharacteristic(characteristic)) {
-                                XYBase.logError(TAG, "Characteristic Read Failed");
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
                             break;
                         case STATUS_COMPLETED:
                             callback.completed(success);

@@ -26,14 +26,6 @@ public class XYSelfTest extends XYActionHelper {
                     Log.v(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            if (!gatt.readCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
-                            break;
-                        case STATUS_CHARACTERISTIC_READ:
-                            value = characteristic.getValue();
-                            break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
                     }
@@ -47,14 +39,6 @@ public class XYSelfTest extends XYActionHelper {
                     Log.v(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            if (!gatt.readCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
-                            break;
-                        case STATUS_CHARACTERISTIC_READ:
-                            value = characteristic.getValue();
-                            break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
                     }
@@ -72,12 +56,6 @@ public class XYSelfTest extends XYActionHelper {
                     Log.v(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                            if (!gatt.writeCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
-                            break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
                             break;
@@ -92,12 +70,6 @@ public class XYSelfTest extends XYActionHelper {
                     Log.v(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                            if (!gatt.writeCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
-                            break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
                             break;

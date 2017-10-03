@@ -1094,14 +1094,14 @@ public class XYDevice extends XYBase {
         Log.v(TAG, "pulse18: " + _id + ":" + scanResult.getRssi());
         _scansMissed = 0;
 
-        if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
+        if (getFamily() == Family.XY3 || getFamily() == Family.Gps || getFamily() == Family.XY4) {
             ScanRecordLegacy scanRecord = scanResult.getScanRecord();
             if (scanRecord != null) {
                 byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
                 if (manufacturerData != null) {
                     if ((manufacturerData[21] & 0x08) == 0x08 && scanResult.getRssi() != outOfRangeRssi) {
                         handleButtonPulse();
-                        if (getFamily() == Family.Gps) {
+                        if (getFamily() == Family.Gps || getFamily() == Family.XY4) {
                             _currentScanResult18 = scanResult;
                             reportEntered();
                             reportDetected();
@@ -1142,7 +1142,7 @@ public class XYDevice extends XYBase {
         Log.v(TAG, "pulse21: " + _id + ":" + scanResult.getRssi());
         _scansMissed = 0;
 
-        if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
+        if (getFamily() == Family.XY3 || getFamily() == Family.Gps || getFamily() == Family.XY4) {
             android.bluetooth.le.ScanRecord scanRecord = scanResult.getScanRecord();
             if (scanRecord != null) {
                 byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
@@ -1151,7 +1151,7 @@ public class XYDevice extends XYBase {
                     if ((manufacturerData[21] & 0x08) == 0x08 && scanResult.getRssi() != outOfRangeRssi) {
                         handleButtonPulse();
                         Log.v(TAG, "handleButtonPulse");
-                        if (getFamily() == Family.Gps) {
+                        if (getFamily() == Family.Gps || getFamily() == Family.XY4) {
                             _currentScanResult21 = scanResult;
                             reportEntered();
                             reportDetected();

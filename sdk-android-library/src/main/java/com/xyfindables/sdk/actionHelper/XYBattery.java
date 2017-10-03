@@ -30,13 +30,7 @@ public class XYBattery extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_READ:
-                            value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                             callback.started(success, value);
-                            break;
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            if (!gatt.readCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
                             break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
@@ -53,13 +47,7 @@ public class XYBattery extends XYActionHelper {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_READ:
-                            value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                             callback.started(success, value);
-                            break;
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            if (!gatt.readCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
                             break;
                         case STATUS_COMPLETED:
                             callback.completed(success);

@@ -36,12 +36,6 @@ public class XYBeep extends XYActionHelper {
                         case STATUS_STARTED:
                             callback.started(success);
                             break;
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            characteristic.setValue(value);
-                            if (!gatt.writeCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
-                            break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
                             break;
@@ -58,12 +52,6 @@ public class XYBeep extends XYActionHelper {
                     switch (status) {
                         case STATUS_STARTED:
                             callback.started(success);
-                            break;
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            characteristic.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                            if (!gatt.writeCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
                             break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
@@ -86,12 +74,6 @@ public class XYBeep extends XYActionHelper {
                         case STATUS_STARTED:
                             callback.started(success);
                             break;
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            characteristic.setValue(index, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                            if (!gatt.writeCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
-                            break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
                             break;
@@ -108,12 +90,6 @@ public class XYBeep extends XYActionHelper {
                     switch (status) {
                         case STATUS_STARTED:
                             callback.started(success);
-                            break;
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            characteristic.setValue(index, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                            if (!gatt.writeCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
                             break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
