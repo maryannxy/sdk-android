@@ -1102,9 +1102,11 @@ public class XYDevice extends XYBase {
                     if ((manufacturerData[21] & 0x08) == 0x08 && scanResult.getRssi() != outOfRangeRssi) {
                         handleButtonPulse();
                         if (getFamily() == Family.Gps || getFamily() == Family.XY4) {
-                            _currentScanResult18 = scanResult;
-                            reportEntered();
-                            reportDetected();
+                            if (_currentScanResult18 == null) {
+                                _currentScanResult18 = scanResult;
+                                reportEntered();
+                                reportDetected();
+                            }
                         }
                         return;
                     }
@@ -1152,9 +1154,11 @@ public class XYDevice extends XYBase {
                         handleButtonPulse();
                         Log.v(TAG, "handleButtonPulse");
                         if (getFamily() == Family.Gps || getFamily() == Family.XY4) {
-                            _currentScanResult21 = scanResult;
-                            reportEntered();
-                            reportDetected();
+                            if (_currentScanResult21 == null) {
+                                _currentScanResult21 = scanResult;
+                                reportEntered();
+                                reportDetected();
+                            }
                         }
                         return;
                     }
@@ -1197,6 +1201,7 @@ public class XYDevice extends XYBase {
         }
         _stayConnectedActive = true;
         pushConnection();
+        // will need update to support xy4
         _subscribeButton = new XYDeviceActionSubscribeButton(this) {
             @Override
             public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
