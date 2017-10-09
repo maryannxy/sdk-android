@@ -607,11 +607,6 @@ public class XYDevice extends XYBase {
                                 XYBase.logError(TAG, "statusChanged:onServicesDiscovered Failed: " + status);
                                 endActionFrame(currentAction, false);
                             }
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException ex) {
-                                Log.e(TAG, "connTest-" + ex.toString());
-                            }
                         } else {
                             logError(TAG, "null _currentAction");
                         }
