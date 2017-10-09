@@ -330,8 +330,10 @@ public class XYDevice extends XYBase {
         } else {
             if (_stayConnectedActive) {
                 _stayConnectedActive = false;
-                _subscribeButton.stop();
-                _subscribeButton = null;
+                if (_subscribeButton != null) {
+                    _subscribeButton.stop();
+                    _subscribeButton = null;
+                }
                 popConnection();
                 Log.v(TAG, "connTest-popConnection4");
             }
