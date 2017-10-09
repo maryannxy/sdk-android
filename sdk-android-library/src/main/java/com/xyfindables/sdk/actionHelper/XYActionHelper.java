@@ -10,16 +10,13 @@ import com.xyfindables.sdk.action.XYDeviceAction;
 
 public abstract class XYActionHelper {
 
-    public static int GET = 0;
-    public static int SET = 1;
-
     public XYDeviceAction action = null;
 
-    public interface Callback {
+    protected interface Callback {
         void completed(boolean success);
     }
 
-    public interface Notification {
+    protected interface Notification {
         void updated(boolean status);
     }
 

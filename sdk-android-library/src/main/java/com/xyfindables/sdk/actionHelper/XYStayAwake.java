@@ -75,7 +75,7 @@ public class XYStayAwake extends XYActionHelper {
             action = new XYDeviceActionSetRegistration(device, value) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    Log.v(TAG, "testOta-statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_COMPLETED:

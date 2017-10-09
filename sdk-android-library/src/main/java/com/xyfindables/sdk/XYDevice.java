@@ -13,6 +13,7 @@ import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -311,11 +312,7 @@ public class XYDevice extends XYBase {
         if (value == _isInOtaMode) {
             return;
         }
-        if (value) {
-            XYSmartScan.instance.pauseAutoScan(true);
-        } else {
-            XYSmartScan.instance.pauseAutoScan(false);
-        }
+        XYSmartScan.instance.pauseAutoScan(value);
         _isInOtaMode = value;
     }
 
@@ -417,12 +414,7 @@ public class XYDevice extends XYBase {
 
     public void endOta() {
         otaMode(false);
-        if (_currentAction != null) {
-            _currentAction.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, false);
-        }
-        _currentAction = null;
-        releaseActionLock(); // ?? necessary ??
-        popConnection();
+//        popConnection();
         Log.v(TAG, "connTest-popConnection2");
     }
 
@@ -610,11 +602,6 @@ public class XYDevice extends XYBase {
                             } else {
                                 XYBase.logError(TAG, "statusChanged:onServicesDiscovered Failed: " + status);
                                 endActionFrame(currentAction, false);
-                            }
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException ex) {
-                                Log.e(TAG, "connTest-" + ex.toString());
                             }
                         } else {
                             logError(TAG, "null _currentAction");

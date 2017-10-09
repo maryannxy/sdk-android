@@ -40,20 +40,6 @@ public abstract class XYDeviceActionOtaWrite extends XYDeviceAction {
     private XYDevice _device;
 
     @Override
-    public void start(final Context context) {
-        Log.i(TAG, this.getClass().getSuperclass().getSimpleName() + ":starting...");
-        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                Log.i(TAG, "running...");
-                _device.queueAction(context.getApplicationContext(), XYDeviceActionOtaWrite.this);
-                return null;
-            }
-        };
-        asyncTask.executeOnExecutor(_threadPool);
-    }
-
-    @Override
     public UUID getServiceId() {
         return XYDeviceService.BasicConfig;
     }
