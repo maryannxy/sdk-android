@@ -331,8 +331,10 @@ public class XYDevice extends XYBase {
         } else {
             if (_stayConnectedActive) {
                 _stayConnectedActive = false;
-                _subscribeButton.stop();
-                _subscribeButton = null;
+                if (_subscribeButton != null) {
+                    _subscribeButton.stop();
+                    _subscribeButton = null;
+                }
                 popConnection();
                 Log.v(TAG, "connTest-popConnection4");
             }
@@ -363,7 +365,7 @@ public class XYDevice extends XYBase {
 
         _actionFrameTimer = new Timer("ActionTimer");
         _actionFrameTimer.schedule(timerTask, _actionTimeout);
-        _actionTimeout = 60000;
+        _actionTimeout = 15000;
     }
 
     private void cancelActionTimer() {

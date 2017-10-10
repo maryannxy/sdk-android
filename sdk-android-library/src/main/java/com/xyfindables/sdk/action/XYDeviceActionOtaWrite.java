@@ -1,23 +1,13 @@
 package com.xyfindables.sdk.action;
 
-import android.annotation.TargetApi;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.content.Context;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.util.Log;
-
-import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYDeviceCharacteristic;
 import com.xyfindables.sdk.XYDeviceService;
 
-import java.nio.ByteBuffer;
 import java.util.UUID;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by alex.mcelroy on 6/12/2017.
