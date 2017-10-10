@@ -84,7 +84,7 @@ public class XYDevice extends XYBase {
     }
 
     private static int _missedPulsesForOutOfRange = 20;
-    private static int _actionTimeout = 15000;
+    private static int _actionTimeout = 30000;
 
     private BluetoothGatt _gatt;
 
@@ -365,7 +365,7 @@ public class XYDevice extends XYBase {
 
         _actionFrameTimer = new Timer("ActionTimer");
         _actionFrameTimer.schedule(timerTask, _actionTimeout);
-        _actionTimeout = 15000;
+        _actionTimeout = 30000;
     }
 
     private void cancelActionTimer() {
