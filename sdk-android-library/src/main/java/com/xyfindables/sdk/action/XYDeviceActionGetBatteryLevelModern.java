@@ -4,36 +4,34 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.util.Log;
 
-import com.xyfindables.core.XYBase;
+import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYDeviceCharacteristic;
 import com.xyfindables.sdk.XYDeviceService;
-import com.xyfindables.sdk.XYDevice;
 
 import java.util.UUID;
 
 /**
- * Created by arietrouw on 1/2/17.
+ * Created by alex.mcelroy on 9/6/2017.
  */
 
-public abstract class XYDeviceActionGetVersion extends XYDeviceAction {
+public abstract class XYDeviceActionGetBatteryLevelModern extends XYDeviceAction {
+    private static final String TAG = XYDeviceActionGetBatteryLevelModern.class.getSimpleName();
 
-    private static final String TAG = XYDeviceActionGetVersion.class.getSimpleName();
+    public int value;
 
-    public String value;
-
-    public XYDeviceActionGetVersion(XYDevice device) {
+    public XYDeviceActionGetBatteryLevelModern(XYDevice device) {
         super(device);
         Log.v(TAG, TAG);
     }
 
     @Override
     public UUID getServiceId() {
-        return XYDeviceService.Control;
+        return XYDeviceService.XY4Battery;
     }
 
     @Override
     public UUID getCharacteristicId() {
-        return XYDeviceCharacteristic.ControlVersion;
+        return XYDeviceCharacteristic.XY4BatteryLevel;
     }
 
     @Override
@@ -42,19 +40,10 @@ public abstract class XYDeviceActionGetVersion extends XYDeviceAction {
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_READ:
-                byte[] versionBytes = characteristic.getValue();
-                if (versionBytes.length > 0) {
-                    value = "";
-                    for (byte b : versionBytes) {
-                        value += String.format("%x", b);
-                    }
-                    Long intValue = Long.parseLong(value, 16);
-                    value = intValue.toString();
-                }
+                value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                 break;
             case STATUS_CHARACTERISTIC_FOUND:
                 if (!gatt.readCharacteristic(characteristic)) {
-                    XYBase.logError(TAG, "Characteristic Read Failed");
                     statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                 }
                 break;

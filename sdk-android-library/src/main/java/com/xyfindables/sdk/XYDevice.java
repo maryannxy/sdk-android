@@ -2,7 +2,6 @@ package com.xyfindables.sdk;
 
 import android.annotation.TargetApi;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -14,9 +13,8 @@ import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Handler;
-import android.support.annotation.Nullable;
+import android.os.Looper;
 import android.util.Log;
 
 import com.xyfindables.core.XYSemaphore;
@@ -24,17 +22,11 @@ import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.action.XYDeviceAction;
 import com.xyfindables.sdk.action.XYDeviceActionGetBatteryLevel;
 import com.xyfindables.sdk.action.XYDeviceActionGetBatterySinceCharged;
-import com.xyfindables.sdk.action.XYDeviceActionGetSIMId;
 import com.xyfindables.sdk.action.XYDeviceActionGetVersion;
-import com.xyfindables.sdk.action.XYDeviceActionOtaWrite;
-import com.xyfindables.sdk.action.XYDeviceActionSetRegistration;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButton;
-import com.xyfindables.sdk.action.XYDeviceActionUnlock;
 import com.xyfindables.sdk.bluetooth.ScanRecordLegacy;
 import com.xyfindables.sdk.bluetooth.ScanResultLegacy;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -338,8 +330,10 @@ public class XYDevice extends XYBase {
         } else {
             if (_stayConnectedActive) {
                 _stayConnectedActive = false;
-                _subscribeButton.stop();
-                _subscribeButton = null;
+                if (_subscribeButton != null) {
+                    _subscribeButton.stop();
+                    _subscribeButton = null;
+                }
                 popConnection();
                 Log.v(TAG, "connTest-popConnection4");
             }
@@ -358,7 +352,7 @@ public class XYDevice extends XYBase {
                 if (_currentAction == null) {
                     XYBase.logError(TAG, "Null Action timed out", false);
                 } else {
-                    XYBase.logError(TAG, "Action Timeout:" + _currentAction.getClass().getSuperclass().getSimpleName(), false);
+                    XYBase.logError(TAG, "Action Timeout", false);
                     endActionFrame(_currentAction, false);
                 }
                 if (_actionFrameTimer != null) {
@@ -393,10 +387,8 @@ public class XYDevice extends XYBase {
     }
 
     private int startActionFrame(XYDeviceAction action) {
-        if (_isInOtaMode && action != _currentAction) {
-            return 0;
-        }
-        Log.v(TAG, "startActionFrame" + action.getClass().getSuperclass().getSimpleName());
+
+        Log.v(TAG, "startActionFrame");
         pushConnection();
         action.statusChanged(XYDeviceAction.STATUS_QUEUED, null, null, true);
 //        try {
@@ -408,9 +400,9 @@ public class XYDevice extends XYBase {
         // acquireUninterruptibly is used so lock is not release when thread expires (due to calling discoverServices)
         _actionLock.acquireUninterruptibly();
 //        _connectIntent = true;
-        Log.v(TAG, "_actionLock[" + getId() + "]:acquired:" + action.getClass().getSuperclass().getSimpleName());
+        Log.v(TAG, "_actionLock[" + getId() + "]:acquired");
         action.statusChanged(XYDeviceAction.STATUS_STARTED, null, null, true);
-        Log.i(TAG, "startActionFrame-action started" + " " + action.getClass().getSuperclass().getSimpleName());
+        Log.i(TAG, "startActionFrame-action started");
         _currentAction = action;
         startActionTimer();
         return action.hashCode();
@@ -427,13 +419,13 @@ public class XYDevice extends XYBase {
             _currentAction.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, false);
         }
         _currentAction = null;
-        releaseActionLock();
+        releaseActionLock(); // ?? necessary ??
         popConnection();
         Log.v(TAG, "connTest-popConnection2");
     }
 
     private void endActionFrame(XYDeviceAction action, boolean success) {
-        Log.v(TAG, "endActionFrame: success = " + success + ": otaMode = " + _isInOtaMode + " " + action.getClass().getSuperclass().getSimpleName());
+        Log.v(TAG, "endActionFrame: success = " + success + ": otaMode = " + _isInOtaMode);
         if (action == null) {
             XYBase.logError(TAG, "Ending Null Action", false);
             return;
@@ -446,7 +438,7 @@ public class XYDevice extends XYBase {
         }
         cancelActionTimer();
         action.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, success);
-        Log.v(TAG, "_actionLock[" + getId() + "]:release:" + action.getClass().getSuperclass().getSimpleName());
+        Log.v(TAG, "_actionLock[" + getId() + "]:release");
         _currentAction = null;
 //        _connectIntent = false;
         releaseActionLock();
@@ -518,9 +510,6 @@ public class XYDevice extends XYBase {
                     public void onConnectionStateChange(final BluetoothGatt gatt, int status, int newState) {
                         super.onConnectionStateChange(gatt, status, newState);
                         Log.i(TAG, "connTest-onConnectionStateChange:" + status + ":" + newState + ":" + getId());
-                        if (_currentAction != null) {
-                            Log.i(TAG, "connTest-currentAction != null:" + _currentAction.getClass().getSuperclass().getSimpleName());
-                        }
                         switch (newState) {
                             case BluetoothGatt.STATE_CONNECTED:
                                 Log.v(TAG, "connTest-STATE_CONNECTED status is " + status);
@@ -595,7 +584,7 @@ public class XYDevice extends XYBase {
                     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
 
                         super.onServicesDiscovered(gatt, status);
-                        XYDeviceAction currentAction = _currentAction;
+                        final XYDeviceAction currentAction = _currentAction;
                         Log.v(TAG, "connTest-onServicesDiscovered");
                         if (currentAction != null) {
                             if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -643,7 +632,7 @@ public class XYDevice extends XYBase {
                     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
                         super.onCharacteristicWrite(gatt, characteristic, status);
                         if (status == BluetoothGatt.GATT_SUCCESS) {
-                            Log.i(TAG, "onCharacteristicWrite:" + status + " " + _currentAction.getClass().getSuperclass().getSimpleName());
+                            Log.i(TAG, "onCharacteristicWrite:" + status);
                             if (_currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, characteristic, true)) {
                                 endActionFrame(_currentAction, true);
                             }
@@ -739,7 +728,7 @@ public class XYDevice extends XYBase {
 //                                    _connectIntent = true;
                                     Log.v(TAG, "connTest-_connectIntent = " + _connectIntent);
                                     boolean connected = gatt.connect();
-                                    Log.v(TAG, "connTest-Connect:" + connected + " " + _currentAction.getClass().getSuperclass().getSimpleName());
+                                    Log.v(TAG, "connTest-Connect:" + connected);
                                     gatt.discoverServices();
                                     Log.v(TAG, "connTest-Connect:" + connected + " - gatt object = " + gatt.hashCode());
                                 }
@@ -812,7 +801,7 @@ public class XYDevice extends XYBase {
         if (_currentScanResult21 != null || _currentScanResult18 != null) {
             Log.v(TAG, "connTest-pushConnection[" + _connectionCount + "->" + (_connectionCount + 1) + "]:" + getId());
             if (_currentAction != null) {
-                Log.e(TAG, "connTest-action: " + _currentAction.getClass().getSuperclass().getSimpleName());
+                Log.e(TAG, "connTest-action");
             } else {
                 Log.e(TAG, "connTest-null currentAction");
             }
@@ -831,20 +820,21 @@ public class XYDevice extends XYBase {
                 if (_connectionCount < 0) {
                     XYBase.logError(TAG, "Negative Connection Count:" + getId(), false);
                     _connectionCount = 0;
-                }
-                if (_connectionCount == 0) {
-                    if (_stayConnectedActive) {
-                        _subscribeButton = null;
-                        _stayConnectedActive = false;
-                    }
-                    BluetoothGatt gatt = getGatt();
-                    if (gatt != null) {
-                        Log.v(TAG, "gatt.disconnect");
-                        gatt.disconnect();
-                        Log.v(TAG, "connTest-closeGatt1");
-                        closeGatt();
-                    } else {
-                        Log.e(TAG, "popConnection gat is null!");
+                } else {
+                    if (_connectionCount == 0) {
+                        if (_stayConnectedActive) {
+                            _subscribeButton = null;
+                            _stayConnectedActive = false;
+                        }
+                        BluetoothGatt gatt = getGatt();
+                        if (gatt != null) {
+                            Log.v(TAG, "gatt.disconnect");
+                            gatt.disconnect();
+                            Log.v(TAG, "connTest-closeGatt1");
+                            closeGatt();
+                        } else {
+                            Log.e(TAG, "popConnection gat is null!");
+                        }
                     }
                 }
             }
@@ -862,24 +852,35 @@ public class XYDevice extends XYBase {
         if (_connectionCount > 0) {
             XYBase.logError(TAG, "Closing GATT with open connections!", false);
             _connectionCount = 0;
+            /* try moving just the disconnect into below block
+            in case close without disconnect causes issue unregistering client inside close
+
             BluetoothGatt gatt = getGatt();
             if (gatt != null) {
                 gatt.disconnect();
                 Log.v(TAG, "gatt.disconnect");
-            }
+            } */
         }
         if (_connectionCount < 0) {
             XYBase.logError(TAG, "Closing GATT with negative connections!", false);
             _connectionCount = 0;
         }
-        BluetoothGatt gatt = getGatt();
+        final BluetoothGatt gatt = getGatt();
         if (gatt == null) {
-            // no false because debug should throw runtime
             XYBase.logError(TAG, "Closing Null Gatt");
             Log.e(TAG, "Closing Null Gatt");
             releaseBleLock();
             Log.v(TAG, "connTest-release1");
         } else {
+            // trying to add disconnect here to see if improved behavior, read above comment
+            // could make difference in case connectionCount is 0 when it should be 1
+            gatt.disconnect();
+            // may be a timing issue calling close immediately after disconnect - try waiting 100 ms
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                Log.e(TAG, "connTest-" + ex.toString());
+            }
             gatt.close();
             Log.v(TAG, "connTest-gatt.close inside closeGatt");
             setGatt(null);
@@ -1080,8 +1081,8 @@ public class XYDevice extends XYBase {
     }
 
     @TargetApi(18)
-    public void pulse18(ScanResultLegacy scanResult) {
-        XYBase.logExtreme(TAG, "pulse18: " + _id + ":" + scanResult.getRssi());
+    void pulse18(ScanResultLegacy scanResult) {
+        Log.v(TAG, "pulse18: " + _id + ":" + scanResult.getRssi());
         _scansMissed = 0;
 
         if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
@@ -1125,11 +1126,11 @@ public class XYDevice extends XYBase {
     }
 
     @TargetApi(21)
-    public void pulse21(Object scanResultObject) {
+    void pulse21(Object scanResultObject) {
 
         android.bluetooth.le.ScanResult scanResult = (android.bluetooth.le.ScanResult) scanResultObject;
 //        Log.i(TAG, "testScanResult- " + scanResult);
-        XYBase.logExtreme(TAG, "pulse21: " + _id + ":" + scanResult.getRssi());
+        Log.v(TAG, "pulse21: " + _id + ":" + scanResult.getRssi());
         _scansMissed = 0;
 
         if (getFamily() == Family.XY3 || getFamily() == Family.Gps) {
@@ -1150,7 +1151,6 @@ public class XYDevice extends XYBase {
                     }
                 }
             }
-
         }
 
         if ((_currentScanResult21 == null) || ((_currentScanResult21.getRssi() == outOfRangeRssi) && (scanResult.getRssi() != outOfRangeRssi))) {
@@ -1508,7 +1508,8 @@ public class XYDevice extends XYBase {
         XY3,
         Mobile,
         Gps,
-        Near
+        Near,
+        XY4
     }
 
     public enum ButtonType {

@@ -6,19 +6,18 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.util.Log;
 
 import com.xyfindables.core.XYBase;
+import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYDeviceCharacteristic;
 import com.xyfindables.sdk.XYDeviceService;
-import com.xyfindables.sdk.XYDevice;
 
 import java.util.UUID;
 
 /**
- * Created by arietrouw on 1/1/17.
+ * Created by alex.mcelroy on 9/6/2017.
  */
 
-public abstract class XYDeviceActionSubscribeButton extends XYDeviceAction {
-
-    private static final String TAG = XYDeviceActionSubscribeButton.class.getSimpleName();
+public abstract class XYDeviceActionSubscribeButtonModern extends XYDeviceAction {
+    private static final String TAG = XYDeviceActionSubscribeButtonModern.class.getSimpleName();
 
     public static final UUID CLIENT_CHARACTERISTIC_CONFIG = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
     public static final int BUTTONPRESS_SINGLE = 1;
@@ -28,7 +27,7 @@ public abstract class XYDeviceActionSubscribeButton extends XYDeviceAction {
     private BluetoothGatt _gatt = null;
     private BluetoothGattCharacteristic _characteristic = null;
 
-    public XYDeviceActionSubscribeButton(XYDevice device) {
+    public XYDeviceActionSubscribeButtonModern(XYDevice device) {
         super(device);
         Log.v(TAG, TAG);
     }
@@ -45,12 +44,12 @@ public abstract class XYDeviceActionSubscribeButton extends XYDeviceAction {
 
     @Override
     public UUID getServiceId() {
-        return XYDeviceService.Control;
+        return XYDeviceService.XY4Primary;
     }
 
     @Override
     public UUID getCharacteristicId() {
-        return XYDeviceCharacteristic.ControlButton;
+        return XYDeviceCharacteristic.XY4PrimaryButtonState;
     }
 
     @Override

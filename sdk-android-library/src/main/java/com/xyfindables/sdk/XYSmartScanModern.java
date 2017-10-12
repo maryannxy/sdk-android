@@ -16,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -26,7 +27,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 
 @TargetApi(21)
-public class XYSmartScanModern extends XYSmartScan {
+class XYSmartScanModern extends XYSmartScan {
 
     final private static String TAG = XYSmartScanModern.class.getSimpleName();
 
@@ -35,11 +36,11 @@ public class XYSmartScanModern extends XYSmartScan {
 
     private boolean _pumpScanResults21Active = false;
 
-    protected int _pulseCountForScan = 0;
+    private int _pulseCountForScan = 0;
 
     private ConcurrentLinkedQueue<android.bluetooth.le.ScanResult> _scanResults21;
 
-    protected XYSmartScanModern() {
+    public XYSmartScanModern() {
         super();
         Log.v(TAG, "XYSmartScanModern");
 
@@ -51,7 +52,7 @@ public class XYSmartScanModern extends XYSmartScan {
         return false;
     }
 
-    protected final BroadcastReceiver _receiver21 = new BroadcastReceiver() {
+    private final BroadcastReceiver _receiver21 = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
@@ -234,7 +235,8 @@ public class XYSmartScanModern extends XYSmartScan {
                         scanner.stopScan(scanCallback);
                         scanner.flushPendingScanResults(scanCallback);
                     }
-                } catch(IllegalStateException | NullPointerException ex) {
+                } catch(IllegalStateException | NullPointerException |
+                ConcurrentModificationException ex) {
                     //this happens if the bt adapter was turned off after previous check
                     //effectivly, we treat it as no scan results found
                 }
@@ -326,7 +328,7 @@ public class XYSmartScanModern extends XYSmartScan {
         });*/
     }
 
-    public void reset(Context context) {
+    private void reset(Context context) {
         Log.i(TAG, "reset");
         XYBase.logError(TAG, "resetting bluetooth adapter", false);
         /*if (Build.VERSION.SDK_INT == 21) {
