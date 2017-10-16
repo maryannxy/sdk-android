@@ -364,7 +364,11 @@ public class XYDevice extends XYBase {
         };
 
         _actionFrameTimer = new Timer("ActionTimer");
-        _actionFrameTimer.schedule(timerTask, _actionTimeout);
+        try {
+            _actionFrameTimer.schedule(timerTask, _actionTimeout);
+        } catch (IllegalStateException ex) {
+            XYBase.logError(TAG, ex.toString());
+        }
         _actionTimeout = 30000;
     }
 
@@ -470,23 +474,24 @@ public class XYDevice extends XYBase {
                 Log.v(TAG, "connTest-queueAction");
 
                 if (getBluetoothDevice() == null) {
-                    for (int i = 0; i < 5; i++) {
-                        if (getBluetoothDevice() == null) {
-                            Log.e(TAG, "connTest-null BlueToothDevice-try again- count " + i);
-                            try {
-                                Thread.sleep(3000);
-                            } catch (InterruptedException ex) {
-                                Log.e(TAG, ex.toString());
-                            }
-                        } else {
-                            Log.e(TAG, "connTest-BTD now has real value = SUCCESS");
-                            break;
-                        }
-                    }
-//                    if (getBluetoothDevice() == null) {
-//                        return null;
-//                    }
+                    return null;
                 }
+
+//                if (getBluetoothDevice() == null) {
+//                    for (int i = 0; i < 5; i++) {
+//                        if (getBluetoothDevice() == null) {
+//                            Log.e(TAG, "connTest-null BlueToothDevice-try again- count " + i);
+//                            try {
+//                                Thread.sleep(3000);
+//                            } catch (InterruptedException ex) {
+//                                Log.e(TAG, ex.toString());
+//                            }
+//                        } else {
+//                            Log.e(TAG, "connTest-BTD now has real value = SUCCESS");
+//                            break;
+//                        }
+//                    }
+//                }
 
                 Log.i(TAG, "connTest-connect[" + getId() + "]:" + _connectionCount);
                 int actionLock = startActionFrame(action);
@@ -615,7 +620,7 @@ public class XYDevice extends XYBase {
                         super.onCharacteristicRead(gatt, characteristic, status);
                         if (status == BluetoothGatt.GATT_SUCCESS) {
                             Log.i(TAG, "onCharacteristicRead:" + status);
-                            if (_currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_READ, gatt, characteristic, true)) {
+                            if (_currentAction != null && _currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_READ, gatt, characteristic, true)) {
                                 endActionFrame(_currentAction, true);
                             }
                         } else {
@@ -629,7 +634,7 @@ public class XYDevice extends XYBase {
                         super.onCharacteristicWrite(gatt, characteristic, status);
                         if (status == BluetoothGatt.GATT_SUCCESS) {
                             Log.i(TAG, "onCharacteristicWrite:" + status);
-                            if (_currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, characteristic, true)) {
+                            if (_currentAction != null && _currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, characteristic, true)) {
                                 endActionFrame(_currentAction, true);
                             }
                         } else {
@@ -658,7 +663,7 @@ public class XYDevice extends XYBase {
                         super.onDescriptorWrite(gatt, descriptor, status);
                         if (status == BluetoothGatt.GATT_SUCCESS) {
                             Log.i(TAG, "onCharacteristicRead:" + status);
-                            if (_currentAction.statusChanged(descriptor, XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, true)) {
+                            if (_currentAction != null && _currentAction.statusChanged(descriptor, XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, true)) {
                                 endActionFrame(_currentAction, true);
                             }
                         } else {
@@ -872,11 +877,11 @@ public class XYDevice extends XYBase {
             // could make difference in case connectionCount is 0 when it should be 1
             gatt.disconnect();
             // may be a timing issue calling close immediately after disconnect - try waiting 100 ms
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ex) {
-                Log.e(TAG, "connTest-" + ex.toString());
-            }
+//            try {
+//                Thread.sleep(100);
+//            } catch (InterruptedException ex) {
+//                Log.e(TAG, "connTest-" + ex.toString());
+//            }
             gatt.close();
             Log.v(TAG, "connTest-gatt.close inside closeGatt");
             setGatt(null);

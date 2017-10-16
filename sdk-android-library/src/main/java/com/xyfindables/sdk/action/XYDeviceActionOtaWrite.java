@@ -72,7 +72,7 @@ public abstract class XYDeviceActionOtaWrite extends XYDeviceAction {
 
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
 
-    public static String bytesToHex(byte[] bytes) {
+    private static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
         for (int j = 0; j < bytes.length; j++) {
             int v = bytes[j] & 0xFF;
