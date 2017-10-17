@@ -12,28 +12,28 @@ import com.xyfindables.sdk.XYDeviceService;
 import java.util.UUID;
 
 /**
- * Created by alex.mcelroy on 9/6/2017.
+ * Created by alex.mcelroy on 10/16/2017.
  */
 
-public abstract class XYDeviceActionGetVersionModern extends XYDeviceAction {
+public abstract class XYDeviceActionSetColor extends XYDeviceAction {
+    private static final String TAG = XYDeviceActionSetColor.class.getSimpleName();
 
-    private static final String TAG = XYDeviceActionGetVersionModern.class.getSimpleName();
+    public byte[] value;
 
-    public String value;
-
-    public XYDeviceActionGetVersionModern(XYDevice device) {
+    public XYDeviceActionSetColor(XYDevice device, byte[] value) {
         super(device);
-        Log.v(TAG, TAG);
+        this.value = value;
+        XYBase.logExtreme(TAG, TAG);
     }
 
     @Override
     public UUID getServiceId() {
-        return XYDeviceService.XY4Device;
+        return XYDeviceService.XY4Primary;
     }
 
     @Override
     public UUID getCharacteristicId() {
-        return XYDeviceCharacteristic.XY4DeviceFirmware;
+        return XYDeviceCharacteristic.XY4PrimaryColor;
     }
 
     @Override
@@ -41,21 +41,13 @@ public abstract class XYDeviceActionGetVersionModern extends XYDeviceAction {
         Log.v(TAG, "statusChanged:" + status + ":" + success);
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
-            case STATUS_CHARACTERISTIC_READ:
-                byte[] versionBytes = characteristic.getValue();
-                if (versionBytes.length > 0) {
-                    value = "";
-                    for (byte b : versionBytes) {
-                        value += String.format("%x", b);
-                    }
-                }
-                break;
-            case STATUS_CHARACTERISTIC_FOUND:
-                if (!gatt.readCharacteristic(characteristic)) {
-                    XYBase.logError(TAG, "Characteristic Read Failed");
+            case STATUS_CHARACTERISTIC_FOUND: {
+                characteristic.setValue(value);
+                if (!gatt.writeCharacteristic(characteristic)) {
                     statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                 }
                 break;
+            }
         }
         return result;
     }

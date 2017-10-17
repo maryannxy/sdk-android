@@ -70,6 +70,8 @@ public class XYDeviceCharacteristic {
     public static final UUID XY4PrimaryEddystoneUID = UUID.fromString("a44eacf4-0104-0001-0012-5f784c9977b5");
     public static final UUID XY4PrimaryEddystoneURL = UUID.fromString("a44eacf4-0104-0001-0013-5f784c9977b5");
     public static final UUID XY4PrimaryEddystoneEID = UUID.fromString("a44eacf4-0104-0001-0014-5f784c9977b5");
+    public static final UUID XY4PrimaryColor = UUID.fromString("a44eacf4-0104-0001-0015-5f784c9977b5");
+    public static final UUID XY4PrimaryHardwareCreateDate = UUID.fromString("a44eacf4-0104-0001-0017-5f784c9977b5");
 
     public static final UUID XY4GenericDeviceName = UUID.fromString("a44eacf4-0104-1800-2a00-5f784c9977b5");
     public static final UUID XY4GenericAppearance = UUID.fromString("a44eacf4-0104-1800-2a01-5f784c9977b5");

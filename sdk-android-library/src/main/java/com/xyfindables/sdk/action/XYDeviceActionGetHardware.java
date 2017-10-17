@@ -12,18 +12,17 @@ import com.xyfindables.sdk.XYDeviceService;
 import java.util.UUID;
 
 /**
- * Created by alex.mcelroy on 9/6/2017.
+ * Created by alex.mcelroy on 10/16/2017.
  */
 
-public abstract class XYDeviceActionGetVersionModern extends XYDeviceAction {
-
-    private static final String TAG = XYDeviceActionGetVersionModern.class.getSimpleName();
+public abstract class XYDeviceActionGetHardware extends XYDeviceAction {
+    private static final String TAG = XYDeviceActionGetHardware.class.getSimpleName();
 
     public String value;
 
-    public XYDeviceActionGetVersionModern(XYDevice device) {
+    public XYDeviceActionGetHardware(XYDevice device) {
         super(device);
-        Log.v(TAG, TAG);
+        XYBase.logExtreme(TAG, TAG);
     }
 
     @Override
@@ -33,7 +32,7 @@ public abstract class XYDeviceActionGetVersionModern extends XYDeviceAction {
 
     @Override
     public UUID getCharacteristicId() {
-        return XYDeviceCharacteristic.XY4DeviceFirmware;
+        return XYDeviceCharacteristic.XY4DeviceHardware;
     }
 
     @Override
