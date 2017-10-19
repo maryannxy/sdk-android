@@ -28,12 +28,12 @@ public abstract class XYDeviceActionGetVersionModern extends XYDeviceAction {
 
     @Override
     public UUID getServiceId() {
-        return XYDeviceService.XY4Device;
+        return XYDeviceService.DeviceStandard;
     }
 
     @Override
     public UUID getCharacteristicId() {
-        return XYDeviceCharacteristic.XY4DeviceFirmware;
+        return XYDeviceCharacteristic.DeviceFirmware;
     }
 
     @Override
@@ -46,7 +46,7 @@ public abstract class XYDeviceActionGetVersionModern extends XYDeviceAction {
                 if (versionBytes.length > 0) {
                     value = "";
                     for (byte b : versionBytes) {
-                        value += String.format("%x", b);
+                        value += (char)b;
                     }
                 }
                 break;

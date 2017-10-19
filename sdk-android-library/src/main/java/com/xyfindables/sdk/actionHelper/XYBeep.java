@@ -65,7 +65,8 @@ public class XYBeep extends XYActionHelper {
 
     public XYBeep(XYDevice device, final int index, final Callback callback) {
         if (device.getFamily() == XYDevice.Family.XY4) {
-            action = new XYDeviceActionBuzzSelectModern(device, index) {
+            byte[] value = {(byte)index, (byte)0};
+            action = new XYDeviceActionBuzzSelectModern(device, value) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
                     Log.v(TAG, "statusChanged:" + status + ":" + success);

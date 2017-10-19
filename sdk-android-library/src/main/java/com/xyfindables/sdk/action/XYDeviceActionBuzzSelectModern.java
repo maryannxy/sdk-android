@@ -17,11 +17,11 @@ import java.util.UUID;
 public abstract class XYDeviceActionBuzzSelectModern extends XYDeviceAction {
     private static final String TAG = XYDeviceActionBuzzSelectModern.class.getSimpleName();
 
-    private int _index;
+    private byte[] _value;
 
-    protected XYDeviceActionBuzzSelectModern(XYDevice device, int index) {
+    protected XYDeviceActionBuzzSelectModern(XYDevice device, byte[] value) {
         super(device);
-        _index = index;
+        _value = value;
         Log.v(TAG, TAG);
     }
 
@@ -41,7 +41,7 @@ public abstract class XYDeviceActionBuzzSelectModern extends XYDeviceAction {
         boolean result = super.statusChanged(status, gatt, characteristic, succes);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND:
-                characteristic.setValue(_index, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                characteristic.setValue(_value);
                 if (!gatt.writeCharacteristic(characteristic)) {
                     statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                 }
