@@ -76,6 +76,7 @@ public class XYDevice extends XYBase {
         _connectIntent = value;
     }
 
+    private int _rssi = 0;
     private boolean _isConnected = false;
     private int _connectionCount = 0;
     private boolean _stayConnected = false;
@@ -258,10 +259,15 @@ public class XYDevice extends XYBase {
     }
 
     public int getRssi() {
-        if (XYSmartScan.instance.legacy()) {
-            return getRssi18();
+        if (_gatt != null) {
+            _gatt.readRemoteRssi();
+            return _rssi;
         } else {
-            return getRssi21();
+            if (XYSmartScan.instance.legacy()) {
+                return getRssi18();
+            } else {
+                return getRssi21();
+            }
         }
     }
 
@@ -485,22 +491,6 @@ public class XYDevice extends XYBase {
                     return null;
                 }
 
-//                if (getBluetoothDevice() == null) {
-//                    for (int i = 0; i < 5; i++) {
-//                        if (getBluetoothDevice() == null) {
-//                            Log.e(TAG, "connTest-null BlueToothDevice-try again- count " + i);
-//                            try {
-//                                Thread.sleep(3000);
-//                            } catch (InterruptedException ex) {
-//                                Log.e(TAG, ex.toString());
-//                            }
-//                        } else {
-//                            Log.e(TAG, "connTest-BTD now has real value = SUCCESS");
-//                            break;
-//                        }
-//                    }
-//                }
-
                 Log.i(TAG, "connTest-connect[" + getId() + "]:" + _connectionCount);
                 int actionLock = startActionFrame(action);
                 if (actionLock == 0) {
@@ -697,6 +687,7 @@ public class XYDevice extends XYBase {
                     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
                         super.onReadRemoteRssi(gatt, rssi, status);
                         Log.i(TAG, "onReadRemoteRssi:" + rssi);
+                        _rssi = rssi;
                     }
 
                     @Override
@@ -1399,7 +1390,9 @@ public class XYDevice extends XYBase {
     }
 
     public Proximity getProximity() {
+
         int currentRssi = getRssi();
+
         if (currentRssi == 0) {
             return Proximity.None;
         } else if (currentRssi >= -40) {

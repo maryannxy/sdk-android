@@ -143,5 +143,4 @@ public class XYSmartScanLegacy extends XYSmartScan {
         _scanningControl.release();
         Log.v(TAG, "scan:finish");
     }
-
 }
