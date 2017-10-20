@@ -105,12 +105,7 @@ public class XYDevice extends XYBase {
     private Context _connectedContext;
 
     static {
-        _threadPool = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new RejectedExecutionHandler() {
-            @Override
-            public void rejectedExecution(Runnable runnable, ThreadPoolExecutor threadPoolExecutor) {
-                Log.e(TAG, "testThreadPool - pool = " + threadPoolExecutor.getPoolSize() + " : queue = " + threadPoolExecutor.getQueue() + " : tasks = " + threadPoolExecutor.getTaskCount() + " : isTerminating = " + threadPoolExecutor.isTerminating() + " : isTerminated = " + threadPoolExecutor.isTerminated());
-            }
-        });
+        _threadPool = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
         _instanceCount = 0;
     }
 
@@ -532,6 +527,7 @@ public class XYDevice extends XYBase {
 //                                _connectIntent = false;
                                 Log.i(TAG, "onConnectionStateChange:Connected: " + getId());
                                 reportConnectionStateChanged(STATE_CONNECTED);
+                                gatt.readRemoteRssi();
                                 gatt.discoverServices();
                                 Log.v(TAG, "stateConnected: gatt object = " + gatt.hashCode());
                                 break;
@@ -700,7 +696,7 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
                         super.onReadRemoteRssi(gatt, rssi, status);
-                        Log.i(TAG, "onReadRemoteRssi:" + status);
+                        Log.i(TAG, "onReadRemoteRssi:" + rssi);
                     }
 
                     @Override
