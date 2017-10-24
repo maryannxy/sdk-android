@@ -12,18 +12,13 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
-import android.nfc.Tag;
 import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Debug;
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 
 import com.xyfindables.core.XYSemaphore;
 import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.action.XYDeviceAction;
-import com.xyfindables.sdk.action.XYDeviceActionGetBatteryLevel;
 import com.xyfindables.sdk.action.XYDeviceActionGetBatterySinceCharged;
 import com.xyfindables.sdk.action.XYDeviceActionGetVersion;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButton;
@@ -41,7 +36,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -366,10 +360,12 @@ public class XYDevice extends XYBase {
                     XYBase.logError(TAG, "Action Timeout", false);
                     endActionFrame(_currentAction, false);
                 }
-                if (_actionFrameTimer != null) {
-                    _actionFrameTimer.cancel();
-                    _actionFrameTimer = null;
-                }
+                // below should not be necessary since cancelActionTimer is called in endActionFrame
+                // this may have been fail safe vs somehow having null action inside endActionFrame, but currently seems to cause crash (race condition?)
+//                if (_actionFrameTimer != null) {
+//                    _actionFrameTimer.cancel();
+//                    _actionFrameTimer = null;
+//                }
             }
         };
 
@@ -517,7 +513,6 @@ public class XYDevice extends XYBase {
 //                                _connectIntent = false;
                                 Log.i(TAG, "onConnectionStateChange:Connected: " + getId());
                                 reportConnectionStateChanged(STATE_CONNECTED);
-                                gatt.readRemoteRssi();
                                 gatt.discoverServices();
                                 Log.v(TAG, "stateConnected: gatt object = " + gatt.hashCode());
                                 break;
@@ -688,6 +683,7 @@ public class XYDevice extends XYBase {
                         super.onReadRemoteRssi(gatt, rssi, status);
                         Log.i(TAG, "onReadRemoteRssi:" + rssi);
                         _rssi = rssi;
+                        reportReadRemoteRssi(rssi);
                     }
 
                     @Override
@@ -1412,6 +1408,26 @@ public class XYDevice extends XYBase {
         return Proximity.OutOfRange;
     }
 
+    public Proximity getProximity(int currentRssi) {
+        if (currentRssi == 0) {
+            return Proximity.None;
+        } else if (currentRssi >= -40) {
+            return Proximity.Touching;
+        } else if (currentRssi >= -60) {
+            return Proximity.VeryNear;
+        } else if (currentRssi >= -70) {
+            return Proximity.Near;
+        } else if (currentRssi >= -80) {
+            return Proximity.Medium;
+        } else if (currentRssi >= -90) {
+            return Proximity.Far;
+        } else if (currentRssi > outOfRangeRssi) {
+            return Proximity.VeryFar;
+        }
+
+        return Proximity.OutOfRange;
+    }
+
     public void scanComplete() {
         if (isConnected()) {
             _scansMissed = 0;
@@ -1526,6 +1542,15 @@ public class XYDevice extends XYBase {
         }
     }
 
+    private void reportReadRemoteRssi(int rssi) {
+        Log.v(TAG, "reportReadRemoteRssi[" + getId() + "]:" + rssi);
+        synchronized (_listeners) {
+            for (Map.Entry<String, Listener> entry : _listeners.entrySet()) {
+                entry.getValue().readRemoteRssi(this, rssi);
+            }
+        }
+    }
+
     public enum Family {
         Unknown,
         XY1,
@@ -1567,6 +1592,8 @@ public class XYDevice extends XYBase {
         void buttonRecentlyPressed(final XYDevice device, final ButtonType buttonType);
 
         void connectionStateChanged(final XYDevice device, int newState);
+
+        void readRemoteRssi(final XYDevice device, int rssi);
 
         void updated(final XYDevice device);
     }

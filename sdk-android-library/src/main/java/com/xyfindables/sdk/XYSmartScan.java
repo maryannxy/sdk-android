@@ -516,7 +516,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                 return null;
             }
 
-            if (family == XYDevice.Family.XY2 || family == XYDevice.Family.XY3 || family == XYDevice.Family.Gps) {
+            if (family == XYDevice.Family.XY2 || family == XYDevice.Family.XY3 || family == XYDevice.Family.Gps || family == XYDevice.Family.XY4) {
                 minor = minor & 0xfff0 | 0x0004;
             }
 
@@ -684,6 +684,11 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
 
     @Override
     public void connectionStateChanged(XYDevice device, int newState) {
+
+    }
+
+    @Override
+    public void readRemoteRssi(XYDevice device, int rssi) {
 
     }
 

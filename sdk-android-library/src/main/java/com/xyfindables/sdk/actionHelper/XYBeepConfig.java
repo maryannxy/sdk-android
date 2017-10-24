@@ -20,7 +20,7 @@ public class XYBeepConfig extends XYActionHelper {
 
     }
 
-    public static byte[] testSong = {(byte)31, (byte)35, (byte)37, (byte)39, (byte)41};
+    public static byte[] testSong = {(byte)1, (byte)16415, (byte)32};
 
     public XYBeepConfig(XYDevice device, int slot, byte[] song, final Callback callback) {
         if (device.getFamily() == XYDevice.Family.XY4) {
