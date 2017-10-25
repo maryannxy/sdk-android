@@ -23,6 +23,7 @@ import com.xyfindables.sdk.action.XYDeviceActionGetBatterySinceCharged;
 import com.xyfindables.sdk.action.XYDeviceActionGetVersion;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButton;
 import com.xyfindables.sdk.actionHelper.XYBattery;
+import com.xyfindables.sdk.actionHelper.XYFirmware;
 import com.xyfindables.sdk.bluetooth.ScanRecordLegacy;
 import com.xyfindables.sdk.bluetooth.ScanResultLegacy;
 
@@ -356,6 +357,11 @@ public class XYDevice extends XYBase {
                 }
                 if (_currentAction == null) {
                     XYBase.logError(TAG, "Null Action timed out", false);
+                    // this will be called in endActionFrame so only needs to be called if somehow _currentAction is null and timer is not
+                    if (_actionFrameTimer != null) {
+                        _actionFrameTimer.cancel();
+                        _actionFrameTimer = null;
+                    }
                 } else {
                     XYBase.logError(TAG, "Action Timeout", false);
                     endActionFrame(_currentAction, false);
@@ -481,9 +487,8 @@ public class XYDevice extends XYBase {
             @Override
             protected Void doInBackground(Void... params) {
 
-                Log.v(TAG, "connTest-queueAction-doInBackground");
-
                 if (getBluetoothDevice() == null) {
+                    Log.e(TAG, "connTest-getBluetoothDevice() == null");
                     return null;
                 }
 
@@ -540,7 +545,8 @@ public class XYDevice extends XYBase {
                                     //XYSmartScan.instance.refresh(gatt);
                                 } else {
                                     _isConnected = false;
-                                    Log.i(TAG, "onConnectionStateChange:Disconnected: " + getId());
+                                    reportConnectionStateChanged(STATE_DISCONNECTED);
+                                    Log.i(TAG, "connTest-onConnectionStateChange:Disconnected: " + getId());
                                     XYDeviceAction currentAction = _currentAction;
                                     if (currentAction != null) {
                                         XYBase.logError(TAG, "statusChanged:disconnected", false);
@@ -731,6 +737,9 @@ public class XYDevice extends XYBase {
                                     Log.v(TAG, "connTest-_connectIntent = " + _connectIntent);
                                     boolean connected = gatt.connect();
                                     Log.v(TAG, "connTest-Connect:" + connected);
+                                    // some sources say must wait 600 ms after connect before discoverServices
+                                    // other sources say call gatt.discoverServices in UI thread
+                                    // 133s seem to start after discoverServices is called
                                     gatt.discoverServices();
                                     Log.v(TAG, "connTest-Connect:" + connected + " - gatt object = " + gatt.hashCode());
                                 }
@@ -962,25 +971,48 @@ public class XYDevice extends XYBase {
                 @Override
                 public void run() {
                     if (repeat) {
-                        checkBattery(context.getApplicationContext(), true);
+                        checkBattery(context, true);
                     } else {
-                        checkBattery(context.getApplicationContext());
+                        checkBattery(context);
                     }
-                    checkVersion(context.getApplicationContext());
-                    checkTimeSinceCharged(context.getApplicationContext());
+                    checkVersion(context);
+                    checkTimeSinceCharged(context);
                 }
             };
 
             final Timer pumpTimer = new Timer();
             Random random = new Random(new Date().getTime());
             //random check in next 6-12 minutes
-            int delay = random.nextInt(360000) + 360000;
+//            int delay = random.nextInt(360000) + 360000;
+            int delay = 30000;
             Log.v(TAG, "checkBatteryInFuture:" + delay);
             if (repeat) {
                 pumpTimer.schedule(checkTimerTask, delay, delay);
             } else {
                 pumpTimer.schedule(checkTimerTask, delay);
             }
+        }
+    }
+
+    private void checkVersion(final Context context) {
+        Log.v(TAG, "checkFirmware");
+        if (_firmwareVersion == null) {
+            _firmwareVersion = "";
+            XYFirmware getVersion = new XYFirmware(this, new XYFirmware.Callback() {
+                @Override
+                public void started(boolean success, String value) {
+                    if (success) {
+                        _firmwareVersion = value;
+                        reportDetected();
+                    }
+                }
+
+                @Override
+                public void completed(boolean success) {
+
+                }
+            });
+            getVersion.start(context);
         }
     }
 
@@ -1007,50 +1039,32 @@ public class XYDevice extends XYBase {
 
                 }
             });
-            battery.start(context.getApplicationContext());
+            battery.start(context);
         }
     }
 
     private void checkTimeSinceCharged(final Context context) {
-        Log.v(TAG, "checkTimeSinceCharged");
-        XYDeviceActionGetBatterySinceCharged getTimeSinceCharged = new XYDeviceActionGetBatterySinceCharged(this) {
-            @Override
-            public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                boolean result = super.statusChanged(status, gatt, characteristic, success);
-                if (status == STATUS_CHARACTERISTIC_READ) {
-                    if (success) {
-                        byte[] value = this.value;
-                        _timeSinceCharged = 0;
-                        for (int i = 0; i < 4; i++) {
-                            _timeSinceCharged <<= 8;
-                            _timeSinceCharged ^= (long) value[i] & 0xFF;
-                        }
-                        reportDetected();
-                    }
-                }
-                return result;
-            }
-        };
-        getTimeSinceCharged.start(context.getApplicationContext());
-    }
-
-    private void checkVersion(final Context context) {
-        Log.v(TAG, "checkFirmware");
-        if (_firmwareVersion == null) {
-            _firmwareVersion = "";
-            XYDeviceActionGetVersion getVersion = new XYDeviceActionGetVersion(this) {
+        if (getFamily() == Family.Gps) {
+            Log.v(TAG, "checkTimeSinceCharged");
+            XYDeviceActionGetBatterySinceCharged getTimeSinceCharged = new XYDeviceActionGetBatterySinceCharged(this) {
+                @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     if (status == STATUS_CHARACTERISTIC_READ) {
                         if (success) {
-                            _firmwareVersion = this.value;
+                            byte[] value = this.value;
+                            _timeSinceCharged = 0;
+                            for (int i = 0; i < 4; i++) {
+                                _timeSinceCharged <<= 8;
+                                _timeSinceCharged ^= (long) value[i] & 0xFF;
+                            }
                             reportDetected();
                         }
                     }
                     return result;
                 }
             };
-            getVersion.start(context.getApplicationContext());
+            getTimeSinceCharged.start(context.getApplicationContext());
         }
     }
 
