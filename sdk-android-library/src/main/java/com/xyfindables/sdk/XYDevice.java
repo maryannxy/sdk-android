@@ -14,6 +14,7 @@ import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.support.compat.BuildConfig;
 import android.util.Log;
 
 import com.xyfindables.core.XYSemaphore;
@@ -983,8 +984,7 @@ public class XYDevice extends XYBase {
             final Timer pumpTimer = new Timer();
             Random random = new Random(new Date().getTime());
             //random check in next 6-12 minutes
-//            int delay = random.nextInt(360000) + 360000;
-            int delay = 30000;
+            int delay = random.nextInt(360000) + 360000;
             Log.v(TAG, "checkBatteryInFuture:" + delay);
             if (repeat) {
                 pumpTimer.schedule(checkTimerTask, delay, delay);
