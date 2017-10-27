@@ -56,8 +56,8 @@ public class XYDeviceActionBuzzModernConfig extends XYDeviceAction {
                 break;
             case STATUS_CHARACTERISTIC_WRITE:
                 counter++;
-                slotPlusOffset = new byte[]{value[0], (byte)(counter*20)};
-                slice = Arrays.copyOfRange(value, counter * 18, counter * 18 + 18);
+                slotPlusOffset = new byte[]{value[0], (byte)(counter*9)};
+                slice = Arrays.copyOfRange(value, counter * 18 + 1, counter * 18 + 19);
                 if (counter == 6) {
                     slice = Arrays.copyOfRange(value, 121, 129);
                 }

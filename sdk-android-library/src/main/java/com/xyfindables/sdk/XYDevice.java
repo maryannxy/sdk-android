@@ -14,7 +14,7 @@ import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
-import android.support.compat.BuildConfig;
+import com.xyfindables.sdk.BuildConfig;
 import android.util.Log;
 
 import com.xyfindables.core.XYSemaphore;
@@ -23,6 +23,7 @@ import com.xyfindables.sdk.action.XYDeviceAction;
 import com.xyfindables.sdk.action.XYDeviceActionGetBatterySinceCharged;
 import com.xyfindables.sdk.action.XYDeviceActionGetVersion;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButton;
+import com.xyfindables.sdk.action.XYDeviceActionSubscribeButtonModern;
 import com.xyfindables.sdk.actionHelper.XYBattery;
 import com.xyfindables.sdk.actionHelper.XYFirmware;
 import com.xyfindables.sdk.bluetooth.ScanRecordLegacy;
@@ -40,8 +41,6 @@ import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 
 /**
  * Created by arietrouw on 12/20/16.
@@ -85,7 +84,7 @@ public class XYDevice extends XYBase {
     }
 
     private static int _missedPulsesForOutOfRange = 20;
-    private static int _actionTimeout = 30000;
+    private static int _actionTimeout = 60000;
 
     private BluetoothGatt _gatt;
 
@@ -312,6 +311,7 @@ public class XYDevice extends XYBase {
     }
 
     private XYDeviceActionSubscribeButton _subscribeButton = null;
+    private XYDeviceActionSubscribeButtonModern _subscribeButtonModern = null;
 
     public void otaMode(boolean value) {
         Log.v(TAG, "otaMode set: " + value);
@@ -382,7 +382,7 @@ public class XYDevice extends XYBase {
         } catch (IllegalStateException ex) {
             XYBase.logError(TAG, ex.toString());
         }
-        _actionTimeout = 30000;
+        _actionTimeout = 60000;
     }
 
     private void cancelActionTimer() {
@@ -723,7 +723,7 @@ public class XYDevice extends XYBase {
                             } else {
                                 BluetoothGatt gatt;
                                 if (android.os.Build.VERSION.SDK_INT >= 23) {
-                                    gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback, TRANSPORT_LE);
+                                    gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback, android.bluetooth.BluetoothDevice.TRANSPORT_LE);
                                 } else {
                                     gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
                                 }
@@ -1222,42 +1222,80 @@ public class XYDevice extends XYBase {
         }
         _stayConnectedActive = true;
         pushConnection();
-        // will need update to support xy4
-        _subscribeButton = new XYDeviceActionSubscribeButton(this) {
-            @Override
-            public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                boolean result = super.statusChanged(status, gatt, characteristic, success);
-                if (status == STATUS_CHARACTERISTIC_UPDATED) {
-                    int buttonValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                    Log.v(TAG, "ButtonCharacteristicUpdated:" + buttonValue);
-                    _buttonRecentlyPressed = true;
-                    TimerTask timerTask = new TimerTask() {
-                        @Override
-                        public void run() {
-                            _buttonRecentlyPressed = false;
+
+        if (getFamily() == Family.XY4) {
+            _subscribeButtonModern = new XYDeviceActionSubscribeButtonModern(this) {
+                @Override
+                public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+                    boolean result = super.statusChanged(status, gatt, characteristic, success);
+                    if (status == STATUS_CHARACTERISTIC_UPDATED) {
+                        int buttonValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                        Log.v(TAG, "ButtonCharacteristicUpdated:" + buttonValue);
+                        _buttonRecentlyPressed = true;
+                        TimerTask timerTask = new TimerTask() {
+                            @Override
+                            public void run() {
+                                _buttonRecentlyPressed = false;
+                            }
+                        };
+                        Timer timer = new Timer();
+                        timer.schedule(timerTask, 40000);
+                        switch (buttonValue) {
+                            case XYDeviceActionSubscribeButton.BUTTONPRESS_SINGLE:
+                                reportButtonPressed(ButtonType.Single);
+                                break;
+                            case XYDeviceActionSubscribeButton.BUTTONPRESS_DOUBLE:
+                                reportButtonPressed(ButtonType.Double);
+                                break;
+                            case XYDeviceActionSubscribeButton.BUTTONPRESS_LONG:
+                                reportButtonPressed(ButtonType.Long);
+                                break;
+                            default:
+                                XYBase.logError(TAG, "Invalid Button Value:" + buttonValue);
+                                break;
                         }
-                    };
-                    Timer timer = new Timer();
-                    timer.schedule(timerTask, 40000);
-                    switch (buttonValue) {
-                        case XYDeviceActionSubscribeButton.BUTTONPRESS_SINGLE:
-                            reportButtonPressed(ButtonType.Single);
-                            break;
-                        case XYDeviceActionSubscribeButton.BUTTONPRESS_DOUBLE:
-                            reportButtonPressed(ButtonType.Double);
-                            break;
-                        case XYDeviceActionSubscribeButton.BUTTONPRESS_LONG:
-                            reportButtonPressed(ButtonType.Long);
-                            break;
-                        default:
-                            XYBase.logError(TAG, "Invalid Button Value:" + buttonValue);
-                            break;
                     }
+                    return result;
                 }
-                return result;
-            }
-        };
-        _subscribeButton.start(_connectedContext.getApplicationContext());
+            };
+            _subscribeButtonModern.start(_connectedContext.getApplicationContext());
+        } else {
+            _subscribeButton = new XYDeviceActionSubscribeButton(this) {
+                @Override
+                public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
+                    boolean result = super.statusChanged(status, gatt, characteristic, success);
+                    if (status == STATUS_CHARACTERISTIC_UPDATED) {
+                        int buttonValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                        Log.v(TAG, "ButtonCharacteristicUpdated:" + buttonValue);
+                        _buttonRecentlyPressed = true;
+                        TimerTask timerTask = new TimerTask() {
+                            @Override
+                            public void run() {
+                                _buttonRecentlyPressed = false;
+                            }
+                        };
+                        Timer timer = new Timer();
+                        timer.schedule(timerTask, 40000);
+                        switch (buttonValue) {
+                            case XYDeviceActionSubscribeButton.BUTTONPRESS_SINGLE:
+                                reportButtonPressed(ButtonType.Single);
+                                break;
+                            case XYDeviceActionSubscribeButton.BUTTONPRESS_DOUBLE:
+                                reportButtonPressed(ButtonType.Double);
+                                break;
+                            case XYDeviceActionSubscribeButton.BUTTONPRESS_LONG:
+                                reportButtonPressed(ButtonType.Long);
+                                break;
+                            default:
+                                XYBase.logError(TAG, "Invalid Button Value:" + buttonValue);
+                                break;
+                        }
+                    }
+                    return result;
+                }
+            };
+            _subscribeButton.start(_connectedContext.getApplicationContext());
+        }
     }
 
     public Boolean getSimActivated() {
