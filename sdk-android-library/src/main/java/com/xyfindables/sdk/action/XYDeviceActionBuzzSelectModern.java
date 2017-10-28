@@ -40,12 +40,14 @@ public abstract class XYDeviceActionBuzzSelectModern extends XYDeviceAction {
         Log.v(TAG, "statusChanged:" + status + ":" + succes);
         boolean result = super.statusChanged(status, gatt, characteristic, succes);
         switch (status) {
-            case STATUS_CHARACTERISTIC_FOUND:
+            case STATUS_CHARACTERISTIC_FOUND: {
                 characteristic.setValue(_value);
                 if (!gatt.writeCharacteristic(characteristic)) {
+                    Log.v(TAG, "testSoundConfig-writeCharacteristic failed");
                     statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                 }
                 break;
+            }
         }
         return result;
     }

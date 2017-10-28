@@ -44,6 +44,7 @@ public class XYDeviceActionBuzzModernConfig extends XYDeviceAction {
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND:
+                Log.v(TAG, "testSoundConfig: found: " + success);
                 byte[] slotPlusOffset = {value[0], (byte)0};
                 byte[] slice = Arrays.copyOfRange(value, 1, 19);
                 byte[] packet = new byte[slotPlusOffset.length + slice.length];
@@ -56,19 +57,21 @@ public class XYDeviceActionBuzzModernConfig extends XYDeviceAction {
                 break;
             case STATUS_CHARACTERISTIC_WRITE:
                 counter++;
+                Log.v(TAG, "testSoundConfig: write: " + success + "counter: " + counter);
                 slotPlusOffset = new byte[]{value[0], (byte)(counter*9)};
                 slice = Arrays.copyOfRange(value, counter * 18 + 1, counter * 18 + 19);
-                if (counter == 6) {
-                    slice = Arrays.copyOfRange(value, 121, 129);
+                if (counter == 14) {
+                    slice = Arrays.copyOfRange(value, 256, 257);
                 }
                 packet = new byte[slotPlusOffset.length + slice.length];
                 System.arraycopy(slotPlusOffset, 0, packet, 0, slotPlusOffset.length);
                 System.arraycopy(slice, 0, packet, slotPlusOffset.length, slice.length);
                 characteristic.setValue(packet);
                 if (!gatt.writeCharacteristic(characteristic)) {
+                    Log.v(TAG, "testSoundConfig-writeCharacteristic failed");
                     statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                 }
-                if (counter == 6) {
+                if (counter == 14) {
                     result = true;
                 } else {
                     result = false;
