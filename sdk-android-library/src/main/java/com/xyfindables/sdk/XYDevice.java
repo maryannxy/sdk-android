@@ -337,10 +337,7 @@ public class XYDevice extends XYBase {
         } else {
             if (_stayConnectedActive) {
                 _stayConnectedActive = false;
-                if (_subscribeButton != null) {
-                    _subscribeButton.stop();
-                    _subscribeButton = null;
-                }
+                stopSubscribeButton();
                 popConnection();
                 Log.v(TAG, "connTest-popConnection4");
             }
@@ -359,10 +356,7 @@ public class XYDevice extends XYBase {
                 if (_currentAction == null) {
                     XYBase.logError(TAG, "Null Action timed out", false);
                     // this will be called in endActionFrame so only needs to be called if somehow _currentAction is null and timer is not
-                    if (_actionFrameTimer != null) {
-                        _actionFrameTimer.cancel();
-                        _actionFrameTimer = null;
-                    }
+                    cancelActionTimer();
                 } else {
                     XYBase.logError(TAG, "Action Timeout", false);
                     endActionFrame(_currentAction, false);
@@ -416,7 +410,6 @@ public class XYDevice extends XYBase {
 
         // acquireUninterruptibly is used so lock is not release when thread expires (due to calling discoverServices)
         _actionLock.acquireUninterruptibly();
-//        _connectIntent = true;
         Log.v(TAG, "_actionLock[" + getId() + "]:acquired");
         action.statusChanged(XYDeviceAction.STATUS_STARTED, null, null, true);
         Log.i(TAG, "startActionFrame-action started");
@@ -656,6 +649,9 @@ public class XYDevice extends XYBase {
                         if (_subscribeButton != null) {
                             _subscribeButton.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED, gatt, characteristic, true);
                         }
+                        if (_subscribeButtonModern != null) {
+                            _subscribeButtonModern.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED, gatt, characteristic, true);
+                        }
                     }
 
                     @Override
@@ -809,6 +805,14 @@ public class XYDevice extends XYBase {
         return _firmwareVersion;
     }
 
+    public void addTemporaryConnection() {
+        _connectionCount++;
+    }
+
+    public void removeTemporaryConnection() {
+        _connectionCount--;
+    }
+
     private void pushConnection() {
         if (_currentScanResult21 != null || _currentScanResult18 != null) {
             if (BuildConfig.DEBUG) {
@@ -848,6 +852,7 @@ public class XYDevice extends XYBase {
                     if (_connectionCount == 0) {
                         if (_stayConnectedActive) {
                             _subscribeButton = null;
+                            _subscribeButtonModern = null;
                             _stayConnectedActive = false;
                         }
                         BluetoothGatt gatt = getGatt();
@@ -900,11 +905,12 @@ public class XYDevice extends XYBase {
             // could make difference in case connectionCount is 0 when it should be 1
             gatt.disconnect();
             // may be a timing issue calling close immediately after disconnect - try waiting 100 ms
-//            try {
-//                Thread.sleep(100);
-//            } catch (InterruptedException ex) {
-//                Log.e(TAG, "connTest-" + ex.toString());
-//            }
+            // changing this seems to have fixed many unexpected disconnections after executing actions
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                Log.e(TAG, "connTest-" + ex.toString());
+            }
             gatt.close();
             Log.v(TAG, "connTest-gatt.close inside closeGatt");
             setGatt(null);
@@ -1211,6 +1217,18 @@ public class XYDevice extends XYBase {
 
     public String getId() {
         return _id;
+    }
+
+    private void stopSubscribeButton() {
+        if (_subscribeButton != null) {
+            _subscribeButton.stop();
+            _subscribeButton = null;
+        }
+
+        if (_subscribeButtonModern != null) {
+            _subscribeButtonModern.stop();
+            _subscribeButtonModern = null;
+        }
     }
 
     private void startSubscribeButton() {

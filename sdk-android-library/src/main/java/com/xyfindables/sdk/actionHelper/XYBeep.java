@@ -19,7 +19,7 @@ public class XYBeep extends XYActionHelper {
     private static final String TAG = XYBeep.class.getSimpleName();
 
     // verify values we should use for standard beep of xy4, also create custom variables containing different configurations
-    protected static final byte[] value = {(byte) 0x0b, (byte) 0x02};
+    protected static final byte[] value = {(byte) 0x0b, (byte) 0x03};
 
     public interface Callback extends XYActionHelper.Callback {
         void started(boolean success);
@@ -65,7 +65,7 @@ public class XYBeep extends XYActionHelper {
 
     public XYBeep(XYDevice device, final int index, final Callback callback) {
         if (device.getFamily() == XYDevice.Family.XY4) {
-            byte[] value = {(byte)index, (byte)2};
+            byte[] value = {(byte)index, (byte)3};
             action = new XYDeviceActionBuzzSelectModern(device, value) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
