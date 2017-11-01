@@ -250,6 +250,10 @@ public class XYDevice extends XYBase {
     }
 
     private void setGatt(BluetoothGatt gatt) {
+        // if _gatt is not closed, and we set new _gatt, then we lose reference to old _gatt connection which still exists in ble stack
+        if (_gatt != null) {
+            _gatt.close();
+        }
         _gatt = gatt;
     }
 
