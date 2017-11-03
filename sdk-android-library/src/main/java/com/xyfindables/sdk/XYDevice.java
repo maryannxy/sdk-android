@@ -530,7 +530,7 @@ public class XYDevice extends XYBase {
                                     /* Ignoring the 133 seems to keep the connection alive.
                                     No idea why, but it does on Android 5.1 */
                                     XYBase.logError(TAG, "connTest-Disconnect with 133", false);
-                                    if (!_isInOtaMode && !_connectIntent && !_debug && (_connectionCount <= 1)) {
+                                    if (!_isInOtaMode && !_connectIntent && !_debug /*&& (_connectionCount <= 1)*/) {
 //                                        popConnection();
                                         Log.e(TAG, "connTest-disconnect inside 133");
                                         XYDeviceAction currentAction = _currentAction;
