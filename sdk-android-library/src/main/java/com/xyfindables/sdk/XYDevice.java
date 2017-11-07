@@ -10,11 +10,14 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
+
 import com.xyfindables.sdk.BuildConfig;
+
 import android.util.Log;
 
 import com.xyfindables.core.XYSemaphore;
@@ -288,12 +291,42 @@ public class XYDevice extends XYBase {
         }
     }
 
-    public int getTxPowerLevel() {
+    private int getTxPowerLevel() {
         if (XYSmartScan.instance.legacy()) {
-            return getRssi18();
+            return getTxPowerLevel18();
         } else {
-            return getRssi21();
+            return getTxPowerLevel21();
         }
+    }
+
+    @TargetApi(18)
+    protected int txPowerLevelFromScanResult18(ScanResultLegacy scanResult) {
+        int tx = 0;
+        if (scanResult != null) {
+            ScanRecordLegacy scanRecord = scanResult.getScanRecord();
+            if (scanRecord != null) {
+                byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
+                if (manufacturerData != null) {
+                    tx = manufacturerData[22];
+                }
+            }
+        }
+        return tx;
+    }
+
+    @TargetApi(21)
+    protected int txPowerLevelFromScanResult21(ScanResult scanResult) {
+        int tx = 0;
+        if (scanResult != null) {
+            ScanRecord scanRecord = scanResult.getScanRecord();
+            if (scanRecord != null) {
+                byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
+                if (manufacturerData != null) {
+                    tx = manufacturerData[22];
+                }
+            }
+        }
+        return tx;
     }
 
     @TargetApi(18)
@@ -301,7 +334,7 @@ public class XYDevice extends XYBase {
         if (_currentScanResult18 == null) {
             return 0;
         } else {
-            return _currentScanResult18.getScanRecord().getTxPowerLevel();
+            return txPowerLevelFromScanResult18(_currentScanResult18);
         }
     }
 
@@ -310,7 +343,7 @@ public class XYDevice extends XYBase {
         if (_currentScanResult21 == null) {
             return 0;
         } else {
-            return _currentScanResult21.getScanRecord().getTxPowerLevel();
+            return txPowerLevelFromScanResult21(_currentScanResult21);
         }
     }
 
@@ -785,12 +818,31 @@ public class XYDevice extends XYBase {
         return asyncTask;
     }
 
-    public double getDistance() {
-        int tx = getTxPowerLevel();
+    public double getDistance(int tx) {
+
         double rssi = getRssi();
 
         if (tx == 0 || rssi == 0 || rssi == outOfRangeRssi) {
-            return -1;
+            return -1.0;
+        } else {
+            double ratio = rssi * 1.0 / tx;
+            if (ratio < 1.0) {
+                return Math.pow(ratio, 10);
+            } else {
+                return (0.89976) * Math.pow(ratio, 7.7095) + 0.111;
+            }
+        }
+    }
+
+    public double getDistance() {
+        int tx = getTxPowerLevel();
+
+        Log.v(TAG, "testTx-" + tx);
+
+        double rssi = getRssi();
+
+        if (tx == 0 || rssi == 0 || rssi == outOfRangeRssi) {
+            return -1.0;
         } else {
             double ratio = rssi * 1.0 / tx;
             if (ratio < 1.0) {
@@ -1460,6 +1512,18 @@ public class XYDevice extends XYBase {
     }
 
     public Proximity getProximity() {
+
+//        double distance = getDistance();
+//        if (distance < 0) {
+//            return Proximity.None;
+//        }
+//        if (distance < 0.5) {
+//            return Proximity.Touching;
+//        }
+//        if (distance <= 3.0) {
+//            return Proximity.Near;
+//        }
+//        return Proximity.Far;
 
         int currentRssi = getRssi();
 
