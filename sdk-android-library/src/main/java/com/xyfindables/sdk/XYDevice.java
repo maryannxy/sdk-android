@@ -32,6 +32,7 @@ import com.xyfindables.sdk.actionHelper.XYFirmware;
 import com.xyfindables.sdk.bluetooth.ScanRecordLegacy;
 import com.xyfindables.sdk.bluetooth.ScanResultLegacy;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -74,7 +75,8 @@ public class XYDevice extends XYBase {
         _connectIntent = value;
     }
 
-    private int _rssi = 0;
+    private int _rssi;
+
     private boolean _isConnected = false;
     private int _connectionCount = 0;
     private boolean _stayConnected = false;
@@ -576,7 +578,7 @@ public class XYDevice extends XYBase {
                                     //XYSmartScan.instance.refresh(gatt);
                                 } else {
                                     _isConnected = false;
-                                    reportConnectionStateChanged(STATE_DISCONNECTED);
+                                    reportConnectionStateChanged(STATE_DISCONNECTED);  // redundant bc called inside closeGatt inside endActionFrame as well? Just add inside gatt!=null ?
                                     Log.i(TAG, "connTest-onConnectionStateChange:Disconnected: " + getId());
                                     XYDeviceAction currentAction = _currentAction;
                                     if (currentAction != null) {
@@ -818,7 +820,7 @@ public class XYDevice extends XYBase {
         return asyncTask;
     }
 
-    public double getDistance(int tx) {
+    public double getDistanceWithCustomTx(int tx) {
 
         double rssi = getRssi();
 
@@ -837,11 +839,45 @@ public class XYDevice extends XYBase {
     public double getDistance() {
         int tx = getTxPowerLevel();
 
+        if (getFamily() == Family.XY4) {
+            tx = -75;
+        }
+
         Log.v(TAG, "testTx-" + tx);
 
         double rssi = getRssi();
 
-        if (tx == 0 || rssi == 0 || rssi == outOfRangeRssi) {
+        if (rssi == outOfRangeRssi) {
+            return -2.0;
+        }
+
+        if (tx == 0 || rssi == 0) {
+            return -1.0;
+        } else {
+            double ratio = rssi * 1.0 / tx;
+            if (ratio < 1.0) {
+                return Math.pow(ratio, 10);
+            } else {
+                return (0.89976) * Math.pow(ratio, 7.7095) + 0.111;
+            }
+        }
+    }
+
+    private double getDistance(int rssi) {
+
+        int tx = getTxPowerLevel();
+
+        if (getFamily() == Family.XY4) {
+            tx = -75;
+        }
+
+        Log.v(TAG, "testTx-" + tx);
+
+        if (rssi == outOfRangeRssi) {
+            return -2.0;
+        }
+
+        if (tx == 0 || rssi == 0) {
             return -1.0;
         } else {
             double ratio = rssi * 1.0 / tx;
@@ -1223,6 +1259,7 @@ public class XYDevice extends XYBase {
     void pulse21(Object scanResultObject) {
 
         android.bluetooth.le.ScanResult scanResult = (android.bluetooth.le.ScanResult) scanResultObject;
+
 //        Log.i(TAG, "testScanResult- " + scanResult);
         Log.v(TAG, "pulse21: " + _id + ":" + scanResult.getRssi());
         _scansMissed = 0;
@@ -1513,57 +1550,97 @@ public class XYDevice extends XYBase {
 
     public Proximity getProximity() {
 
-//        double distance = getDistance();
-//        if (distance < 0) {
-//            return Proximity.None;
-//        }
-//        if (distance < 0.5) {
-//            return Proximity.Touching;
-//        }
-//        if (distance <= 3.0) {
-//            return Proximity.Near;
-//        }
-//        return Proximity.Far;
+        double distance = getDistance();
 
-        int currentRssi = getRssi();
-
-        if (currentRssi == 0) {
-            return Proximity.None;
-        } else if (currentRssi >= -40) {
-            return Proximity.Touching;
-        } else if (currentRssi >= -60) {
-            return Proximity.VeryNear;
-        } else if (currentRssi >= -70) {
-            return Proximity.Near;
-        } else if (currentRssi >= -80) {
-            return Proximity.Medium;
-        } else if (currentRssi >= -90) {
-            return Proximity.Far;
-        } else if (currentRssi > outOfRangeRssi) {
-            return Proximity.VeryFar;
+        if (distance < -1.0) {
+            return Proximity.OutOfRange;
         }
+        if (distance < 0.0) {
+            return Proximity.None;
+        }
+        if (distance < 0.0173) {
+            return Proximity.Touching;
+        }
+        if (distance < 1.0108) {
+            return Proximity.VeryNear;
+        }
+        if (distance < 3.0639) {
+            return Proximity.Near;
+        }
+        if (distance < 8.3779) {
+            return Proximity.Medium;
+        }
+        if (distance < 20.6086) {
+            return Proximity.Far;
+        }
+        return Proximity.VeryFar;
 
-        return Proximity.OutOfRange;
+//        int currentRssi = getRssi();
+//
+//        if (currentRssi == 0) {
+//            return Proximity.None;
+//        } else if (currentRssi >= -40) { .01734153
+//            return Proximity.Touching;
+//        } else if (currentRssi >= -60) { 1.01076
+//            return Proximity.VeryNear;
+//        } else if (currentRssi >= -70) { 3.06392867
+//            return Proximity.Near;
+//        } else if (currentRssi >= -80) { 8.37788453900756
+//            return Proximity.Medium;
+//        } else if (currentRssi >= -90) { 20.6085636568
+//            return Proximity.Far;
+//        } else if (currentRssi > outOfRangeRssi) {
+//            return Proximity.VeryFar;
+//        }
+//
+//        return Proximity.OutOfRange;
     }
 
     public Proximity getProximity(int currentRssi) {
-        if (currentRssi == 0) {
-            return Proximity.None;
-        } else if (currentRssi >= -40) {
-            return Proximity.Touching;
-        } else if (currentRssi >= -60) {
-            return Proximity.VeryNear;
-        } else if (currentRssi >= -70) {
-            return Proximity.Near;
-        } else if (currentRssi >= -80) {
-            return Proximity.Medium;
-        } else if (currentRssi >= -90) {
-            return Proximity.Far;
-        } else if (currentRssi > outOfRangeRssi) {
-            return Proximity.VeryFar;
-        }
 
-        return Proximity.OutOfRange;
+        double distance = getDistance(currentRssi);
+
+        if (distance < -1.0) {
+            return Proximity.OutOfRange;
+        }
+        if (distance < 0.0) {
+            return Proximity.None;
+        }
+        if (distance < 0.0173) {
+            return Proximity.Touching;
+        }
+        if (distance < 1.0108) {
+            return Proximity.VeryNear;
+        }
+        if (distance < 3.0639) {
+            return Proximity.Near;
+        }
+        if (distance < 8.3779) {
+            return Proximity.Medium;
+        }
+        if (distance < 20.6086) {
+            return Proximity.Far;
+        }
+        return Proximity.VeryFar;
+
+
+//        if (currentRssi == 0) {
+//            return Proximity.None;
+//        } else if (currentRssi >= -40) {
+//            return Proximity.Touching;
+//        } else if (currentRssi >= -60) {
+//            return Proximity.VeryNear;
+//        } else if (currentRssi >= -70) {
+//            return Proximity.Near;
+//        } else if (currentRssi >= -80) {
+//            return Proximity.Medium;
+//        } else if (currentRssi >= -90) {
+//            return Proximity.Far;
+//        } else if (currentRssi > outOfRangeRssi) {
+//            return Proximity.VeryFar;
+//        }
+//
+//        return Proximity.OutOfRange;
     }
 
     public void scanComplete() {
