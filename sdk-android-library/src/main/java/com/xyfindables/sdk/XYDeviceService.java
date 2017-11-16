@@ -24,4 +24,7 @@ public class XYDeviceService {
     public static final UUID AlertStandard = UUID.fromString("00001802-0000-1000-8000-00805F9B34FB");
     public static final UUID LinkLossStandard = UUID.fromString("00001803-0000-1000-8000-00805F9B34FB");
     public static final UUID TimeStandard = UUID.fromString("00001805-0000-1000-8000-00805F9B34FB");
+
+    //dialog ota service
+    public static final UUID SPOTA_SERVICE_UUID = UUID.fromString("0000fef5-0000-1000-8000-00805f9b34fb");
 }

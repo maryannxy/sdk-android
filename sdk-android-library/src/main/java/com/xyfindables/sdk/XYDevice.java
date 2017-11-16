@@ -289,6 +289,7 @@ public class XYDevice extends XYBase {
         if (_currentScanResult21 == null) {
             return outOfRangeRssi;
         } else {
+            Log.v(TAG, "testRssi-_currentScanResult21.getRssi() = " + _currentScanResult21.getRssi());
             return _currentScanResult21.getRssi();
         }
     }
@@ -724,6 +725,7 @@ public class XYDevice extends XYBase {
                     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
                         super.onReadRemoteRssi(gatt, rssi, status);
                         Log.i(TAG, "onReadRemoteRssi:" + rssi);
+                        Log.v(TAG, "testRssi-onReadRemoteRssi rssi = " + rssi);
                         _rssi = rssi;
                         reportReadRemoteRssi(rssi);
                     }
@@ -840,7 +842,9 @@ public class XYDevice extends XYBase {
         int tx = getTxPowerLevel();
 
         if (getFamily() == Family.XY4) {
-            tx = -75;
+            tx = -60;
+        } else {
+            tx = -60;
         }
 
         Log.v(TAG, "testTx-" + tx);
@@ -851,7 +855,7 @@ public class XYDevice extends XYBase {
             return -2.0;
         }
 
-        if (tx == 0 || rssi == 0) {
+        if (tx == 0 || rssi == 0) { // this could cause ui "searching" because rssi = 0 when no values returning
             return -1.0;
         } else {
             double ratio = rssi * 1.0 / tx;
@@ -868,7 +872,9 @@ public class XYDevice extends XYBase {
         int tx = getTxPowerLevel();
 
         if (getFamily() == Family.XY4) {
-            tx = -75;
+            tx = -60;
+        } else {
+            tx = -60;
         }
 
         Log.v(TAG, "testTx-" + tx);
@@ -884,7 +890,7 @@ public class XYDevice extends XYBase {
             if (ratio < 1.0) {
                 return Math.pow(ratio, 10);
             } else {
-                return (0.89976) * Math.pow(ratio, 7.7095) + 0.111;
+                return (0.89976) * Math.pow(ratio, 7.7095) + 0.111; // made for tx of -59 I believe so works with most our devices, but does not work with xy4 of tx -75
             }
         }
     }
@@ -914,9 +920,7 @@ public class XYDevice extends XYBase {
                 }
                 Log.v(TAG, "connTest-pushConnection[" + _connectionCount + "->" + (_connectionCount + 1) + "]:" + getId() + ": " + action);
             }
-            if (_currentAction != null) {
-                Log.e(TAG, "connTest-action");
-            } else {
+            if (_currentAction == null) {
                 Log.e(TAG, "connTest-null currentAction");
             }
             _connectionCount++;

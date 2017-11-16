@@ -73,8 +73,15 @@ public class XYDeviceCharacteristic {
     public static final UUID XY4PrimaryColor = UUID.fromString("a44eacf4-0104-0001-0015-5f784c9977b5");
     public static final UUID XY4PrimaryHardwareCreateDate = UUID.fromString("a44eacf4-0104-0001-0017-5f784c9977b5");
 
-
-
+    // dialog ota characteristics start
+    public static final UUID SPOTA_MEM_DEV_UUID = UUID.fromString("8082caa8-41a6-4021-91c6-56f9b954cc34");
+    public static final UUID SPOTA_GPIO_MAP_UUID = UUID.fromString("724249f0-5eC3-4b5f-8804-42345af08651");
+    public static final UUID SPOTA_MEM_INFO_UUID = UUID.fromString("6c53db25-47a1-45fe-a022-7c92fb334fd4");
+    public static final UUID SPOTA_PATCH_LEN_UUID = UUID.fromString("9d84b9a3-000c-49d8-9183-855b673fda31");
+    public static final UUID SPOTA_PATCH_DATA_UUID = UUID.fromString("457871e8-d516-4ca1-9116-57d0b17b9cb2");
+    public static final UUID SPOTA_SERV_STATUS_UUID = UUID.fromString("5f78df94-798c-46f5-990a-b3eb6a065c88");
+    public static final UUID SPOTA_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+    // dialog ota characteristics end
 
     public static final UUID DeviceName = UUID.fromString("00002a00-0000-1000-8000-00805f9b34fb");
     public static final UUID Appearance = UUID.fromString("00002a01-0000-1000-8000-00805f9b34fb");

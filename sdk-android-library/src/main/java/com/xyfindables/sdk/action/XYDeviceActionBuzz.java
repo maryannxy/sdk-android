@@ -47,5 +47,4 @@ public abstract class XYDeviceActionBuzz extends XYDeviceAction {
         }
         return result;
     }
-
 }
