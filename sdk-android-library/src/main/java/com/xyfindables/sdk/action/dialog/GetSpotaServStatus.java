@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.util.Log;
 
+import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYDeviceCharacteristic;
 import com.xyfindables.sdk.XYDeviceService;
@@ -12,17 +13,16 @@ import com.xyfindables.sdk.action.XYDeviceAction;
 import java.util.UUID;
 
 /**
- * Created by alex.mcelroy on 11/15/2017.
+ * Created by alex on 11/17/2017.
  */
 
-public abstract class SetSpotaGpioMap extends XYDeviceAction {
-    private static final String TAG = SetSpotaGpioMap.class.getSimpleName();
+public abstract class GetSpotaServStatus extends XYDeviceAction {
+    private static final String TAG = GetSpotaServStatus.class.getSimpleName();
 
     public byte[] value;
 
-    public SetSpotaGpioMap(XYDevice device, byte[] value) {
+    public GetSpotaServStatus(XYDevice device) {
         super(device);
-        this.value = value;
         Log.v(TAG, TAG);
     }
 
@@ -33,7 +33,7 @@ public abstract class SetSpotaGpioMap extends XYDeviceAction {
 
     @Override
     public UUID getCharacteristicId() {
-        return XYDeviceCharacteristic.SPOTA_GPIO_MAP_UUID;
+        return XYDeviceCharacteristic.SPOTA_SERV_STATUS_UUID;
     }
 
     @Override
@@ -41,13 +41,15 @@ public abstract class SetSpotaGpioMap extends XYDeviceAction {
         Log.v(TAG, "statusChanged:" + status + ":" + success);
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
-            case STATUS_CHARACTERISTIC_FOUND: {
-                characteristic.setValue(value);
-                if (!gatt.writeCharacteristic(characteristic)) {
+            case STATUS_CHARACTERISTIC_READ:
+                value = characteristic.getValue();
+                break;
+            case STATUS_CHARACTERISTIC_FOUND:
+                if (!gatt.readCharacteristic(characteristic)) {
+                    XYBase.logError(TAG, "Characteristic Read Failed");
                     statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                 }
                 break;
-            }
         }
         return result;
     }

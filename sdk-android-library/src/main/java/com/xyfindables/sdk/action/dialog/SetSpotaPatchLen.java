@@ -15,12 +15,12 @@ import java.util.UUID;
  * Created by alex.mcelroy on 11/15/2017.
  */
 
-public abstract class SetSpotaGpioMap extends XYDeviceAction {
-    private static final String TAG = SetSpotaGpioMap.class.getSimpleName();
+public abstract class SetSpotaPatchLen extends XYDeviceAction {
+    private static final String TAG = SetSpotaPatchLen.class.getSimpleName();
 
     public byte[] value;
 
-    public SetSpotaGpioMap(XYDevice device, byte[] value) {
+    public SetSpotaPatchLen(XYDevice device, byte[] value) {
         super(device);
         this.value = value;
         Log.v(TAG, TAG);
@@ -33,7 +33,7 @@ public abstract class SetSpotaGpioMap extends XYDeviceAction {
 
     @Override
     public UUID getCharacteristicId() {
-        return XYDeviceCharacteristic.SPOTA_GPIO_MAP_UUID;
+        return XYDeviceCharacteristic.SPOTA_PATCH_LEN_UUID;
     }
 
     @Override
