@@ -18,7 +18,7 @@ import java.util.UUID;
 public abstract class SetSpotaMemDev extends XYDeviceAction {
     private static final String TAG = SetSpotaMemDev.class.getSimpleName();
 
-    public byte[] value;
+    byte[] value;
 
     public SetSpotaMemDev(XYDevice device, byte[] value) {
         super(device);
@@ -44,6 +44,7 @@ public abstract class SetSpotaMemDev extends XYDeviceAction {
             case STATUS_CHARACTERISTIC_FOUND: {
                 characteristic.setValue(value);
                 if (!gatt.writeCharacteristic(characteristic)) {
+                    Log.e(TAG, "testOta-SetSpotaMemDev write failed");
                     statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                 }
                 break;

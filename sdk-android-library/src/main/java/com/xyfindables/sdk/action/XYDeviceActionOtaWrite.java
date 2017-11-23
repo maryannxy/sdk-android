@@ -19,6 +19,7 @@ public abstract class XYDeviceActionOtaWrite extends XYDeviceAction {
 
     public byte[][] value;
     private int counter = 0;
+    private XYDevice _device;
 
     public XYDeviceActionOtaWrite(XYDevice device, byte[][] value) {
         super(device);
@@ -26,8 +27,6 @@ public abstract class XYDeviceActionOtaWrite extends XYDeviceAction {
         _device = device;
         Log.v(TAG, TAG);
     }
-
-    private XYDevice _device;
 
     @Override
     public UUID getServiceId() {

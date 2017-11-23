@@ -27,6 +27,7 @@ import com.xyfindables.sdk.action.XYDeviceActionGetBatterySinceCharged;
 import com.xyfindables.sdk.action.XYDeviceActionGetVersion;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButton;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButtonModern;
+import com.xyfindables.sdk.action.dialog.SubscribeSpotaNotifications;
 import com.xyfindables.sdk.actionHelper.XYBattery;
 import com.xyfindables.sdk.actionHelper.XYFirmware;
 import com.xyfindables.sdk.bluetooth.ScanRecordLegacy;
@@ -350,6 +351,26 @@ public class XYDevice extends XYBase {
         }
     }
 
+    private SubscribeSpotaNotifications _subscribeSpotaNotifications = null;
+    public SubscribeSpotaNotifications getSpotaNotifications() {
+        return _subscribeSpotaNotifications;
+    }
+    public void setSpotaNotifications(SubscribeSpotaNotifications value) {
+        _subscribeSpotaNotifications = value;
+    }
+
+    public void startSpotaNotifications(Context context) {
+        if (_subscribeSpotaNotifications != null) {
+            _subscribeSpotaNotifications.start(context);
+        }
+    }
+
+    public void stopSpotaNotifications() {
+        if (_subscribeSpotaNotifications != null) {
+            _subscribeSpotaNotifications.stop();
+        }
+    }
+
     private XYDeviceActionSubscribeButton _subscribeButton = null;
     private XYDeviceActionSubscribeButtonModern _subscribeButtonModern = null;
 
@@ -592,6 +613,8 @@ public class XYDevice extends XYBase {
                                         }
                                     }
                                 }
+                                // needs more testing before uncomment this for live
+//                                setGatt(null);
                                 break;
                             }
                             case BluetoothGatt.STATE_DISCONNECTING:
@@ -692,6 +715,9 @@ public class XYDevice extends XYBase {
                         if (_subscribeButtonModern != null) {
                             _subscribeButtonModern.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED, gatt, characteristic, true);
                         }
+                        if (_subscribeSpotaNotifications != null) {
+                            _subscribeSpotaNotifications.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED, gatt, characteristic, true);
+                        }
                     }
 
                     @Override
@@ -704,15 +730,15 @@ public class XYDevice extends XYBase {
                     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
                         super.onDescriptorWrite(gatt, descriptor, status);
                         if (status == BluetoothGatt.GATT_SUCCESS) {
-                            Log.i(TAG, "onCharacteristicRead:" + status);
+                            Log.i(TAG, "onDescriptorWrite:" + status);
                             if (_currentAction != null && _currentAction.statusChanged(descriptor, XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, true)) {
                                 endActionFrame(_currentAction, true);
                             }
                         } else {
-                            XYBase.logError(TAG, "onCharacteristicWrite Failed: " + status);
+                            XYBase.logError(TAG, "onDescriptorWrite Failed: " + status);
                             endActionFrame(_currentAction, false);
                         }
-                        Log.i(TAG, "onDescriptorWrite:" + status);
+                        Log.i(TAG, "onDescriptorWrite: " + descriptor + " : status = " + status);
                     }
 
                     @Override
@@ -742,7 +768,7 @@ public class XYDevice extends XYBase {
                     XYSmartScan.instance.pauseAutoScan(true);
 
                     try {
-                        Log.i(TAG, "_bleAccess acquiring[" + getId() + "]:" + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
+                        Log.i(TAG, "connTest-_bleAccess acquiring[" + getId() + "]:" + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
                         if (_bleAccess.tryAcquire(10, TimeUnit.SECONDS)) {
                             Log.i(TAG, "connTest_bleAccess acquired[" + getId() + "]: " + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
                             // below is commented out to prevent release being called in UI

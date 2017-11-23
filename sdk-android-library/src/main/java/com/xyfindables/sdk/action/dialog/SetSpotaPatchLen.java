@@ -18,7 +18,7 @@ import java.util.UUID;
 public abstract class SetSpotaPatchLen extends XYDeviceAction {
     private static final String TAG = SetSpotaPatchLen.class.getSimpleName();
 
-    public byte[] value;
+    byte[] value;
 
     public SetSpotaPatchLen(XYDevice device, byte[] value) {
         super(device);

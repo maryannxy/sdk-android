@@ -12,7 +12,7 @@ import com.xyfindables.sdk.action.XYDeviceAction;
 import java.util.UUID;
 
 /**
- * Created by alex.mcelroy on 11/15/2017.
+ * Created by alex.mcelroy on 11/21/2017.
  */
 
 public abstract class SetSpotaGpioMap extends XYDeviceAction {
@@ -33,7 +33,7 @@ public abstract class SetSpotaGpioMap extends XYDeviceAction {
 
     @Override
     public UUID getCharacteristicId() {
-        return XYDeviceCharacteristic.SPOTA_GPIO_MAP_UUID;
+        return XYDeviceCharacteristic.SPOTA_MEM_DEV_UUID;
     }
 
     @Override
