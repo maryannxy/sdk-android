@@ -44,7 +44,7 @@ public abstract class XYDeviceActionSetGPSInterval extends XYDeviceAction {
             case STATUS_CHARACTERISTIC_FOUND: {
                 characteristic.setValue(value);
                 if (!gatt.writeCharacteristic(characteristic)) {
-                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                    result = false;
                 }
                 break;
             }

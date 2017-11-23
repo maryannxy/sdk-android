@@ -52,7 +52,7 @@ public class XYDeviceActionBuzzModernConfig extends XYDeviceAction {
                 System.arraycopy(slice, 0, packet, slotPlusOffset.length, slice.length);
                 characteristic.setValue(packet);
                 if (!gatt.writeCharacteristic(characteristic)) {
-                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                    result = false;
                 }
                 break;
             case STATUS_CHARACTERISTIC_WRITE:
@@ -67,13 +67,13 @@ public class XYDeviceActionBuzzModernConfig extends XYDeviceAction {
                 System.arraycopy(slotPlusOffset, 0, packet, 0, slotPlusOffset.length);
                 System.arraycopy(slice, 0, packet, slotPlusOffset.length, slice.length);
                 characteristic.setValue(packet);
-                if (!gatt.writeCharacteristic(characteristic)) {
-                    Log.v(TAG, "testSoundConfig-writeCharacteristic failed");
-                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                }
                 if (counter == 14) {
                     result = true;
                 } else {
+                    result = false;
+                }
+                if (!gatt.writeCharacteristic(characteristic)) {
+                    Log.v(TAG, "testSoundConfig-writeCharacteristic failed");
                     result = false;
                 }
                 break;

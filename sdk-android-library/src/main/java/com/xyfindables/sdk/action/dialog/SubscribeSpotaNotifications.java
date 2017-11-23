@@ -61,6 +61,8 @@ public abstract class SubscribeSpotaNotifications extends XYDeviceAction {
                 Log.i(TAG, "testOta-subscribeSpotaNotifications:statusChanged:Characteristic Found");
                 if (!gatt.setCharacteristicNotification(characteristic, true)) {
                     Log.e(TAG, "testOta-notifications-Characteristic Notification Failed");
+                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                    return false;
                 } else {
                     _gatt = gatt;
                     _characteristic = characteristic;
@@ -70,6 +72,7 @@ public abstract class SubscribeSpotaNotifications extends XYDeviceAction {
                 if (!gatt.writeDescriptor(descriptor)) {
                     Log.e(TAG, "testOta-notifications-Write Descriptor failed");
                     statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                    return false;
                 } else {
                     Log.v(TAG, "testOta-notifications-Write Descriptor succeeded");
                 }

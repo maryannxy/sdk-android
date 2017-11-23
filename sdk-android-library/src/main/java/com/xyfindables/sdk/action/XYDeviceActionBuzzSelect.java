@@ -44,7 +44,7 @@ public abstract class XYDeviceActionBuzzSelect extends XYDeviceAction {
             case STATUS_CHARACTERISTIC_FOUND:
                 characteristic.setValue(_index, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                 if (!gatt.writeCharacteristic(characteristic)) {
-                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                    result = false;
                 }
                 break;
         }

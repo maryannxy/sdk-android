@@ -42,12 +42,14 @@ public abstract class SetSpotaMemDev extends XYDeviceAction {
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND: {
-                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_SINT32, 0);
+                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT32, 0);
                 if (!gatt.writeCharacteristic(characteristic)) {
                     Log.e(TAG, "testOta-SetSpotaMemDev write failed");
-                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                    result = false;
+                } else {
+                    Log.i(TAG, "testOta-SetSpotaMemDev write succeed");
+                    result = true;
                 }
-                break;
             }
         }
         return result;

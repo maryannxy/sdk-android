@@ -53,7 +53,7 @@ public abstract class XYDeviceActionSetVirtualBeacon extends XYDeviceAction {
             case STATUS_CHARACTERISTIC_FOUND: {
                 characteristic.setValue(value);
                 if (!gatt.writeCharacteristic(characteristic)) {
-                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                    result = false;
                 }
                 break;
             }
