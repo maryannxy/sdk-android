@@ -33,7 +33,7 @@ public abstract class SetSpotaGpioMap extends XYDeviceAction {
 
     @Override
     public UUID getCharacteristicId() {
-        return XYDeviceCharacteristic.SPOTA_MEM_DEV_UUID;
+        return XYDeviceCharacteristic.SPOTA_GPIO_MAP_UUID;
     }
 
     @Override
