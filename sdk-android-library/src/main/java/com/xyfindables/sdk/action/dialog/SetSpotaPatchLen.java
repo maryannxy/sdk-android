@@ -18,9 +18,9 @@ import java.util.UUID;
 public abstract class SetSpotaPatchLen extends XYDeviceAction {
     private static final String TAG = SetSpotaPatchLen.class.getSimpleName();
 
-    byte[] value;
+    int value;
 
-    public SetSpotaPatchLen(XYDevice device, byte[] value) {
+    public SetSpotaPatchLen(XYDevice device, int value) {
         super(device);
         this.value = value;
         Log.v(TAG, TAG);
@@ -42,7 +42,7 @@ public abstract class SetSpotaPatchLen extends XYDeviceAction {
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND: {
-                characteristic.setValue(value);
+                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_SINT16, 0);
                 if (!gatt.writeCharacteristic(characteristic)) {
                     statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
                 }

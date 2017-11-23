@@ -18,9 +18,9 @@ import java.util.UUID;
 public abstract class SetSpotaMemDev extends XYDeviceAction {
     private static final String TAG = SetSpotaMemDev.class.getSimpleName();
 
-    byte[] value;
+    int value;
 
-    public SetSpotaMemDev(XYDevice device, byte[] value) {
+    public SetSpotaMemDev(XYDevice device, int value) {
         super(device);
         this.value = value;
         Log.v(TAG, TAG);
@@ -42,7 +42,7 @@ public abstract class SetSpotaMemDev extends XYDeviceAction {
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND: {
-                characteristic.setValue(value);
+                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_SINT32, 0);
                 if (!gatt.writeCharacteristic(characteristic)) {
                     Log.e(TAG, "testOta-SetSpotaMemDev write failed");
                     statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
