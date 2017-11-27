@@ -45,7 +45,7 @@ public abstract class XYDeviceActionGetInactiveVirtualBeacon extends XYDeviceAct
                 break;
             case STATUS_CHARACTERISTIC_FOUND:
                 if (!gatt.readCharacteristic(characteristic)) {
-                    result = false;
+                    result = true;
                 }
                 break;
         }

@@ -44,7 +44,7 @@ public abstract class XYDeviceActionReboot extends XYDeviceAction {
             case STATUS_CHARACTERISTIC_FOUND: {
                 characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                 if (!gatt.writeCharacteristic(characteristic)) {
-                    result = false;
+                    result = true;
                 }
                 Log.i(TAG, "testOta-rebootFound: " + success);
                 break;

@@ -44,7 +44,7 @@ public abstract class XYDeviceActionBuzzSelectModern extends XYDeviceAction {
                 characteristic.setValue(_value);
                 if (!gatt.writeCharacteristic(characteristic)) {
                     Log.v(TAG, "testSoundConfig-writeCharacteristic failed");
-                    result = false;
+                    result = true;
                 }
                 break;
             }

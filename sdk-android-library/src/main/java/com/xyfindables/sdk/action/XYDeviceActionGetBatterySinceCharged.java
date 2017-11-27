@@ -45,7 +45,7 @@ public abstract class XYDeviceActionGetBatterySinceCharged extends XYDeviceActio
                 break;
             case STATUS_CHARACTERISTIC_FOUND:
                 if (!gatt.readCharacteristic(characteristic)) {
-                    result = false;
+                    result = true;
                 }
                 break;
         }

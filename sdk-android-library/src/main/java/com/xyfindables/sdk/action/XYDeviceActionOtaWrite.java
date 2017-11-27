@@ -58,11 +58,11 @@ public abstract class XYDeviceActionOtaWrite extends XYDeviceAction {
                     characteristic.setValue(value[counter]);
                     gatt.writeCharacteristic(characteristic);
                     Log.i(TAG, "testOta-value = " + bytesToHex(value[counter]));
-                    result = false;
+                    result = true;
                 } else {
                     Log.i(TAG, "testOta-write-FINISHED: " + success + ": otaMode set to false");
                     _device.otaMode(false);
-                    result = true;
+                    result = false;
                 }
                 break;
         }

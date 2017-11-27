@@ -59,7 +59,7 @@ public abstract class XYDeviceActionSubscribeButtonModern extends XYDeviceAction
         switch (status) {
             case STATUS_CHARACTERISTIC_UPDATED: {
                 Log.i(TAG, "statusChanged:Updated:" + characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
-                return true;
+                return false;
             }
             case STATUS_CHARACTERISTIC_FOUND: {
                 Log.i(TAG, "statusChanged:Characteristic Found");
@@ -72,7 +72,7 @@ public abstract class XYDeviceActionSubscribeButtonModern extends XYDeviceAction
                 BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG);
                 descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                 if (!gatt.writeDescriptor(descriptor)) {
-                    result = false;
+                    result = true;
                 }
                 break;
             }

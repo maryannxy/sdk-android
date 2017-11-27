@@ -43,7 +43,7 @@ public abstract class XYDeviceActionSetLockModern extends  XYDeviceAction {
             case STATUS_CHARACTERISTIC_FOUND: {
                 characteristic.setValue(value);
                 if (!gatt.writeCharacteristic(characteristic)) {
-                    result = false;
+                    result = true;
                 }
                 break;
             }

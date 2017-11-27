@@ -53,7 +53,7 @@ public abstract class XYDeviceActionGetLockStatus extends XYDeviceAction {
             case STATUS_CHARACTERISTIC_FOUND:
                 if (!gatt.readCharacteristic(characteristic)) {
                     XYBase.logError(TAG, "Characteristic Read Failed");
-                    result = false;
+                    result = true;
                 }
                 break;
         }

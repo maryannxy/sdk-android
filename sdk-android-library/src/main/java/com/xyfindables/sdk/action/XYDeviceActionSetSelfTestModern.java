@@ -43,7 +43,7 @@ public abstract class XYDeviceActionSetSelfTestModern extends XYDeviceAction {
             case STATUS_CHARACTERISTIC_FOUND: {
                 characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                 if (!gatt.writeCharacteristic(characteristic)) {
-                    result = false;
+                    result = true;
                 }
                 break;
             }
