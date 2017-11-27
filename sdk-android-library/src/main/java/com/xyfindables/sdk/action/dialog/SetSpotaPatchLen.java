@@ -42,9 +42,11 @@ public abstract class SetSpotaPatchLen extends XYDeviceAction {
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND: {
-                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_SINT16, 0);
+                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+//                characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
                 if (!gatt.writeCharacteristic(characteristic)) {
-                    result = false;
+                    Log.e(TAG, "testOta-SetSpotaPatchLen write failed");
+                    result = true;
                 }
                 break;
             }

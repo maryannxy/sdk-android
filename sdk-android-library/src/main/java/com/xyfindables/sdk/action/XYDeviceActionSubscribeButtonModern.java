@@ -72,9 +72,9 @@ public abstract class XYDeviceActionSubscribeButtonModern extends XYDeviceAction
                 BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG);
                 descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                 if (!gatt.writeDescriptor(descriptor)) {
-                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                    result = false;
                 }
-                return true;
+                break;
             }
         }
         return result;

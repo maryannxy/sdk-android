@@ -44,7 +44,7 @@ public abstract class XYDeviceActionGetAdvertisingConfig extends XYDeviceAction 
                 break;
             case STATUS_CHARACTERISTIC_FOUND:
                 if (!gatt.readCharacteristic(characteristic)) {
-                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                    result = false;
                 }
                 break;
         }

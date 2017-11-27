@@ -709,13 +709,13 @@ public class XYDevice extends XYBase {
                     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
                         super.onCharacteristicChanged(gatt, characteristic);
                         Log.i(TAG, "onCharacteristicChanged");
-                        if (_subscribeButton != null) {
+                        if (_subscribeButton != null && !_isInOtaMode) {
                             _subscribeButton.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED, gatt, characteristic, true);
                         }
-                        if (_subscribeButtonModern != null) {
+                        if (_subscribeButtonModern != null && !_isInOtaMode) {
                             _subscribeButtonModern.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED, gatt, characteristic, true);
                         }
-                        if (_subscribeSpotaNotifications != null) {
+                        if (_subscribeSpotaNotifications != null && _isInOtaMode) {
                             _subscribeSpotaNotifications.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED, gatt, characteristic, true);
                         }
                     }
@@ -1354,6 +1354,9 @@ public class XYDevice extends XYBase {
         }
     }
 
+    private Timer _buttonPressedTimer = null;
+    private TimerTask _buttonPressedTimerTask = null;
+
     private void startSubscribeButton() {
         if (_connectedContext == null) {
             return;
@@ -1373,14 +1376,22 @@ public class XYDevice extends XYBase {
                         int buttonValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                         Log.v(TAG, "ButtonCharacteristicUpdated:" + buttonValue);
                         _buttonRecentlyPressed = true;
-                        TimerTask timerTask = new TimerTask() {
+                        if (_buttonPressedTimer != null) {
+                            _buttonPressedTimer.cancel();
+                            _buttonPressedTimer = null;
+                        }
+                        if (_buttonPressedTimerTask != null) {
+                            _buttonPressedTimerTask.cancel();
+                            _buttonPressedTimerTask = null;
+                        }
+                        _buttonPressedTimer = new Timer();
+                        _buttonPressedTimerTask = new TimerTask() {
                             @Override
                             public void run() {
                                 _buttonRecentlyPressed = false;
                             }
                         };
-                        Timer timer = new Timer();
-                        timer.schedule(timerTask, 40000);
+                        _buttonPressedTimer.schedule(_buttonPressedTimerTask, 40000);
                         switch (buttonValue) {
                             case XYDeviceActionSubscribeButton.BUTTONPRESS_SINGLE:
                                 reportButtonPressed(ButtonType.Single);
@@ -1409,14 +1420,23 @@ public class XYDevice extends XYBase {
                         int buttonValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                         Log.v(TAG, "ButtonCharacteristicUpdated:" + buttonValue);
                         _buttonRecentlyPressed = true;
-                        TimerTask timerTask = new TimerTask() {
+                        _buttonRecentlyPressed = true;
+                        if (_buttonPressedTimer != null) {
+                            _buttonPressedTimer.cancel();
+                            _buttonPressedTimer = null;
+                        }
+                        if (_buttonPressedTimerTask != null) {
+                            _buttonPressedTimerTask.cancel();
+                            _buttonPressedTimerTask = null;
+                        }
+                        _buttonPressedTimer = new Timer();
+                        _buttonPressedTimerTask = new TimerTask() {
                             @Override
                             public void run() {
                                 _buttonRecentlyPressed = false;
                             }
                         };
-                        Timer timer = new Timer();
-                        timer.schedule(timerTask, 40000);
+                        _buttonPressedTimer.schedule(_buttonPressedTimerTask, 40000);
                         switch (buttonValue) {
                             case XYDeviceActionSubscribeButton.BUTTONPRESS_SINGLE:
                                 reportButtonPressed(ButtonType.Single);

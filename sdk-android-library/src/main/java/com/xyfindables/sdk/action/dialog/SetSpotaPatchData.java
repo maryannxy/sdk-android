@@ -2,6 +2,7 @@ package com.xyfindables.sdk.action.dialog;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.os.Build;
 import android.util.Log;
 
 import com.xyfindables.sdk.XYDevice;
@@ -41,26 +42,35 @@ public abstract class SetSpotaPatchData extends XYDeviceAction {
 
     @Override
     public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-//        Log.v(TAG, "testOta-statusChanged:" + status + ":" + success);
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND: {
-//                Log.i(TAG, "testOta-found: " + counter + " : " + success + ": length: " + value.length);
+                if (Build.VERSION.SDK_INT >= 21) {
+                    gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
+                }
                 characteristic.setValue(value[counter]);
-                gatt.writeCharacteristic(characteristic);
-//                Log.i(TAG, "testOta-value = " + bytesToHex(value[counter]));
+//                characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+                if (!gatt.writeCharacteristic(characteristic)) {
+                    Log.e(TAG, "testOta-SetSpotaPatchData writeCharacteristic failed");
+                    result = true;
+                } else {
+                    Log.v(TAG, "testOta-SetSpotaPatchData writeCharacteristic succeeded");
+                    result = false;
+                }
                 break;
             }
             case STATUS_CHARACTERISTIC_WRITE:
                 counter++;
                 if (counter < value.length) {
                     characteristic.setValue(value[counter]);
-                    gatt.writeCharacteristic(characteristic);
-//                    Log.i(TAG, "testOta-value = " + bytesToHex(value[counter]));
-                    result = false;
-                } else {
-//                    Log.i(TAG, "testOta-write-FINISHED: " + success + ": otaMode set to false");
-                    result = true;
+//                    characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+                    if (!gatt.writeCharacteristic(characteristic)) {
+                        Log.e(TAG, "testOta-SetSpotaPatchData writeCharacteristic failed");
+                        result = true;
+                    } else {
+                        Log.v(TAG, "testOta-SetSpotaPatchData writeCharacteristic succeeded");
+                        result = false;
+                    }
                 }
                 break;
         }

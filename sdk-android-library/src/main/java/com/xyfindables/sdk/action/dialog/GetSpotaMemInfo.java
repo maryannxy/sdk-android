@@ -48,7 +48,7 @@ public abstract class GetSpotaMemInfo extends XYDeviceAction {
             case STATUS_CHARACTERISTIC_FOUND:
                 if (!gatt.readCharacteristic(characteristic)) {
                     XYBase.logError(TAG, "Characteristic Read Failed");
-                    statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
+                    result = true;
                 }
                 break;
         }
