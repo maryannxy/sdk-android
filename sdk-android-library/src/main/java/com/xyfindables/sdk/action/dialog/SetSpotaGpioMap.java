@@ -42,7 +42,7 @@ public abstract class SetSpotaGpioMap extends XYDeviceAction {
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND: {
-                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_SINT32, 0);
+                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT32, 0);
                 if (!gatt.writeCharacteristic(characteristic)) {
                     result = true;
                 }
