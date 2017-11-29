@@ -45,16 +45,16 @@ public abstract class SetSpotaPatchData extends XYDeviceAction {
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND: {
-                if (Build.VERSION.SDK_INT >= 21) {
-                    gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
-                }
+//                if (Build.VERSION.SDK_INT >= 21) {
+//                    gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
+//                }
                 characteristic.setValue(value[counter]);
-//                characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+                Log.v(TAG, "testOta-write-hexValue = : " + counter + " : " + bytesToHex(value[counter]));
+                characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
                 if (!gatt.writeCharacteristic(characteristic)) {
                     Log.e(TAG, "testOta-SetSpotaPatchData writeCharacteristic failed");
                     result = true;
                 } else {
-                    Log.v(TAG, "testOta-SetSpotaPatchData writeCharacteristic succeeded");
                     result = false;
                 }
                 break;
@@ -63,12 +63,12 @@ public abstract class SetSpotaPatchData extends XYDeviceAction {
                 counter++;
                 if (counter < value.length) {
                     characteristic.setValue(value[counter]);
-//                    characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+                    Log.v(TAG, "testOta-write-hexValue = : " + counter + " : " + bytesToHex(value[counter]));
+                    characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
                     if (!gatt.writeCharacteristic(characteristic)) {
                         Log.e(TAG, "testOta-SetSpotaPatchData writeCharacteristic failed");
                         result = true;
                     } else {
-                        Log.v(TAG, "testOta-SetSpotaPatchData writeCharacteristic succeeded");
                         result = false;
                     }
                 }
