@@ -49,7 +49,7 @@ public abstract class SetSpotaPatchData extends XYDeviceAction {
 //                    gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
 //                }
                 characteristic.setValue(value[counter]);
-                Log.v(TAG, "testOta-write-hexValue = : " + counter + " : " + bytesToHex(value[counter]));
+//                Log.v(TAG, "testOta-write-hexValue = : " + counter + " : " + bytesToHex(value[counter]));
                 characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
                 if (!gatt.writeCharacteristic(characteristic)) {
                     Log.e(TAG, "testOta-SetSpotaPatchData writeCharacteristic failed");
@@ -63,7 +63,7 @@ public abstract class SetSpotaPatchData extends XYDeviceAction {
                 counter++;
                 if (counter < value.length) {
                     characteristic.setValue(value[counter]);
-                    Log.v(TAG, "testOta-write-hexValue = : " + counter + " : " + bytesToHex(value[counter]));
+//                    Log.v(TAG, "testOta-write-hexValue = : " + counter + " : " + bytesToHex(value[counter]));
                     characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
                     if (!gatt.writeCharacteristic(characteristic)) {
                         Log.e(TAG, "testOta-SetSpotaPatchData writeCharacteristic failed");
