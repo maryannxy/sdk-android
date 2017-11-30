@@ -564,6 +564,10 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onConnectionStateChange(final BluetoothGatt gatt, int status, int newState) {
                         super.onConnectionStateChange(gatt, status, newState);
+                        if (gatt.hashCode() != _gatt.hashCode()) {
+                            XYBase.logError(TAG, "onConnectionStateChange", "Not for Me!");
+                            return;
+                        }
                         Log.i(TAG, "connTest-onConnectionStateChange:" + status + ":" + newState + ":" + getId());
                         switch (newState) {
                             case BluetoothGatt.STATE_CONNECTED:
@@ -647,6 +651,10 @@ public class XYDevice extends XYBase {
                     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
 
                         super.onServicesDiscovered(gatt, status);
+                        if (gatt.hashCode() != _gatt.hashCode()) {
+                            XYBase.logError(TAG, "onServicesDiscovered", "Not for Me!");
+                            return;
+                        }
                         final XYDeviceAction currentAction = _currentAction;
                         Log.v(TAG, "connTest-onServicesDiscovered");
                         if (currentAction != null) {
@@ -680,6 +688,10 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
                         super.onCharacteristicRead(gatt, characteristic, status);
+                        if (gatt.hashCode() != _gatt.hashCode()) {
+                            XYBase.logError(TAG, "onCharacteristicRead", "Not for Me!");
+                            return;
+                        }
                         if (status == BluetoothGatt.GATT_SUCCESS) {
                             Log.i(TAG, "onCharacteristicRead:" + status);
                             if (_currentAction != null && _currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_READ, gatt, characteristic, true)) {
@@ -694,6 +706,10 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
                         super.onCharacteristicWrite(gatt, characteristic, status);
+                        if (gatt.hashCode() != _gatt.hashCode()) {
+                            XYBase.logError(TAG, "onCharacteristicWrite", "Not for Me!");
+                            return;
+                        }
                         if (status == BluetoothGatt.GATT_SUCCESS) {
                             Log.i(TAG, "onCharacteristicWrite:" + status);
                             if (_currentAction != null && _currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, characteristic, true)) {
@@ -708,6 +724,10 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
                         super.onCharacteristicChanged(gatt, characteristic);
+                        if (gatt.hashCode() != _gatt.hashCode()) {
+                            XYBase.logError(TAG, "onCharacteristicChanged", "Not for Me!");
+                            return;
+                        }
                         Log.i(TAG, "onCharacteristicChanged");
                         if (_subscribeButton != null && !_isInOtaMode) {
                             _subscribeButton.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED, gatt, characteristic, true);
@@ -723,12 +743,20 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
                         super.onDescriptorRead(gatt, descriptor, status);
+                        if (gatt.hashCode() != _gatt.hashCode()) {
+                            XYBase.logError(TAG, "onDescriptorRead", "Not for Me!");
+                            return;
+                        }
                         Log.i(TAG, "onDescriptorRead:" + status);
                     }
 
                     @Override
                     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
                         super.onDescriptorWrite(gatt, descriptor, status);
+                        if (gatt.hashCode() != _gatt.hashCode()) {
+                            XYBase.logError(TAG, "onDescriptorWrite", "Not for Me!");
+                            return;
+                        }
                         if (status == BluetoothGatt.GATT_SUCCESS) {
                             Log.i(TAG, "onDescriptorWrite:" + status);
                             if (_currentAction != null && _currentAction.statusChanged(descriptor, XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, true)) {
@@ -744,12 +772,20 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
                         super.onReliableWriteCompleted(gatt, status);
+                        if (gatt.hashCode() != _gatt.hashCode()) {
+                            XYBase.logError(TAG, "onReliableWriteCompleted", "Not for Me!");
+                            return;
+                        }
                         Log.i(TAG, "onReliableWriteCompleted:" + status);
                     }
 
                     @Override
                     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
                         super.onReadRemoteRssi(gatt, rssi, status);
+                        if (gatt.hashCode() != _gatt.hashCode()) {
+                            XYBase.logError(TAG, "onReadRemoteRssi", "Not for Me!");
+                            return;
+                        }
                         Log.i(TAG, "onReadRemoteRssi:" + rssi);
                         Log.v(TAG, "testRssi-onReadRemoteRssi rssi = " + rssi);
                         _rssi = rssi;
@@ -759,6 +795,10 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
                         super.onMtuChanged(gatt, mtu, status);
+                        if (gatt.hashCode() != _gatt.hashCode()) {
+                            XYBase.logError(TAG, "onMtuChanged", "Not for Me!");
+                            return;
+                        }
                         Log.i(TAG, "onMtuChanged:" + status);
                     }
 
