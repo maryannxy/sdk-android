@@ -16,15 +16,12 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
 
-import com.xyfindables.sdk.BuildConfig;
-
 import android.util.Log;
 
 import com.xyfindables.core.XYSemaphore;
 import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.action.XYDeviceAction;
 import com.xyfindables.sdk.action.XYDeviceActionGetBatterySinceCharged;
-import com.xyfindables.sdk.action.XYDeviceActionGetVersion;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButton;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButtonModern;
 import com.xyfindables.sdk.action.dialog.SubscribeSpotaNotifications;
@@ -33,7 +30,6 @@ import com.xyfindables.sdk.actionHelper.XYFirmware;
 import com.xyfindables.sdk.bluetooth.ScanRecordLegacy;
 import com.xyfindables.sdk.bluetooth.ScanResultLegacy;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -90,7 +86,7 @@ public class XYDevice extends XYBase {
     }
 
     private static int _missedPulsesForOutOfRange = 20;
-    private static int _actionTimeout = 60000;
+    private static int _actionTimeout = 30000;
 
     private BluetoothGatt _gatt;
 
@@ -259,6 +255,7 @@ public class XYDevice extends XYBase {
         // if _gatt is not closed, and we set new _gatt, then we lose reference to old _gatt connection which still exists in ble stack
         if (_gatt != null) {
             _gatt.close();
+            releaseBleLock();
         }
         _gatt = gatt;
     }
@@ -352,9 +349,11 @@ public class XYDevice extends XYBase {
     }
 
     private SubscribeSpotaNotifications _subscribeSpotaNotifications = null;
+
     public SubscribeSpotaNotifications getSpotaNotifications() {
         return _subscribeSpotaNotifications;
     }
+
     public void setSpotaNotifications(SubscribeSpotaNotifications value) {
         _subscribeSpotaNotifications = value;
     }
@@ -437,7 +436,7 @@ public class XYDevice extends XYBase {
         } catch (IllegalStateException ex) {
             XYBase.logError(TAG, ex.toString());
         }
-        _actionTimeout = 60000;
+        _actionTimeout = 30000;
     }
 
     private void cancelActionTimer() {
@@ -560,11 +559,11 @@ public class XYDevice extends XYBase {
                     return null;
                 }
 
-                BluetoothGattCallback callback = new BluetoothGattCallback() {
+                final BluetoothGattCallback callback = new BluetoothGattCallback() {
                     @Override
                     public void onConnectionStateChange(final BluetoothGatt gatt, int status, int newState) {
                         super.onConnectionStateChange(gatt, status, newState);
-                        if (gatt.hashCode() != _gatt.hashCode()) {
+                        if (gatt != null && _gatt != null && gatt.hashCode() != _gatt.hashCode()) {
                             XYBase.logError(TAG, "onConnectionStateChange", "Not for Me!");
                             return;
                         }
@@ -577,8 +576,9 @@ public class XYDevice extends XYBase {
 //                                _connectIntent = false;
                                 Log.i(TAG, "onConnectionStateChange:Connected: " + getId());
                                 reportConnectionStateChanged(STATE_CONNECTED);
+                                // call gatt.discoverServices() in ui thread?
                                 gatt.discoverServices();
-                                Log.v(TAG, "stateConnected: gatt object = " + gatt.hashCode());
+                                Log.v(TAG, "connTest-discoverServices called in STATE_CONNECTED");
                                 break;
                             case BluetoothGatt.STATE_DISCONNECTED: {
                                 if (status == 133) {
@@ -592,7 +592,8 @@ public class XYDevice extends XYBase {
                                     No idea why, but it does on Android 5.1 */
                                     XYBase.logError(TAG, "connTest-Disconnect with 133", false);
                                     if (!_isInOtaMode && !_connectIntent && !_debug /*&& (_connectionCount <= 1)*/) {
-//                                        popConnection();
+                                        reportConnectionStateChanged(STATE_DISCONNECTED);
+                                        popConnection();
                                         Log.e(TAG, "connTest-disconnect inside 133");
                                         XYDeviceAction currentAction = _currentAction;
                                         if (currentAction != null) {
@@ -600,7 +601,6 @@ public class XYDevice extends XYBase {
                                             endActionFrame(currentAction, false);
                                         }
                                     }
-
                                     //XYSmartScan.instance.refresh(gatt);
                                 } else {
                                     _isConnected = false;
@@ -610,15 +610,10 @@ public class XYDevice extends XYBase {
                                     if (currentAction != null) {
                                         XYBase.logError(TAG, "statusChanged:disconnected", false);
                                         endActionFrame(currentAction, false);
-                                    } else {
-                                        if (gatt != null) {
-                                            popConnection();
-                                            Log.v(TAG, "connTest-popConnection on disconnect");
-                                        }
                                     }
                                 }
                                 // needs more testing before uncomment this for live
-//                                setGatt(null);
+                                setGatt(null);
                                 break;
                             }
                             case BluetoothGatt.STATE_DISCONNECTING:
@@ -651,7 +646,7 @@ public class XYDevice extends XYBase {
                     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
 
                         super.onServicesDiscovered(gatt, status);
-                        if (gatt.hashCode() != _gatt.hashCode()) {
+                        if (gatt != null && _gatt != null && gatt.hashCode() != _gatt.hashCode()) {
                             XYBase.logError(TAG, "onServicesDiscovered", "Not for Me!");
                             return;
                         }
@@ -688,7 +683,7 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
                         super.onCharacteristicRead(gatt, characteristic, status);
-                        if (gatt.hashCode() != _gatt.hashCode()) {
+                        if (gatt != null && _gatt != null && gatt.hashCode() != _gatt.hashCode()) {
                             XYBase.logError(TAG, "onCharacteristicRead", "Not for Me!");
                             return;
                         }
@@ -706,7 +701,7 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
                         super.onCharacteristicWrite(gatt, characteristic, status);
-                        if (gatt.hashCode() != _gatt.hashCode()) {
+                        if (gatt != null && _gatt != null && gatt.hashCode() != _gatt.hashCode()) {
                             XYBase.logError(TAG, "onCharacteristicWrite", "Not for Me!");
                             return;
                         }
@@ -724,7 +719,7 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
                         super.onCharacteristicChanged(gatt, characteristic);
-                        if (gatt.hashCode() != _gatt.hashCode()) {
+                        if (gatt != null && _gatt != null && gatt.hashCode() != _gatt.hashCode()) {
                             XYBase.logError(TAG, "onCharacteristicChanged", "Not for Me!");
                             return;
                         }
@@ -743,7 +738,7 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
                         super.onDescriptorRead(gatt, descriptor, status);
-                        if (gatt.hashCode() != _gatt.hashCode()) {
+                        if (gatt != null && _gatt != null && gatt.hashCode() != _gatt.hashCode()) {
                             XYBase.logError(TAG, "onDescriptorRead", "Not for Me!");
                             return;
                         }
@@ -753,7 +748,7 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
                         super.onDescriptorWrite(gatt, descriptor, status);
-                        if (gatt.hashCode() != _gatt.hashCode()) {
+                        if (gatt != null && _gatt != null && gatt.hashCode() != _gatt.hashCode()) {
                             XYBase.logError(TAG, "onDescriptorWrite", "Not for Me!");
                             return;
                         }
@@ -772,7 +767,7 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
                         super.onReliableWriteCompleted(gatt, status);
-                        if (gatt.hashCode() != _gatt.hashCode()) {
+                        if (gatt != null && _gatt != null && gatt.hashCode() != _gatt.hashCode()) {
                             XYBase.logError(TAG, "onReliableWriteCompleted", "Not for Me!");
                             return;
                         }
@@ -782,7 +777,7 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
                         super.onReadRemoteRssi(gatt, rssi, status);
-                        if (gatt.hashCode() != _gatt.hashCode()) {
+                        if (gatt != null && _gatt != null && gatt.hashCode() != _gatt.hashCode()) {
                             XYBase.logError(TAG, "onReadRemoteRssi", "Not for Me!");
                             return;
                         }
@@ -795,7 +790,7 @@ public class XYDevice extends XYBase {
                     @Override
                     public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
                         super.onMtuChanged(gatt, mtu, status);
-                        if (gatt.hashCode() != _gatt.hashCode()) {
+                        if (gatt != null && _gatt != null && gatt.hashCode() != _gatt.hashCode()) {
                             XYBase.logError(TAG, "onMtuChanged", "Not for Me!");
                             return;
                         }
@@ -813,43 +808,74 @@ public class XYDevice extends XYBase {
                             Log.i(TAG, "connTest_bleAccess acquired[" + getId() + "]: " + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
                             // below is commented out to prevent release being called in UI
                             //stopping the scan and running the connect in ui thread required for 4.x
-//                            Handler handler = new Handler(context.getApplicationContext().getMainLooper());
-//                            handler.post(new Runnable() {
-//                                @Override
-//                                public void run() {
-                            BluetoothDevice bluetoothDevice = getBluetoothDevice();
-                            if (bluetoothDevice == null) {
-                                XYBase.logError(TAG, "connTest-No Bluetooth Adapter!", false);
-                                endActionFrame(_currentAction, false);
-                                releaseBleLock();
-                                Log.v(TAG, "connTest-release3");
+                            if (android.os.Build.VERSION.SDK_INT < 21) {
+                                Handler handler = new Handler(context.getApplicationContext().getMainLooper());
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        BluetoothDevice bluetoothDevice = getBluetoothDevice();
+                                        if (bluetoothDevice == null) {
+                                            XYBase.logError(TAG, "connTest-No Bluetooth Adapter!", false);
+                                            endActionFrame(_currentAction, false);
+                                            releaseBleLock();
+                                            Log.v(TAG, "connTest-release3");
+                                        } else {
+                                            final BluetoothGatt gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
+                                            setGatt(gatt);
+                                            if (gatt == null) {
+                                                Log.i(TAG, "gatt is null");
+                                                endActionFrame(_currentAction, false);
+                                                releaseBleLock();
+                                                Log.v(TAG, "connTest-release4");
+                                            } else {
+//                                    _connectIntent = true;
+                                                Log.v(TAG, "connTest-_connectIntent = " + _connectIntent);
+                                                final boolean connected = gatt.connect();
+                                                Log.v(TAG, "connTest-Connect:" + connected);
+                                                // some sources say must wait 600 ms after connect before discoverServices
+                                                // other sources say call gatt.discoverServices in UI thread
+                                                // 133s seem to start after discoverServices is called
+
+                                                // this is called in connected state
+//                                                gatt.discoverServices();
+                                                Log.v(TAG, "connTest-Connect:" + connected);
+                                            }
+                                        }
+                                    }
+                                });
                             } else {
-                                BluetoothGatt gatt;
-                                if (android.os.Build.VERSION.SDK_INT >= 23) {
-                                    gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback, android.bluetooth.BluetoothDevice.TRANSPORT_LE);
-                                } else {
-                                    gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
-                                }
-                                setGatt(gatt);
-                                if (gatt == null) {
-                                    Log.i(TAG, "gatt is null");
+                                BluetoothDevice bluetoothDevice = getBluetoothDevice();
+                                if (bluetoothDevice == null) {
+                                    XYBase.logError(TAG, "connTest-No Bluetooth Adapter!", false);
                                     endActionFrame(_currentAction, false);
                                     releaseBleLock();
-                                    Log.v(TAG, "connTest-release4");
+                                    Log.v(TAG, "connTest-release3");
                                 } else {
+                                    final BluetoothGatt gatt;
+                                    if (android.os.Build.VERSION.SDK_INT >= 23) {
+                                        gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback, android.bluetooth.BluetoothDevice.TRANSPORT_LE);
+                                    } else {
+                                        gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
+                                    }
+                                    setGatt(gatt);
+                                    if (gatt == null) {
+                                        Log.i(TAG, "gatt is null");
+                                        endActionFrame(_currentAction, false);
+                                        releaseBleLock();
+                                        Log.v(TAG, "connTest-release4");
+                                    } else {
 //                                    _connectIntent = true;
-                                    Log.v(TAG, "connTest-_connectIntent = " + _connectIntent);
-                                    boolean connected = gatt.connect();
-                                    Log.v(TAG, "connTest-Connect:" + connected);
-                                    // some sources say must wait 600 ms after connect before discoverServices
-                                    // other sources say call gatt.discoverServices in UI thread
-                                    // 133s seem to start after discoverServices is called
-                                    gatt.discoverServices();
-                                    Log.v(TAG, "connTest-Connect:" + connected + " - gatt object = " + gatt.hashCode());
+                                        Log.v(TAG, "connTest-_connectIntent = " + _connectIntent);
+                                        final boolean connected = gatt.connect();
+                                        Log.v(TAG, "connTest-Connect:" + connected);
+                                        // some sources say must wait 600 ms after connect before discoverServices
+                                        // other sources say call gatt.discoverServices in UI thread
+                                        // 133s seem to start after discoverServices is called
+//                                        gatt.discoverServices();
+//                                        Log.v(TAG, "connTest-discoverServices called in acquire");
+                                    }
                                 }
                             }
-//                                }
-//                            });
                         } else {
                             XYBase.logError(TAG, "connTest-_bleAccess not acquired", false);
                             endActionFrame(_currentAction, false);
@@ -877,6 +903,8 @@ public class XYDevice extends XYBase {
                             if (!gatt.discoverServices()) {
                                 Log.v(TAG, "connTest-FAIL discoverServices");
                                 endActionFrame(_currentAction, false);
+                            } else {
+                                Log.v(TAG, "connTest-discoverServices called inside callback if gatt not null");
                             }
                         }
                     }
@@ -1024,7 +1052,7 @@ public class XYDevice extends XYBase {
                             Log.v(TAG, "connTest-closeGatt1");
                             closeGatt();
                         } else {
-                            Log.e(TAG, "popConnection gat is null!");
+                            Log.e(TAG, "connTest-popConnection gat is null!");
                         }
                     }
                 }
@@ -1076,7 +1104,7 @@ public class XYDevice extends XYBase {
             gatt.close();
             Log.v(TAG, "connTest-gatt.close inside closeGatt");
             setGatt(null);
-            releaseBleLock();
+//            releaseBleLock();
             Log.v(TAG, "connTest-release2");
         }
         _currentAction = null; //just to make sure
@@ -1402,6 +1430,7 @@ public class XYDevice extends XYBase {
             return;
         }
         if (_bleAccess.availablePermits() <= 1) {
+            _stayConnected = false;
             return;
         }
         _stayConnectedActive = true;
@@ -1902,5 +1931,5 @@ public class XYDevice extends XYBase {
 
         void updated(final XYDevice device);
     }
-    // endregion =========== Listeners ============
+// endregion =========== Listeners ============
 }

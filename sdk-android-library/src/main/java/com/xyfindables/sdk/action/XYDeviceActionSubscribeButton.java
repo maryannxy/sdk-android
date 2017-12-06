@@ -60,7 +60,8 @@ public abstract class XYDeviceActionSubscribeButton extends XYDeviceAction {
         switch (status) {
             case STATUS_CHARACTERISTIC_UPDATED: {
                 Log.i(TAG, "statusChanged:Updated:" + characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
-                return false;
+                result = false;
+                break;
             }
             case STATUS_CHARACTERISTIC_FOUND: {
                 Log.i(TAG, "statusChanged:Characteristic Found");
