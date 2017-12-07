@@ -252,9 +252,22 @@ public class XYDevice extends XYBase {
     }
 
     private void setGatt(BluetoothGatt gatt) {
+        Log.v(TAG, "connTest-setGatt = " + gatt);
+
+        if (gatt == _gatt) {
+            Log.e(TAG, "connTest-trying to set same gatt");
+            return;
+        }
+
         // if _gatt is not closed, and we set new _gatt, then we lose reference to old _gatt connection which still exists in ble stack
         if (_gatt != null) {
             _gatt.close();
+            if (_currentScanResult21 != null) {
+                _currentScanResult21 = null;
+            }
+            if (_currentScanResult18 != null) {
+                _currentScanResult18 = null;
+            }
             releaseBleLock();
         }
         _gatt = gatt;
@@ -656,6 +669,7 @@ public class XYDevice extends XYBase {
                             if (status == BluetoothGatt.GATT_SUCCESS) {
                                 Log.i(TAG, "onServicesDiscovered:" + status);
                                 currentAction.statusChanged(XYDeviceAction.STATUS_SERVICE_FOUND, gatt, null, true);
+                                // concurrent mod ex on many devices with below line
                                 BluetoothGattService service = gatt.getService(currentAction.getServiceId());
                                 if (service != null) {
                                     BluetoothGattCharacteristic characteristic = service.getCharacteristic(currentAction.getCharacteristicId());
@@ -712,7 +726,9 @@ public class XYDevice extends XYBase {
                             }
                         } else {
                             XYBase.logError(TAG, "onCharacteristicWrite Failed: " + status);
-                            endActionFrame(_currentAction, false);
+                            if (_currentAction != null && _currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, characteristic, true)) {
+                                endActionFrame(_currentAction, false);
+                            }
                         }
                     }
 
@@ -896,6 +912,7 @@ public class XYDevice extends XYBase {
                         // should already be connected but just in case
                         boolean connected = gatt.connect();
                         Log.v(TAG, "connTest-Connect:" + connected);
+                        // null pointer exception here, somehow gatt is null?
                         List<BluetoothGattService> services = gatt.getServices();
                         if (services.size() > 0) {
                             callback.onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS);
@@ -1317,7 +1334,6 @@ public class XYDevice extends XYBase {
                 byte[] manufacturerData = scanResult.getScanRecord().getManufacturerSpecificData(0x004c);
                 if (manufacturerData != null) {
                     if ((manufacturerData[21] & 0x08) == 0x08 && scanResult.getRssi() != outOfRangeRssi) {
-                        handleButtonPulse();
                         if (getFamily() == Family.Gps || getFamily() == Family.XY4) {
                             if (_currentScanResult18 == null) {
                                 _currentScanResult18 = scanResult;
@@ -1325,6 +1341,7 @@ public class XYDevice extends XYBase {
                                 reportDetected();
                             }
                         }
+                        handleButtonPulse();
                         return;
                     }
                 }
@@ -1369,8 +1386,6 @@ public class XYDevice extends XYBase {
 
                 if (manufacturerData != null) {
                     if ((manufacturerData[21] & 0x08) == 0x08 && scanResult.getRssi() != outOfRangeRssi) {
-                        handleButtonPulse();
-                        Log.v(TAG, "handleButtonPulse");
                         if (getFamily() == Family.Gps || getFamily() == Family.XY4) {
                             if (_currentScanResult21 == null) {
                                 _currentScanResult21 = scanResult;
@@ -1378,6 +1393,8 @@ public class XYDevice extends XYBase {
                                 reportDetected();
                             }
                         }
+                        handleButtonPulse();
+                        Log.v(TAG, "handleButtonPulse");
                         return;
                     }
                 }
@@ -1836,7 +1853,7 @@ public class XYDevice extends XYBase {
                 }
             };
             Timer timer = new Timer();
-            timer.schedule(timerTask, 40000);
+            timer.schedule(timerTask, 30000);
         }
     }
 
