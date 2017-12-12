@@ -8,13 +8,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.util.Log;
 
 import com.xyfindables.core.XYBase;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.List;
@@ -42,7 +40,7 @@ class XYSmartScanModern extends XYSmartScan {
 
     public XYSmartScanModern() {
         super();
-        Log.v(TAG, "XYSmartScanModern");
+        logExtreme(TAG, "XYSmartScanModern");
 
         _scanResults21 = new ConcurrentLinkedQueue<>();
     }
@@ -62,12 +60,12 @@ class XYSmartScanModern extends XYSmartScan {
                         BluetoothAdapter.ERROR);
                 switch (state) {
                     case BluetoothAdapter.STATE_OFF:
-                        Log.i(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_OFF");
+                        logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_OFF");
                         if (_pendingBleRestart21) {
                             final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context).getAdapter();
 
                             if (bluetoothAdapter == null) {
-                                Log.i(TAG, "Bluetooth Disabled");
+                                logInfo(TAG, "Bluetooth Disabled");
                                 return;
                             }
                             bluetoothAdapter.enable();
@@ -76,7 +74,7 @@ class XYSmartScanModern extends XYSmartScan {
                             final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context).getAdapter();
 
                             if (bluetoothAdapter == null) {
-                                Log.i(TAG, "Bluetooth Disabled");
+                                logInfo(TAG, "Bluetooth Disabled");
                                 return;
                             }
                             bluetoothAdapter.enable();
@@ -122,7 +120,7 @@ class XYSmartScanModern extends XYSmartScan {
     @TargetApi(21)
     @Override
     protected void scan(final Context context, int period) {
-        Log.v(TAG, "scan21:start:" + period);
+        logExtreme(TAG, "scan21:start:" + period);
 
         Object settings;
 
@@ -131,7 +129,7 @@ class XYSmartScanModern extends XYSmartScan {
         final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context).getAdapter();
 
         if (bluetoothAdapter == null) {
-            Log.i(TAG, "Bluetooth Disabled");
+            logInfo(TAG, "Bluetooth Disabled");
             _scanningControl.release();
             return;
         }
@@ -154,7 +152,7 @@ class XYSmartScanModern extends XYSmartScan {
                         if ((manufacturerData[0] == 0x02) && (manufacturerData[1] == 0x15)) {
                             String xyId = xyIdFromAppleBytes(manufacturerData);
                             if (xyId != null) {
-                                Log.v(TAG, "scan21:onScanResult: " + xyId);
+                                logExtreme(TAG, "scan21:onScanResult: " + xyId);
                             }
                         }
                     }
@@ -168,7 +166,7 @@ class XYSmartScanModern extends XYSmartScan {
 
             @Override
             public void onBatchScanResults(List<ScanResult> results) {
-                Log.v(TAG, "scan21:onBatchScanResults:" + results.size());
+                logExtreme(TAG, "scan21:onBatchScanResults:" + results.size());
                 for (android.bluetooth.le.ScanResult result : results) {
                     _scanResults21.add(result);
                     _pulseCount++;
@@ -180,21 +178,21 @@ class XYSmartScanModern extends XYSmartScan {
             public void onScanFailed(int errorCode) {
                 switch (errorCode) {
                     case SCAN_FAILED_ALREADY_STARTED:
-                        Log.e(TAG, "scan21:onScanFailed:SCAN_FAILED_ALREADY_STARTED");
+                        XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_ALREADY_STARTED", true);
                         break;
                     case SCAN_FAILED_APPLICATION_REGISTRATION_FAILED:
-                        XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_APPLICATION_REGISTRATION_FAILED", false);
+                        XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_APPLICATION_REGISTRATION_FAILED", true);
                         //reset(context); //Seems to happen when stopped in debugger?
                         break;
                     case SCAN_FAILED_FEATURE_UNSUPPORTED:
-                        XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_FEATURE_UNSUPPORTED");
+                        XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_FEATURE_UNSUPPORTED", true);
                         break;
                     case SCAN_FAILED_INTERNAL_ERROR:
-                        XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_INTERNAL_ERROR", false);
+                        XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_INTERNAL_ERROR", true);
                         reset(context);
                         break;
                     default:
-                        XYBase.logError(TAG, "scan21:onScanFailed:Unknown:" + errorCode);
+                        XYBase.logError(TAG, "scan21:onScanFailed:Unknown:" + errorCode, true);
                         break;
                 }
             }
@@ -208,7 +206,7 @@ class XYSmartScanModern extends XYSmartScan {
 
         final android.bluetooth.le.BluetoothLeScanner scanner = bluetoothAdapter.getBluetoothLeScanner();
         if (scanner == null) {
-            Log.i(TAG, "Failed to get Bluetooth Scanner. Disabled?");
+            logInfo(TAG, "Failed to get Bluetooth Scanner. Disabled?");
             _scanningControl.release();
             return;
         }
@@ -228,7 +226,7 @@ class XYSmartScanModern extends XYSmartScan {
         final TimerTask stopTimerTask = new TimerTask() {
             @Override
             public void run() {
-                Log.v(TAG, "stopTimerTask");
+                logInfo(TAG, "stopTimerTask");
                 pumpTimer.cancel();
                 try {
                     if (scanner != null) {
@@ -263,14 +261,14 @@ class XYSmartScanModern extends XYSmartScan {
         scanner.startScan(new ArrayList<ScanFilter>(), (android.bluetooth.le.ScanSettings)settings, scanCallback);
         dump(context);
         _scanningControl.release();
-        Log.v(TAG, "scan21:finish");
+        logExtreme(TAG, "scan21:finish");
     }
 
     private void processScanResult21(String xyId, android.bluetooth.le.ScanResult scanResult) {
         _processedPulseCount++;
         XYDevice device = deviceFromId(xyId);
         if (device == null) {
-            XYBase.logError(TAG, "Failed to Create Device");
+            XYBase.logError(TAG, "connTest-Failed to Create Device", true);
             return;
         }
         device.pulse21(scanResult);
@@ -329,8 +327,8 @@ class XYSmartScanModern extends XYSmartScan {
     }
 
     private void reset(Context context) {
-        Log.i(TAG, "reset");
-        XYBase.logError(TAG, "resetting bluetooth adapter", false);
+        logInfo(TAG, "reset");
+        XYBase.logError(TAG, "connTest-resetting bluetooth adapter", true);
         /*if (Build.VERSION.SDK_INT == 21) {
             if (!_pendingBleRestart21) {
                 restartBle21(context);
@@ -343,28 +341,28 @@ class XYSmartScanModern extends XYSmartScan {
     }
 
     private void restartBle21(Context context) {
-        Log.i(TAG, "restartBle21");
+        logInfo(TAG, "restartBle21");
         try {
             final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context).getAdapter();
 
             if (bluetoothAdapter == null) {
-                Log.i(TAG, "Bluetooth Disabled");
+                logInfo(TAG, "Bluetooth Disabled");
                 return;
             }
             _pendingBleRestart21 = true;
             Method shutdown = bluetoothAdapter.getClass().getMethod("shutdown");
             shutdown.invoke(bluetoothAdapter);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ex) {
-            XYBase.logException(TAG, ex);
+            XYBase.logException(TAG, ex, true);
         }
     }
 
     private void restartBle21Plus(Context context) {
-        Log.i(TAG, "restartBle21Plus");
+        logInfo(TAG, "restartBle21Plus");
         final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context).getAdapter();
 
         if (bluetoothAdapter == null) {
-            Log.i(TAG, "Bluetooth Disabled");
+            logInfo(TAG, "Bluetooth Disabled");
             return;
         }
         _pendingBleRestart21Plus = true;

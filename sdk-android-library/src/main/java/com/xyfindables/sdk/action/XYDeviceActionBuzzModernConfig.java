@@ -2,8 +2,6 @@ package com.xyfindables.sdk.action;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.provider.Settings;
-import android.util.Log;
 
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYDeviceCharacteristic;
@@ -25,7 +23,7 @@ public class XYDeviceActionBuzzModernConfig extends XYDeviceAction {
     protected XYDeviceActionBuzzModernConfig(XYDevice device, byte[] value) {
         super(device);
         this.value = value;
-        Log.v(TAG, TAG);
+        logAction(TAG, TAG);
     }
 
     @Override
@@ -40,11 +38,11 @@ public class XYDeviceActionBuzzModernConfig extends XYDeviceAction {
 
     @Override
     public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        logExtreme(TAG, "statusChanged:" + status + ":" + success);
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND:
-                Log.v(TAG, "testSoundConfig: found: " + success);
+                logExtreme(TAG, "testSoundConfig: found: " + success);
                 byte[] slotPlusOffset = {value[0], (byte)0};
                 byte[] slice = Arrays.copyOfRange(value, 1, 19);
                 byte[] packet = new byte[slotPlusOffset.length + slice.length];
@@ -57,7 +55,7 @@ public class XYDeviceActionBuzzModernConfig extends XYDeviceAction {
                 break;
             case STATUS_CHARACTERISTIC_WRITE:
                 counter++;
-                Log.v(TAG, "testSoundConfig: write: " + success + "counter: " + counter);
+                logExtreme(TAG, "testSoundConfig: write: " + success + "counter: " + counter);
                 slotPlusOffset = new byte[]{value[0], (byte)(counter*9)};
                 slice = Arrays.copyOfRange(value, counter * 18 + 1, counter * 18 + 19);
                 if (counter == 14) {
@@ -73,7 +71,7 @@ public class XYDeviceActionBuzzModernConfig extends XYDeviceAction {
                     result = false;
                 }
                 if (!gatt.writeCharacteristic(characteristic)) {
-                    Log.v(TAG, "testSoundConfig-writeCharacteristic failed");
+                    logError(TAG, "testSoundConfig-writeCharacteristic failed", false);
                     result = true;
                 }
                 break;

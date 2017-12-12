@@ -2,7 +2,6 @@ package com.xyfindables.sdk.actionHelper;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.util.Log;
 
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.action.XYDeviceActionSetLock;
@@ -20,7 +19,7 @@ public class XYLock extends XYActionHelper {
             action = new XYDeviceActionSetLockModern(device, value) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_COMPLETED:
@@ -34,7 +33,7 @@ public class XYLock extends XYActionHelper {
             action = new XYDeviceActionSetLock(device, value) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_COMPLETED:

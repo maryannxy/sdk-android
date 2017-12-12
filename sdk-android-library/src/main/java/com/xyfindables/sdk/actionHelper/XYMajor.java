@@ -2,9 +2,6 @@ package com.xyfindables.sdk.actionHelper;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.util.Log;
-
-import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.action.XYDeviceActionGetMajor;
 import com.xyfindables.sdk.action.XYDeviceActionGetMajorModern;
@@ -23,7 +20,7 @@ public class XYMajor extends XYActionHelper {
         if (device.getFamily() == XYDevice.Family.XY4) {
             action = new XYDeviceActionGetMajorModern(device) {
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_COMPLETED:
@@ -37,7 +34,7 @@ public class XYMajor extends XYActionHelper {
             action = new XYDeviceActionGetMajor(device) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_COMPLETED:
@@ -55,7 +52,7 @@ public class XYMajor extends XYActionHelper {
             action = new XYDeviceActionSetMajorModern(device, value) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_COMPLETED:
@@ -69,7 +66,7 @@ public class XYMajor extends XYActionHelper {
             action = new XYDeviceActionSetMajor(device, value) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_COMPLETED:

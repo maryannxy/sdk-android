@@ -2,7 +2,6 @@ package com.xyfindables.sdk.actionHelper;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.util.Log;
 
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.action.XYDeviceActionBuzzModern;
@@ -30,7 +29,7 @@ public class XYBeep extends XYActionHelper {
             action = new XYDeviceActionBuzzModern(device, value) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_STARTED:
@@ -47,7 +46,7 @@ public class XYBeep extends XYActionHelper {
             action = new XYDeviceActionBuzz(device) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_STARTED:
@@ -69,7 +68,7 @@ public class XYBeep extends XYActionHelper {
             action = new XYDeviceActionBuzzSelectModern(device, value) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_STARTED:
@@ -86,7 +85,7 @@ public class XYBeep extends XYActionHelper {
             action = new XYDeviceActionBuzzSelect(device, index) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_STARTED:

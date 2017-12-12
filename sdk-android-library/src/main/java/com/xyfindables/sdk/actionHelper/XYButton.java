@@ -2,18 +2,13 @@ package com.xyfindables.sdk.actionHelper;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.telecom.Call;
-import android.util.Log;
-
-import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.action.XYDeviceActionGetButtonState;
 import com.xyfindables.sdk.action.XYDeviceActionGetButtonStateModern;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButton;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButtonModern;
 
-import java.util.UUID;
+import static com.xyfindables.core.XYBase.logError;
 
 /**
  * Created by alex.mcelroy on 9/6/2017.
@@ -32,7 +27,7 @@ public class XYButton extends XYActionHelper {
             action = new XYDeviceActionGetButtonStateModern(device) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_FOUND:
@@ -49,7 +44,7 @@ public class XYButton extends XYActionHelper {
             action = new XYDeviceActionGetButtonState(device) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_FOUND:
@@ -73,7 +68,7 @@ public class XYButton extends XYActionHelper {
             action = new XYDeviceActionSubscribeButtonModern(device) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_UPDATED: {
@@ -88,7 +83,7 @@ public class XYButton extends XYActionHelper {
             action = new XYDeviceActionSubscribeButton(device) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_UPDATED: {
@@ -108,7 +103,7 @@ public class XYButton extends XYActionHelper {
             _gatt = null;
             _characteristic = null;
         } else {
-            XYBase.logError(TAG, "Stopping non-started button notifications");
+            logError(TAG, "connTest-Stopping non-started button notifications", true);
         }
     }
 }

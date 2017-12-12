@@ -2,9 +2,6 @@ package com.xyfindables.sdk.actionHelper;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.util.Log;
-
-import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.action.XYDeviceActionGetAccelerometerInactive;
 import com.xyfindables.sdk.action.XYDeviceActionGetAccelerometerMovementCount;
@@ -50,7 +47,7 @@ public class XYAccelerometer extends XYActionHelper {
         action = new XYDeviceActionGetAccelerometerRaw(_device) {
             @Override
             public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                Log.v(TAG, "statusChanged:" + status + ":" + success);
+                logExtreme(TAG, "statusChanged:" + status + ":" + success);
                 boolean result = super.statusChanged(status, gatt, characteristic, success);
                 switch (status) {
                     case STATUS_CHARACTERISTIC_READ:
@@ -69,7 +66,7 @@ public class XYAccelerometer extends XYActionHelper {
         action = new XYDeviceActionGetAccelerometerInactive(_device) {
             @Override
             public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                Log.v(TAG, "statusChanged:" + status + ":" + success);
+                logExtreme(TAG, "statusChanged:" + status + ":" + success);
                 boolean result = super.statusChanged(status, gatt, characteristic, success);
                 switch (status) {
                     case STATUS_CHARACTERISTIC_READ:
@@ -88,7 +85,7 @@ public class XYAccelerometer extends XYActionHelper {
         action = new XYDeviceActionGetAccelerometerMovementCount(_device) {
             @Override
             public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                Log.v(TAG, "statusChanged:" + status + ":" + success);
+                logExtreme(TAG, "statusChanged:" + status + ":" + success);
                 boolean result = super.statusChanged(status, gatt, characteristic, success);
                 switch (status) {
                     case STATUS_CHARACTERISTIC_READ:
@@ -107,7 +104,7 @@ public class XYAccelerometer extends XYActionHelper {
         action = new XYDeviceActionGetAccelerometerThreshold(_device) {
             @Override
             public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                Log.v(TAG, "statusChanged:" + status + ":" + success);
+                logExtreme(TAG, "statusChanged:" + status + ":" + success);
                 boolean result = super.statusChanged(status, gatt, characteristic, success);
                 switch (status) {
                     case STATUS_CHARACTERISTIC_READ:
@@ -126,7 +123,7 @@ public class XYAccelerometer extends XYActionHelper {
         action = new XYDeviceActionGetAccelerometerTimeout(_device) {
             @Override
             public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                Log.v(TAG, "statusChanged:" + status + ":" + success);
+                logExtreme(TAG, "statusChanged:" + status + ":" + success);
                 boolean result = super.statusChanged(status, gatt, characteristic, success);
                 switch (status) {
                     case STATUS_CHARACTERISTIC_READ:

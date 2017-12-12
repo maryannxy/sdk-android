@@ -2,7 +2,6 @@ package com.xyfindables.sdk.action;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.util.Log;
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYDeviceCharacteristic;
 import com.xyfindables.sdk.XYDeviceService;
@@ -25,7 +24,7 @@ public abstract class XYDeviceActionOtaWrite extends XYDeviceAction {
         super(device);
         this.value = value;
         _device = device;
-        Log.v(TAG, TAG);
+        logAction(TAG, TAG);
     }
 
     @Override
@@ -41,26 +40,26 @@ public abstract class XYDeviceActionOtaWrite extends XYDeviceAction {
     @Override
     public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
 
-        Log.v(TAG, "testOta-statusChanged:" + status + ":" + success);
+        logExtreme(TAG, "testOta-statusChanged:" + status + ":" + success);
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND:
                 _device.otaMode(true);
-                Log.i(TAG, "testOta-found: " + counter + " : " + success + ": length: " + value.length);
+                logExtreme(TAG, "testOta-found: " + counter + " : " + success + ": length: " + value.length);
                 characteristic.setValue(value[counter]);
                 gatt.writeCharacteristic(characteristic);
-                Log.i(TAG, "testOta-value = " + bytesToHex(value[counter]));
+                logExtreme(TAG, "testOta-value = " + bytesToHex(value[counter]));
                 break;
             case STATUS_CHARACTERISTIC_WRITE:
                 counter++;
                 if (counter < value.length) {
-                    Log.i(TAG, "testOta-write: " + counter + " : " + success);
+                    logExtreme(TAG, "testOta-write: " + counter + " : " + success);
                     characteristic.setValue(value[counter]);
                     gatt.writeCharacteristic(characteristic);
-                    Log.i(TAG, "testOta-value = " + bytesToHex(value[counter]));
+                    logExtreme(TAG, "testOta-value = " + bytesToHex(value[counter]));
                     result = false;
                 } else {
-                    Log.i(TAG, "testOta-write-FINISHED: " + success + ": otaMode set to false");
+                    logExtreme(TAG, "testOta-write-FINISHED: " + success + ": otaMode set to false");
                     _device.otaMode(false);
                     result = true;
                 }

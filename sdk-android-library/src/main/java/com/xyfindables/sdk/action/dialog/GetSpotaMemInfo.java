@@ -2,14 +2,11 @@ package com.xyfindables.sdk.action.dialog;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.util.Log;
 
-import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYDeviceCharacteristic;
 import com.xyfindables.sdk.XYDeviceService;
 import com.xyfindables.sdk.action.XYDeviceAction;
-import com.xyfindables.sdk.action.XYDeviceActionGetAccelerometerTimeout;
 
 import java.util.UUID;
 
@@ -24,7 +21,7 @@ public abstract class GetSpotaMemInfo extends XYDeviceAction {
 
     public GetSpotaMemInfo(XYDevice device) {
         super(device);
-        Log.v(TAG, TAG);
+        logAction(TAG, TAG);
     }
 
     @Override
@@ -39,7 +36,7 @@ public abstract class GetSpotaMemInfo extends XYDeviceAction {
 
     @Override
     public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        logExtreme(TAG, "statusChanged:" + status + ":" + success);
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_READ:
@@ -47,7 +44,7 @@ public abstract class GetSpotaMemInfo extends XYDeviceAction {
                 break;
             case STATUS_CHARACTERISTIC_FOUND:
                 if (!gatt.readCharacteristic(characteristic)) {
-                    XYBase.logError(TAG, "Characteristic Read Failed");
+                    logError(TAG, "connTest-Characteristic Read Failed", false);
                     result = true;
                 }
                 break;

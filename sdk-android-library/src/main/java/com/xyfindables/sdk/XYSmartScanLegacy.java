@@ -3,39 +3,14 @@ package com.xyfindables.sdk;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.location.LocationManager;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.bluetooth.ScanRecordLegacy;
 import com.xyfindables.sdk.bluetooth.ScanResultLegacy;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by arietrouw on 12/20/16.
@@ -60,7 +35,7 @@ public class XYSmartScanLegacy extends XYSmartScan {
 
     protected XYSmartScanLegacy() {
         super();
-        Log.v(TAG, TAG);
+        logExtreme(TAG, TAG);
         _scanResults = new ConcurrentLinkedQueue<>();
     }
 
@@ -68,7 +43,7 @@ public class XYSmartScanLegacy extends XYSmartScan {
         _processedPulseCount++;
         XYDevice device = deviceFromId(xyId);
         if (device == null) {
-            XYBase.logError(TAG, "Failed to Create Device");
+            XYBase.logError(TAG, "connTest-Failed to Create Device", true);
             return;
         }
         device.pulse18(scanResult);
@@ -98,7 +73,7 @@ public class XYSmartScanLegacy extends XYSmartScan {
 
     @Override
     protected void scan(final Context context, int period) {
-        Log.v(TAG, "scan:start:" + period);
+        logExtreme(TAG, "scan:start:" + period);
         if (!_scanningControl.tryAcquire()) {
             return;
         }
@@ -108,7 +83,7 @@ public class XYSmartScanLegacy extends XYSmartScan {
         final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context.getApplicationContext()).getAdapter();
 
         if (bluetoothAdapter == null) {
-            Log.i(TAG, "Bluetooth Disabled");
+            logInfo(TAG, "Bluetooth Disabled");
             return;
         }
 
@@ -125,7 +100,7 @@ public class XYSmartScanLegacy extends XYSmartScan {
         final TimerTask stopTimerTask = new TimerTask() {
             @Override
             public void run() {
-                Log.v(TAG, "stopTimerTask");
+                logExtreme(TAG, "stopTimerTask");
                 pumpTimer.cancel();
                 if (bluetoothAdapter != null) {
                     bluetoothAdapter.stopLeScan(_scanCallback);
@@ -141,6 +116,6 @@ public class XYSmartScanLegacy extends XYSmartScan {
 
         bluetoothAdapter.startLeScan(_scanCallback);
         _scanningControl.release();
-        Log.v(TAG, "scan:finish");
+        logExtreme(TAG, "scan:finish");
     }
 }

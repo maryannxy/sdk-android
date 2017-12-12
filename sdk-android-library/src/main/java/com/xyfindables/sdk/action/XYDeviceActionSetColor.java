@@ -2,7 +2,6 @@ package com.xyfindables.sdk.action;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.util.Log;
 
 import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.XYDevice;
@@ -23,7 +22,7 @@ public abstract class XYDeviceActionSetColor extends XYDeviceAction {
     public XYDeviceActionSetColor(XYDevice device, byte[] value) {
         super(device);
         this.value = value;
-        XYBase.logExtreme(TAG, TAG);
+        logAction(TAG, TAG);
     }
 
     @Override
@@ -38,7 +37,7 @@ public abstract class XYDeviceActionSetColor extends XYDeviceAction {
 
     @Override
     public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        logExtreme(TAG, "statusChanged:" + status + ":" + success);
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND: {

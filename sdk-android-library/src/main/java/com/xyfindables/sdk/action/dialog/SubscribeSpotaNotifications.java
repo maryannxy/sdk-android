@@ -3,9 +3,6 @@ package com.xyfindables.sdk.action.dialog;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
-import android.util.Log;
-
-import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYDeviceCharacteristic;
 import com.xyfindables.sdk.XYDeviceService;
@@ -25,7 +22,7 @@ public abstract class SubscribeSpotaNotifications extends XYDeviceAction {
 
     public SubscribeSpotaNotifications(XYDevice device) {
         super(device);
-        Log.v(TAG, TAG);
+        logAction(TAG, TAG);
     }
 
     public void stop() {
@@ -34,7 +31,7 @@ public abstract class SubscribeSpotaNotifications extends XYDeviceAction {
             _gatt = null;
             _characteristic = null;
         } else {
-            XYBase.logError(TAG, "Stopping non-started notifications");
+            logError(TAG, "connTest-Stopping non-started notifications", false);
         }
     }
 
@@ -50,7 +47,7 @@ public abstract class SubscribeSpotaNotifications extends XYDeviceAction {
 
     @Override
     public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        logExtreme(TAG, "statusChanged:" + status + ":" + success);
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_UPDATED: {
@@ -58,22 +55,22 @@ public abstract class SubscribeSpotaNotifications extends XYDeviceAction {
                 return true;
             }
             case STATUS_CHARACTERISTIC_FOUND: {
-                Log.i(TAG, "testOta-subscribeSpotaNotifications:statusChanged:Characteristic Found");
+                logExtreme(TAG, "testOta-subscribeSpotaNotifications:statusChanged:Characteristic Found");
                 if (!gatt.setCharacteristicNotification(characteristic, true)) {
-                    Log.e(TAG, "testOta-notifications-Characteristic Notification Failed");
+                    logError(TAG, "testOta-notifications-Characteristic Notification Failed", false);
                     return true;
                 } else {
-                    Log.v(TAG, "testOta-notifications-Characteristic Notification Succeeded");
+                    logExtreme(TAG, "testOta-notifications-Characteristic Notification Succeeded");
                     _gatt = gatt;
                     _characteristic = characteristic;
                 }
                 BluetoothGattDescriptor descriptor = characteristic.getDescriptor(XYDeviceCharacteristic.SPOTA_DESCRIPTOR_UUID);
                 descriptor.setValue(new byte[] {0x01, 0x00});
                 if (!gatt.writeDescriptor(descriptor)) {
-                    Log.e(TAG, "testOta-notifications-Write Descriptor failed");
+                    logError(TAG, "testOta-notifications-Write Descriptor failed", false);
                     return true;
                 } else {
-                    Log.v(TAG, "testOta-notifications-Write Descriptor succeeded");
+                    logExtreme(TAG, "testOta-notifications-Write Descriptor succeeded");
                 }
                 return false;
             }

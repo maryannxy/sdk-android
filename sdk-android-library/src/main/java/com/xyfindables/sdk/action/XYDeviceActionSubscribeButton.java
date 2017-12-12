@@ -3,9 +3,6 @@ package com.xyfindables.sdk.action;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
-import android.util.Log;
-
-import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.XYDeviceCharacteristic;
 import com.xyfindables.sdk.XYDeviceService;
 import com.xyfindables.sdk.XYDevice;
@@ -30,7 +27,7 @@ public abstract class XYDeviceActionSubscribeButton extends XYDeviceAction {
 
     public XYDeviceActionSubscribeButton(XYDevice device) {
         super(device);
-        Log.v(TAG, TAG);
+        logAction(TAG, TAG);
     }
 
     public void stop() {
@@ -39,7 +36,7 @@ public abstract class XYDeviceActionSubscribeButton extends XYDeviceAction {
             _gatt = null;
             _characteristic = null;
         } else {
-            XYBase.logError(TAG, "Stopping non-started button notifications");
+            logError(TAG, "connTest-Stopping non-started button notifications", false);
         }
     }
 
@@ -55,18 +52,18 @@ public abstract class XYDeviceActionSubscribeButton extends XYDeviceAction {
 
     @Override
     public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        logExtreme(TAG, "statusChanged:" + status + ":" + success);
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_UPDATED: {
-                Log.i(TAG, "statusChanged:Updated:" + characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
+                logInfo(TAG, "statusChanged:Updated:" + characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
                 result = false;
                 break;
             }
             case STATUS_CHARACTERISTIC_FOUND: {
-                Log.i(TAG, "statusChanged:Characteristic Found");
+                logInfo(TAG, "statusChanged:Characteristic Found");
                 if (!gatt.setCharacteristicNotification(characteristic, true)) {
-                    XYBase.logError(TAG, "Characteristic Notification Failed");
+                    logError(TAG, "connTest-Characteristic Notification Failed", false);
                 } else {
                     _gatt = gatt;
                     _characteristic = characteristic;

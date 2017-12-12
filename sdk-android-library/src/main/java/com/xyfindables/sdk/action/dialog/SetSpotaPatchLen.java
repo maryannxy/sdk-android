@@ -2,7 +2,6 @@ package com.xyfindables.sdk.action.dialog;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.util.Log;
 
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYDeviceCharacteristic;
@@ -23,7 +22,7 @@ public abstract class SetSpotaPatchLen extends XYDeviceAction {
     public SetSpotaPatchLen(XYDevice device, int value) {
         super(device);
         this.value = value;
-        Log.v(TAG, TAG);
+        logAction(TAG, TAG);
     }
 
     @Override
@@ -38,13 +37,13 @@ public abstract class SetSpotaPatchLen extends XYDeviceAction {
 
     @Override
     public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        logExtreme(TAG, "statusChanged:" + status + ":" + success);
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND: {
                 characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT16, 0);
                 if (!gatt.writeCharacteristic(characteristic)) {
-                    Log.e(TAG, "testOta-SetSpotaPatchLen write failed");
+                    logError(TAG, "testOta-SetSpotaPatchLen write failed", false);
                     result = true;
                 }
                 break;

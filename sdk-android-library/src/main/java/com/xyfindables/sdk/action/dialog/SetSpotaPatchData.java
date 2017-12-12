@@ -2,8 +2,6 @@ package com.xyfindables.sdk.action.dialog;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.os.Build;
-import android.util.Log;
 
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYDeviceCharacteristic;
@@ -27,7 +25,7 @@ public abstract class SetSpotaPatchData extends XYDeviceAction {
         super(device);
         this.value = value;
         _device = device;
-        Log.v(TAG, TAG);
+        logAction(TAG, TAG);
     }
 
     @Override
@@ -52,7 +50,7 @@ public abstract class SetSpotaPatchData extends XYDeviceAction {
 //                Log.v(TAG, "testOta-write-hexValue = : " + counter + " : " + bytesToHex(value[counter]));
                 characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
                 if (!gatt.writeCharacteristic(characteristic)) {
-                    Log.e(TAG, "testOta-SetSpotaPatchData writeCharacteristic failed");
+                    logError(TAG, "testOta-SetSpotaPatchData writeCharacteristic failed", false);
                     result = true;
                 } else {
                     result = false;
@@ -66,7 +64,7 @@ public abstract class SetSpotaPatchData extends XYDeviceAction {
 //                    Log.v(TAG, "testOta-write-hexValue = : " + counter + " : " + bytesToHex(value[counter]));
                     characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
                     if (!gatt.writeCharacteristic(characteristic)) {
-                        Log.e(TAG, "testOta-SetSpotaPatchData writeCharacteristic failed");
+                        logError(TAG, "testOta-SetSpotaPatchData writeCharacteristic failed", false);
                         result = true;
                     } else {
                         result = false;

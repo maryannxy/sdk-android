@@ -2,7 +2,6 @@ package com.xyfindables.sdk.action;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.util.Log;
 
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYDeviceCharacteristic;
@@ -22,7 +21,7 @@ public abstract class XYDeviceActionBuzzSelectModern extends XYDeviceAction {
     protected XYDeviceActionBuzzSelectModern(XYDevice device, byte[] value) {
         super(device);
         _value = value;
-        Log.v(TAG, TAG);
+        logAction(TAG, TAG);
     }
 
     @Override
@@ -37,13 +36,13 @@ public abstract class XYDeviceActionBuzzSelectModern extends XYDeviceAction {
 
     @Override
     public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean succes) {
-        Log.v(TAG, "statusChanged:" + status + ":" + succes);
+        logExtreme(TAG, "statusChanged:" + status + ":" + succes);
         boolean result = super.statusChanged(status, gatt, characteristic, succes);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND: {
                 characteristic.setValue(_value);
                 if (!gatt.writeCharacteristic(characteristic)) {
-                    Log.v(TAG, "testSoundConfig-writeCharacteristic failed");
+                    logError(TAG, "testSoundConfig-writeCharacteristic failed", false);
                     result = true;
                 }
                 break;

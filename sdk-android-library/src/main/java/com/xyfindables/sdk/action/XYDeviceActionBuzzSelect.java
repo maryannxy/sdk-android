@@ -2,7 +2,6 @@ package com.xyfindables.sdk.action;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.util.Log;
 
 import com.xyfindables.sdk.XYDeviceCharacteristic;
 import com.xyfindables.sdk.XYDeviceService;
@@ -23,7 +22,7 @@ public abstract class XYDeviceActionBuzzSelect extends XYDeviceAction {
     protected XYDeviceActionBuzzSelect(XYDevice device, int index) {
         super(device);
         _index = index;
-        Log.v(TAG, TAG);
+        logExtreme(TAG, TAG);
     }
 
     @Override
@@ -38,7 +37,7 @@ public abstract class XYDeviceActionBuzzSelect extends XYDeviceAction {
 
     @Override
     public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-        Log.v(TAG, "statusChanged:" + status + ":" + success);
+        logExtreme(TAG, "statusChanged:" + status + ":" + success);
         boolean result = super.statusChanged(status, gatt, characteristic, success);
         switch (status) {
             case STATUS_CHARACTERISTIC_FOUND:
