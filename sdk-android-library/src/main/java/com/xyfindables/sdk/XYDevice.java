@@ -13,6 +13,7 @@ import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
+import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Handler;
 
@@ -257,7 +258,7 @@ public class XYDevice extends XYBase {
             return;
         }
 
-        // if _gatt is not closed, and we set new _gatt, then we lose reference to old _gatt connection which still exists in ble stack
+        // if _gatt is not closed, and we set new _gatt, then we keep reference to old _gatt connection which still exists in ble stack
         if (_gatt != null) {
             _gatt.close();
             if (_currentScanResult21 != null) {
@@ -409,7 +410,6 @@ public class XYDevice extends XYBase {
             if (_stayConnectedActive) {
                 _stayConnectedActive = false;
                 stopSubscribeButton();
-                XYBase.logExtreme(TAG, "connTest-popConnection4");
             }
         }
     }
@@ -588,39 +588,41 @@ public class XYDevice extends XYBase {
                                 logExtreme(TAG, "connTest-discoverServices called in STATE_CONNECTED");
                                 break;
                             case BluetoothGatt.STATE_DISCONNECTED: {
+                                logInfo(TAG, "connTest-onConnectionStateChange:Disconnected: " + getId());
                                 if (status == 133) {
                                     if (!_connectIntent) {
                                         _isConnected = false;
                                     }
                                     // 133 may disconnect device -> in this case stayConnected can leave us with surplus connectionCount and no way to re-subscribe to button
-                                    stayConnected(null, false);
-                                    logExtreme(TAG, "connTest-133-_connectIntent = " + _connectIntent);
+//                                    stayConnected(null, false); // hacky?
                                     /* Ignoring the 133 seems to keep the connection alive.
                                     No idea why, but it does on Android 5.1 */
                                     logError(TAG, "connTest-Disconnect with 133", false);
                                     if (!_isInOtaMode && !_connectIntent && !_debug /*&& (_connectionCount <= 1)*/) {
                                         reportConnectionStateChanged(STATE_DISCONNECTED);
-                                        popConnection();
+                                        //popConnection();  //hacky?
                                         logError(TAG, "connTest-disconnect inside 133", false);
                                         XYDeviceAction currentAction = _currentAction;
                                         if (currentAction != null) {
-                                            logError(TAG, "statusChanged:disconnected", false);
                                             endActionFrame(currentAction, false);
+                                        } else {
+                                            logError(TAG, "connTest-trying to disconnect inside 133 with null currentAction", false);
                                         }
+                                        setGatt(null); // need to close gatt on device we no longer see, this will cause gatt to be null when pop connection is called since it is delayed 6 seconds
                                     }
                                     //XYSmartScan.instance.refresh(gatt);
                                 } else {
                                     _isConnected = false;
                                     reportConnectionStateChanged(STATE_DISCONNECTED);  // redundant bc called inside closeGatt inside endActionFrame as well? Just add inside gatt!=null ?
-                                    logInfo(TAG, "connTest-onConnectionStateChange:Disconnected: " + getId());
                                     XYDeviceAction currentAction = _currentAction;
                                     if (currentAction != null) {
-                                        logError(TAG, "statusChanged:disconnected", false);
                                         endActionFrame(currentAction, false);
+                                    } else {
+                                        logError(TAG, "connTest-trying to disconnect with null currentAction", false);
                                     }
+                                    setGatt(null); // need to close gatt on device we no longer see, this will cause gatt to be null when pop connection is called since it is delayed 6 seconds
+
                                 }
-                                // needs more testing before uncomment this for live
-//                                setGatt(null); // this will cause gatt to be null when pop connection is called since it is delayed 6 seconds
                                 break;
                             }
                             case BluetoothGatt.STATE_DISCONNECTING:
@@ -669,19 +671,19 @@ public class XYDevice extends XYBase {
                                             endActionFrame(currentAction, false);
                                         }
                                     } else {
-                                        logError(TAG, "statusChanged:characteristic null", true);
+                                        logError(TAG, "connTest-statusChanged:characteristic null", true);
                                         endActionFrame(currentAction, false);
                                     }
                                 } else {
-                                    logError(TAG, "statusChanged:service null", true);
+                                    logError(TAG, "connTest-statusChanged:service null, gatt = " + gatt + " currentAction = " + currentAction, true);
                                     endActionFrame(currentAction, false);
                                 }
                             } else {
-                                logError(TAG, "statusChanged:onServicesDiscovered Failed: " + status, true);
+                                logError(TAG, "connTest-statusChanged:onServicesDiscovered Failed: " + status, true);
                                 endActionFrame(currentAction, false);
                             }
                         } else {
-                            logError(TAG, "null _currentAction", true);
+                            logError(TAG, "connTest-null _currentAction", true);
                         }
                     }
 
@@ -711,9 +713,7 @@ public class XYDevice extends XYBase {
                             }
                         } else {
                             logError(TAG, "onCharacteristicWrite Failed: " + status, false);
-                            if (_currentAction != null && _currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, characteristic, true)) {
-                                endActionFrame(_currentAction, false);
-                            }
+                            endActionFrame(_currentAction, false);
                         }
                     }
 
@@ -820,7 +820,6 @@ public class XYDevice extends XYBase {
 
                                                 // this is called in connected state
 //                                                gatt.discoverServices();
-                                                logExtreme(TAG, "connTest-Connect:" + connected);
                                             }
                                         }
                                     }
@@ -846,8 +845,6 @@ public class XYDevice extends XYBase {
                                         releaseBleLock();
                                         logExtreme(TAG, "connTest-release4");
                                     } else {
-//                                    _connectIntent = true;
-                                        logExtreme(TAG, "connTest-_connectIntent = " + _connectIntent);
                                         final boolean connected = gatt.connect();
                                         logExtreme(TAG, "connTest-Connect:" + connected);
                                         // some sources say must wait 600 ms after connect before discoverServices
@@ -1015,7 +1012,7 @@ public class XYDevice extends XYBase {
                     if (_currentAction != null) {
                         action = _currentAction.getClass().getSuperclass().getSimpleName();
                     }
-                    XYBase.logExtreme(TAG, "connTest-popConnection[" + _connectionCount + "->" + (_connectionCount - 1) + "]:" + getId() + ": " + action);
+                    logExtreme(TAG, "connTest-popConnection[" + _connectionCount + "->" + (_connectionCount - 1) + "]:" + getId() + ": " + action);
                 }
                 _connectionCount--;
                 if (_connectionCount < 0) {
@@ -1032,10 +1029,11 @@ public class XYDevice extends XYBase {
                         if (gatt != null) {
                             logExtreme(TAG, "gatt.disconnect");
                             gatt.disconnect();
-                            XYBase.logExtreme(TAG, "connTest-closeGatt1");
+                            logExtreme(TAG, "connTest-closeGatt1");
                             closeGatt();
                         } else {
-                            logError(TAG, "connTest-popConnection gat is null!", true);
+                            // this should occur when out of range or take battery out since there is 6 second delay, and gatt will be set null in disconnect
+                            logError(TAG, "connTest-popConnection gat is null!", false);
                         }
                     }
                 }
@@ -1085,7 +1083,7 @@ public class XYDevice extends XYBase {
             }
             gatt.close();
             XYBase.logExtreme(TAG, "connTest-gatt.close inside closeGatt");
-            setGatt(null);
+//            setGatt(null);
 //            releaseBleLock();
             logExtreme(TAG, "connTest-release2");
         }
@@ -1402,7 +1400,8 @@ public class XYDevice extends XYBase {
             _subscribeButtonModern.stop();
             _subscribeButtonModern = null;
         }
-        _connectionCount--; // erase fake connection count we used before to keep connection alive
+        XYBase.logExtreme(TAG, "connTest-stopSubscribeButton[" + _connectionCount + "->" + (_connectionCount - 1) + "]:" + getId());
+        _connectionCount--;// erase fake connection count we used before to keep connection alive
     }
 
     private Timer _buttonPressedTimer = null;
@@ -1417,6 +1416,7 @@ public class XYDevice extends XYBase {
             return;
         }
         _stayConnectedActive = true;
+        logExtreme(TAG, "connTest-startSubscribeButton[" + _connectionCount + "->" + (_connectionCount + 1) + "]:" + getId());
         _connectionCount++; // do not use pushConnection here because then this action will be null inside pushConnection and throw error
 
         if (getFamily() == Family.XY4) {
