@@ -78,11 +78,6 @@ public class XYDevice extends XYBase {
     private boolean _stayConnected = false;
     private boolean _stayConnectedActive = false;
     private boolean _isInOtaMode = false;
-    private boolean _debug = false;
-
-    public void setDebug(boolean value) {
-        _debug = value;
-    }
 
     private static int _missedPulsesForOutOfRange = 20;
     private static int _actionTimeout = 30000;
@@ -251,7 +246,7 @@ public class XYDevice extends XYBase {
     }
 
     private void setGatt(BluetoothGatt gatt) {
-        XYBase.logExtreme(TAG, "connTest-setGatt = " + gatt);
+        XYBase.logExtreme(TAG, "connTest-setGatt = " + gatt + ": previous _gatt = " + _gatt);
 
         if (gatt == _gatt) {
             logError(TAG, "connTest-trying to set same gatt", false);
@@ -261,6 +256,7 @@ public class XYDevice extends XYBase {
         // if _gatt is not closed, and we set new _gatt, then we keep reference to old _gatt connection which still exists in ble stack
         if (_gatt != null) {
             _gatt.close();
+
             if (_currentScanResult21 != null) {
                 _currentScanResult21 = null;
             }
@@ -299,7 +295,6 @@ public class XYDevice extends XYBase {
         if (_currentScanResult21 == null) {
             return outOfRangeRssi;
         } else {
-            logExtreme(TAG, "testRssi-_currentScanResult21.getRssi() = " + _currentScanResult21.getRssi());
             return _currentScanResult21.getRssi();
         }
     }
@@ -598,7 +593,7 @@ public class XYDevice extends XYBase {
                                     /* Ignoring the 133 seems to keep the connection alive.
                                     No idea why, but it does on Android 5.1 */
                                     logError(TAG, "connTest-Disconnect with 133", false);
-                                    if (!_isInOtaMode && !_connectIntent && !_debug /*&& (_connectionCount <= 1)*/) {
+                                    if (!_isInOtaMode && !_connectIntent /*&& (_connectionCount <= 1)*/) {
                                         reportConnectionStateChanged(STATE_DISCONNECTED);
                                         //popConnection();  //hacky?
                                         logError(TAG, "connTest-disconnect inside 133", false);
@@ -789,72 +784,42 @@ public class XYDevice extends XYBase {
                         if (_bleAccess.tryAcquire(10, TimeUnit.SECONDS)) {
                             XYBase.logInfo(TAG, "connTest_bleAccess acquired[" + getId() + "]: " + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
                             // below is commented out to prevent release being called in UI
-                            //stopping the scan and running the connect in ui thread required for 4.x
-                            if (android.os.Build.VERSION.SDK_INT < 21) {
-                                Handler handler = new Handler(context.getApplicationContext().getMainLooper());
-                                handler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        BluetoothDevice bluetoothDevice = getBluetoothDevice();
-                                        if (bluetoothDevice == null) {
-                                            logError(TAG, "connTest-No Bluetooth Adapter!", false);
-                                            endActionFrame(_currentAction, false);
-                                            releaseBleLock();
-                                            XYBase.logExtreme(TAG, "connTest-release3");
-                                        } else {
-                                            final BluetoothGatt gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
-                                            setGatt(gatt);
-                                            if (gatt == null) {
-                                                logExtreme(TAG, "gatt is null");
-                                                endActionFrame(_currentAction, false);
-                                                releaseBleLock();
-                                                logExtreme(TAG, "connTest-release4");
-                                            } else {
-//                                    _connectIntent = true;
-                                                logExtreme(TAG, "connTest-_connectIntent = " + _connectIntent);
-                                                final boolean connected = gatt.connect();
-                                                logExtreme(TAG, "connTest-Connect:" + connected);
-                                                // some sources say must wait 600 ms after connect before discoverServices
-                                                // other sources say call gatt.discoverServices in UI thread
-                                                // 133s seem to start after discoverServices is called
+                            //stopping the scan and running the connect in ui thread required for 4.x - also required for Samsung Galaxy s7 7.0- and likely other phones as well
 
-                                                // this is called in connected state
-//                                                gatt.discoverServices();
-                                            }
-                                        }
-                                    }
-                                });
-                            } else {
-                                BluetoothDevice bluetoothDevice = getBluetoothDevice();
-                                if (bluetoothDevice == null) {
-                                    logError(TAG, "connTest-No Bluetooth Adapter!", false);
-                                    endActionFrame(_currentAction, false);
-                                    releaseBleLock();
-                                    logExtreme(TAG, "connTest-release3");
-                                } else {
-                                    final BluetoothGatt gatt;
-                                    if (android.os.Build.VERSION.SDK_INT >= 23) {
-                                        gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback, android.bluetooth.BluetoothDevice.TRANSPORT_LE);
-                                    } else {
-                                        gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
-                                    }
-                                    setGatt(gatt);
-                                    if (gatt == null) {
-                                        logExtreme(TAG, "gatt is null");
+                            Handler handler = new Handler(context.getApplicationContext().getMainLooper());
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    BluetoothDevice bluetoothDevice = getBluetoothDevice();
+                                    if (bluetoothDevice == null) {
+                                        logError(TAG, "connTest-No Bluetooth Adapter!", false);
                                         endActionFrame(_currentAction, false);
                                         releaseBleLock();
-                                        logExtreme(TAG, "connTest-release4");
+                                        logExtreme(TAG, "connTest-release3");
                                     } else {
-                                        final boolean connected = gatt.connect();
-                                        logExtreme(TAG, "connTest-Connect:" + connected);
-                                        // some sources say must wait 600 ms after connect before discoverServices
-                                        // other sources say call gatt.discoverServices in UI thread
-                                        // 133s seem to start after discoverServices is called
+                                        final BluetoothGatt gatt;
+                                        if (android.os.Build.VERSION.SDK_INT >= 23) {
+                                            gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback, android.bluetooth.BluetoothDevice.TRANSPORT_LE);
+                                        } else {
+                                            gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
+                                        }
+                                        setGatt(gatt);
+                                        if (gatt == null) {
+                                            logExtreme(TAG, "gatt is null");
+                                            endActionFrame(_currentAction, false);
+                                            releaseBleLock();
+                                            logExtreme(TAG, "connTest-release4");
+                                        } else {
+                                            final boolean connected = gatt.connect();
+                                            logExtreme(TAG, "connTest-Connect:" + connected);
+                                            // some sources say must wait 600 ms after connect before discoverServices
+                                            // other sources say call gatt.discoverServices in UI thread
+                                            // 133s seem to start after gatt.connect is called
 //                                        gatt.discoverServices();
-//                                        Log.v(TAG, "connTest-discoverServices called in acquire");
+                                        }
                                     }
                                 }
-                            }
+                            });
                         } else {
                             logError(TAG, "connTest-_bleAccess not acquired", false);
                             endActionFrame(_currentAction, false);
@@ -921,8 +886,6 @@ public class XYDevice extends XYBase {
             tx = -60;
         }
 
-        logExtreme(TAG, "testTx-" + tx);
-
         double rssi = getRssi();
 
         if (rssi == outOfRangeRssi) {
@@ -950,8 +913,6 @@ public class XYDevice extends XYBase {
         } else {
             tx = -60;
         }
-
-        logExtreme(TAG, "testTx-" + tx);
 
         if (rssi == outOfRangeRssi) {
             return -2.0;
@@ -1338,8 +1299,7 @@ public class XYDevice extends XYBase {
 
         android.bluetooth.le.ScanResult scanResult = (android.bluetooth.le.ScanResult) scanResultObject;
 
-//        Log.i(TAG, "testScanResult- " + scanResult);
-        logExtreme(TAG, "pulse21: " + _id + ":" + scanResult.getRssi());
+//        logExtreme(TAG, "pulse21: " + _id + ":" + scanResult.getRssi());
         _scansMissed = 0;
 
         if (getFamily() == Family.XY3 || getFamily() == Family.Gps || getFamily() == Family.XY4) {
@@ -1642,7 +1602,6 @@ public class XYDevice extends XYBase {
     public static UUID getUUID(Family family) {
         return family2uuid.get(family);
     }
-
 
     public void clearScanResults() {
         _currentScanResult18 = null;

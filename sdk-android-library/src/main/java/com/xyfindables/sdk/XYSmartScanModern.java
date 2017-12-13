@@ -152,7 +152,7 @@ class XYSmartScanModern extends XYSmartScan {
                         if ((manufacturerData[0] == 0x02) && (manufacturerData[1] == 0x15)) {
                             String xyId = xyIdFromAppleBytes(manufacturerData);
                             if (xyId != null) {
-                                logExtreme(TAG, "scan21:onScanResult: " + xyId);
+                                //logExtreme(TAG, "scan21:onScanResult: " + xyId);
                             }
                         }
                     }
