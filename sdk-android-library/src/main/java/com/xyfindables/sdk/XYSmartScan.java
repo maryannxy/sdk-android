@@ -165,7 +165,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                     }
                     break;
                 default:
-                    logError(TAG, "Unknown Action:" + action, true);
+                    logError(TAG, "Unknown Action:" + action, false);
                     break;
             }
         }
