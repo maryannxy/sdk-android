@@ -670,7 +670,7 @@ public class XYDevice extends XYBase {
                                         endActionFrame(currentAction, false);
                                     }
                                 } else {
-                                    logError(TAG, "connTest-statusChanged:service null, gatt = " + gatt + " currentAction = " + currentAction, true);
+                                    logError(TAG, "connTest-statusChanged:service null, gatt = " + gatt + " currentAction = " + currentAction, false); // this happens a decent amount. What is causing this?
                                     endActionFrame(currentAction, false);
                                 }
                             } else {
