@@ -666,7 +666,7 @@ public class XYDevice extends XYBase {
                                             endActionFrame(currentAction, false);
                                         }
                                     } else {
-                                        logError(TAG, "connTest-statusChanged:characteristic null", true);
+                                        logError(TAG, "connTest-statusChanged:characteristic null", false); // this happens a decent amount. What is causing this?
                                         endActionFrame(currentAction, false);
                                     }
                                 } else {
