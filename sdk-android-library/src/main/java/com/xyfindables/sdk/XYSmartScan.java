@@ -160,7 +160,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                             logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:SCAN_MODE_CONNECTABLE_DISCOVERABLE");
                             break;
                         default:
-                            logError(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:????:" + prevScanMode, true);
+                            logError(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:????:" + prevScanMode, false); // occurs too often?
                             break;
                     }
                     break;
