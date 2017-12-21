@@ -157,7 +157,6 @@ class XYSmartScanModern extends XYSmartScan {
                         }
                     }
 
-
                     _scanResults21.add(result);
                     _pulseCount++;
                     _pulseCountForScan++;

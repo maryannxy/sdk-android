@@ -13,7 +13,6 @@ import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
-import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Handler;
 
@@ -1046,7 +1045,7 @@ public class XYDevice extends XYBase {
             XYBase.logExtreme(TAG, "connTest-gatt.close inside closeGatt");
 //            setGatt(null);
 //            releaseBleLock();
-            logExtreme(TAG, "connTest-release2");
+//            logExtreme(TAG, "connTest-release2");
         }
         _currentAction = null; //just to make sure
         if (_actionLock.availablePermits() == 0) {
@@ -1077,6 +1076,8 @@ public class XYDevice extends XYBase {
         if (_stayConnectedActive) {
             _stayConnectedActive = false;
             popConnection();
+            _isConnected = false;
+            setGatt(null);
             logExtreme(TAG, "connTest-popConnection3");
         }
         if (XYSmartScan.instance.legacy()) {
