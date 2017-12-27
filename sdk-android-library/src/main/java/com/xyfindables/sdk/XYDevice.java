@@ -445,8 +445,9 @@ public class XYDevice extends XYBase {
 
     private void cancelActionTimer() {
         if (_actionFrameTimer == null) {
-            logError(TAG, "Null _actionFrameTimer", false);
+            logError(TAG, "connTest-Null _actionFrameTimer", false);
         } else {
+            logExtreme(TAG, "connTest-_actionFrameTimer being cancelled");
             _actionFrameTimer.cancel();
             _actionFrameTimer = null;
         }
@@ -458,7 +459,7 @@ public class XYDevice extends XYBase {
     }
 
     private void releaseActionLock() {
-        logExtreme(TAG, "_actionLock" + _actionLock.availablePermits());
+        logExtreme(TAG, "connTest-_actionLock" + _actionLock.availablePermits());
         _actionLock.release();
     }
 
@@ -495,7 +496,7 @@ public class XYDevice extends XYBase {
     }
 
     private void endActionFrame(XYDeviceAction action, boolean success) {
-        logExtreme(TAG, "endActionFrame: success = " + success + ": otaMode = " + _isInOtaMode);
+        logExtreme(TAG, "connTest-endActionFrame: success = " + success + ": otaMode = " + _isInOtaMode);
         if (action == null) {
             logError(TAG, "connTest-Ending Null Action", false);
             return;
@@ -508,13 +509,13 @@ public class XYDevice extends XYBase {
         }
         cancelActionTimer();
         action.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, success);
-        logExtreme(TAG, "_actionLock[" + getId() + "]:release");
+        logExtreme(TAG, "connTest-_actionLock[" + getId() + "]:release");
         popConnection();
         _currentAction = null;
 //        _connectIntent = false;
         releaseActionLock();
         XYSmartScan.instance.pauseAutoScan(false);
-        logExtreme(TAG, "connTest-popConnection1");
+        logExtreme(TAG, "connTest-popConnection1-pauseAutoScan set back to false");
     }
 
     public final void runOnUiThread(final Context context, Runnable action) {
@@ -654,15 +655,19 @@ public class XYDevice extends XYBase {
                         XYBase.logExtreme(TAG, "connTest-onServicesDiscovered");
                         if (currentAction != null) {
                             if (status == BluetoothGatt.GATT_SUCCESS) {
-                                logInfo(TAG, "onServicesDiscovered:" + status);
+                                logInfo(TAG, "connTest-onServicesDiscovered:" + status);
                                 currentAction.statusChanged(XYDeviceAction.STATUS_SERVICE_FOUND, gatt, null, true);
                                 // concurrent mod ex on many devices with below line
                                 BluetoothGattService service = gatt.getService(currentAction.getServiceId());
                                 if (service != null) {
                                     BluetoothGattCharacteristic characteristic = service.getCharacteristic(currentAction.getCharacteristicId());
+                                    logExtreme(TAG, "connTest-onServicesDiscovered-service not null");
                                     if (characteristic != null) {
                                         if (currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_FOUND, gatt, characteristic, true)) {
+                                            logExtreme(TAG, "connTest-onServicesDiscovered-characteristic not null");
                                             endActionFrame(currentAction, false);
+                                        } else {
+                                            logExtreme(TAG, "connTest-do nothing"); // herein lies the issue- something in endActionFrame is triggering 133-timing? executing actions too close together?
                                         }
                                     } else {
                                         logError(TAG, "connTest-statusChanged:characteristic null", false); // this happens a decent amount. What is causing this?
@@ -777,6 +782,7 @@ public class XYDevice extends XYBase {
                 if (getGatt() == null) {
                     //stopping the scan and running the connect in ui thread required for 4.x
                     XYSmartScan.instance.pauseAutoScan(true);
+                    logExtreme(TAG, "connTest-pauseAutoScan(true)");
 
                     try {
                         XYBase.logInfo(TAG, "connTest-_bleAccess acquiring[" + getId() + "]:" + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + getId());
@@ -836,9 +842,8 @@ public class XYDevice extends XYBase {
                         releaseBleLock();
                         logExtreme(TAG, "connTest-release5");
                     } else {
-                        // should already be connected but just in case
-                        boolean connected = gatt.connect();
-                        logExtreme(TAG, "connTest-Connect:" + connected);
+                        // should already be connected but just in case -> is now commented out because cause issues calling this when already connected on some phones
+//                            boolean connected = gatt.connect();
                         // null pointer exception here, somehow gatt is null?
                         List<BluetoothGattService> services = gatt.getServices();
                         if (services.size() > 0) {
@@ -964,6 +969,7 @@ public class XYDevice extends XYBase {
     }
 
     public void popConnection() {
+        logExtreme(TAG, "connTest-popConnection called");
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -987,7 +993,7 @@ public class XYDevice extends XYBase {
                         }
                         BluetoothGatt gatt = getGatt();
                         if (gatt != null) {
-                            logExtreme(TAG, "gatt.disconnect");
+                            logExtreme(TAG, "connTest-gatt.disconnect!!!!!!!!!!");
                             gatt.disconnect();
                             logExtreme(TAG, "connTest-closeGatt1");
                             closeGatt();
@@ -1033,7 +1039,9 @@ public class XYDevice extends XYBase {
         } else {
             // trying to add disconnect here to see if improved behavior, read above comment
             // could make difference in case connectionCount is 0 when it should be 1
-            gatt.disconnect();
+            // this was already called-try removing below
+//            gatt.disconnect();
+//            logExtreme(TAG, "connTest-gatt.disconnect!!!!!!!!!!!");
             // may be a timing issue calling close immediately after disconnect - try waiting 100 ms
             // changing this seems to have fixed many unexpected disconnections after executing actions
             try {
