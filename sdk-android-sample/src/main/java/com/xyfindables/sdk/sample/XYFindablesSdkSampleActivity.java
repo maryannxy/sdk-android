@@ -34,7 +34,7 @@ public class XYFindablesSdkSampleActivity extends Activity {
         btnTestLogging.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                XYBase.logError(TAG, "logError Test");
+                XYBase.logError(TAG, "logError Test", false);
                 XYBase.logException(TAG, new Exception("XYFindablesCoreSampleActivity Test Exception"), false);
                 XYBase.logAction(TAG, "logAction Test");
                 XYBase.logError(TAG, "logError", false);
