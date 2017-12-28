@@ -44,6 +44,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(path: ':sdk-android-library')
     implementation project(path: ':xycore')
+    implementation project(path: ':xyui')
     compile('com.crashlytics.sdk.android:crashlytics:2.8.0@aar') {
         transitive = true;
     }

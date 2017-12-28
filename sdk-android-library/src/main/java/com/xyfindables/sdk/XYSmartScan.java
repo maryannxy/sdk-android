@@ -465,6 +465,34 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         return _status;
     }
 
+    public int getDeviceCount() {
+        return _devices.size();
+    }
+
+    public XYDevice getDevice(int index) {
+        try {
+            int count = 0;
+            XYDevice device = null;
+            if (_devicesLock.tryLock(defaultLockTimeout, defaultLockTimeUnits)) {
+                for (Map.Entry<String, XYDevice> entry : _devices.entrySet()) {
+                    if (count == index) {
+                        device = entry.getValue();
+                        break;
+                    }
+                    count++;
+                }
+                _devicesLock.unlock();
+                return device;
+            } else {
+                XYBase.logError(TAG, "getDevices failed due to lock:" + _devicesLock.getHoldCount(), true);
+                return null;
+            }
+        } catch (InterruptedException ex) {
+            XYBase.logException(TAG, ex, true);
+            return null;
+        }
+    }
+
     public List<XYDevice> getDevices() {
         try {
             ArrayList<XYDevice> list = new ArrayList<>();
