@@ -548,6 +548,8 @@ public class XYDevice extends XYBase {
 
                 if (getBluetoothDevice() == null) {
                     logError(TAG, "connTest-getBluetoothDevice() == null", false);
+                    // need to complete action here
+                    action.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, false);
                     return null;
                 }
 
