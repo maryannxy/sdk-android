@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/toolbar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="parent"/>
+
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/nameLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="19dp"
+                android:layout_marginTop="4dp"
+                android:text="Family:"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/name"
+                android:layout_width="wrap_content"
+                android:layout_height="19dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="4dp"
+                app:layout_constraintLeft_toRightOf="@+id/nameLabel"
+                app:layout_constraintStart_toEndOf="@+id/nameLabel"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Name" />
+
+            <TextView
+                android:id="@+id/majorLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Major:"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/nameLabel" />
+
+            <TextView
+                android:id="@+id/major"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintLeft_toRightOf="@+id/majorLabel"
+                app:layout_constraintTop_toBottomOf="@+id/nameLabel"
+                tools:text="11111" />
+
+            <TextView
+                android:id="@+id/minorLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Minor:"
+                app:layout_constraintLeft_toRightOf="@+id/major"
+                app:layout_constraintTop_toBottomOf="@+id/nameLabel" />
+
+            <TextView
+                android:id="@+id/minor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintLeft_toRightOf="@+id/minorLabel"
+                app:layout_constraintTop_toBottomOf="@+id/nameLabel"
+                tools:text="00000" />
+
+            <TextView
+                android:id="@+id/rssiLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="RSSI:"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/majorLabel" />
+
+            <TextView
+                android:id="@+id/rssi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintLeft_toRightOf="@+id/rssiLabel"
+                app:layout_constraintTop_toBottomOf="@+id/majorLabel"
+                tools:text="-999" />
+
+            <TextView
+                android:id="@+id/pulsesLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pulses:"
+                app:layout_constraintLeft_toRightOf="@+id/rssi"
+                app:layout_constraintTop_toBottomOf="@+id/majorLabel" />
+
+            <TextView
+                android:id="@+id/pulseCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintLeft_toRightOf="@+id/pulsesLabel"
+                app:layout_constraintTop_toBottomOf="@+id/majorLabel"
+                tools:text="99" />
+
+            <TextView
+                android:id="@+id/enterLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Enter:"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/rssiLabel" />
+
+            <TextView
+                android:id="@+id/enterCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintLeft_toRightOf="@+id/enterLabel"
+                app:layout_constraintTop_toBottomOf="@+id/rssiLabel"
+                tools:text="2" />
+
+            <TextView
+                android:id="@+id/exitLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Exit:"
+                app:layout_constraintLeft_toRightOf="@+id/enterCount"
+                app:layout_constraintTop_toBottomOf="@+id/rssiLabel" />
+
+            <TextView
+                android:id="@+id/exitCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintLeft_toRightOf="@+id/exitLabel"
+                app:layout_constraintTop_toBottomOf="@+id/rssiLabel"
+                tools:text="1" />
+
+            <TextView
+                android:id="@+id/actionSuccessLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Action Success:"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/enterLabel" />
+
+            <TextView
+                android:id="@+id/actionSuccessCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintLeft_toRightOf="@+id/actionSuccessLabel"
+                app:layout_constraintTop_toBottomOf="@+id/enterLabel"
+                tools:text="5" />
+
+            <TextView
+                android:id="@+id/actionFailLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Action Fail:"
+                app:layout_constraintLeft_toRightOf="@+id/actionSuccessCount"
+                app:layout_constraintTop_toBottomOf="@+id/exitLabel" />
+
+            <TextView
+                android:id="@+id/actionFailCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintLeft_toRightOf="@+id/actionFailLabel"
+                app:layout_constraintTop_toBottomOf="@+id/exitLabel"
+                tools:text="2" />
+
+            <TextView
+                android:id="@+id/actionQueueLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Action Queue:"
+                app:layout_constraintLeft_toRightOf="@+id/actionFailCount"
+                app:layout_constraintTop_toBottomOf="@+id/exitLabel" />
+
+            <TextView
+                android:id="@+id/actionQueueCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintLeft_toRightOf="@+id/actionQueueLabel"
+                app:layout_constraintTop_toBottomOf="@+id/exitLabel"
+                tools:text="14" />
+
+        </android.support.constraint.ConstraintLayout>
+
+    </ScrollView>
+
+</android.support.constraint.ConstraintLayout>

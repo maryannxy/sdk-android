@@ -158,7 +158,7 @@ public class XYDevice extends XYBase {
     private ScanResultLegacy _currentScanResult18;
     private ScanResult _currentScanResult21;
 
-    private HashMap<String, Listener> _listeners = new HashMap<>();
+    private final HashMap<String, Listener> _listeners = new HashMap<>();
     private XYDeviceAction _currentAction;
 
     XYDevice(String id) {
@@ -1883,6 +1883,8 @@ public class XYDevice extends XYBase {
         void readRemoteRssi(final XYDevice device, int rssi);
 
         void updated(final XYDevice device);
+
+        void statusChanged(XYSmartScan.Status status);
     }
 // endregion =========== Listeners ============
 }

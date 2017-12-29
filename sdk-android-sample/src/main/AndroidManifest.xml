@@ -15,9 +15,10 @@
         <activity android:name="com.xyfindables.sdk.sample.XYFindablesSdkSampleActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity android:name="com.xyfindables.sdk.sample.XYDeviceActivity">
         </activity>
         <meta-data
             android:name="io.fabric.ApiKey"

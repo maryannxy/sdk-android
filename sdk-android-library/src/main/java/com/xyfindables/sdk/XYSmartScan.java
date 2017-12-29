@@ -19,6 +19,8 @@ import com.xyfindables.core.XYBase;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -31,10 +33,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-
-/**
- * Created by arietrouw on 12/20/16.
- */
 
 public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
 
@@ -63,10 +61,11 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
     final private static ThreadPoolExecutor _threadPoolListeners = new ThreadPoolExecutor(1, 5, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 
     private static int defaultLockTimeout = 10;
-    protected static final int scansWithOutPulsesBeforeRestart = 100;
+    static final int scansWithOutPulsesBeforeRestart = 100;
     private static int _missedPulsesForOutOfRange = 20;
 
     private static TimeUnit defaultLockTimeUnits = TimeUnit.SECONDS;
+    private static long startTime = Calendar.getInstance().getTimeInMillis();
 
     private Status _status = Status.None;
 
@@ -81,29 +80,33 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
     private Timer _autoScanTimer;
     private boolean paused = false;
 
-    protected HashMap<String, XYDevice> _devices;
-    protected int _scanCount = 0;
-    protected int _pulseCount = 0;
+    private HashMap<String, XYDevice> _devices;
+    int _scanCount = 0;
+    int _pulseCount = 0;
 
-    protected int _processedPulseCount = 0;
-    protected int _scansWithoutPulses = 0;
+    int _processedPulseCount = 0;
+    int _scansWithoutPulses = 0;
 
     private long _currenDeviceId;
 
-    protected Semaphore _scanningControl = new Semaphore(1, true);
+    Semaphore _scanningControl = new Semaphore(1, true);
 
-    private final HashMap<String, Listener> _listeners = new HashMap<>();
+    private final HashMap<String, XYDevice.Listener> _listeners = new HashMap<>();
 
-    protected BluetoothManager getBluetoothManager(Context context) {
+    BluetoothManager getBluetoothManager(Context context) {
         return (BluetoothManager)context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
     }
 
     private boolean _receiverRegistered = false;
 
-    protected final BroadcastReceiver _receiver = new BroadcastReceiver() {
+    final BroadcastReceiver _receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
+
+            if (action == null) {
+                return;
+            }
 
             switch (action) {
                 case BluetoothAdapter.ACTION_STATE_CHANGED:
@@ -171,7 +174,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         }
     };
 
-    protected XYSmartScan() {
+    XYSmartScan() {
         super();
         logInfo(TAG, TAG);
         _devices = new HashMap<>();
@@ -390,11 +393,13 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
     }
 
     public boolean areLocationServicesAvailable(@NonNull Context context) {
-        LocationManager lm = null;
-        boolean gps_enabled, network_enabled;
+        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
-        if (lm == null)
-            lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        if (lm == null) {
+            return false;
+        }
+
+        boolean gps_enabled, network_enabled;
 
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
@@ -420,11 +425,13 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
     }
 
     public static boolean isLocationAvailable(@NonNull Context context) {
-        LocationManager lm = null;
-        boolean gps_enabled, network_enabled;
+        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
-        if (lm == null)
-            lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        if (lm == null) {
+            return false;
+        }
+
+        boolean gps_enabled, network_enabled;
 
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
@@ -555,6 +562,22 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         }
     }
 
+    public int getPulseCount() {
+        return _pulseCount;
+    }
+
+    public long getPulsesPerSecond() {
+        long seconds = ((Calendar.getInstance().getTimeInMillis() - startTime) / 1000);
+        if (seconds == 0) {
+            return _pulseCount;
+        }
+        return _pulseCount / seconds;
+    }
+
+    public int getScanCount() {
+        return _scanCount;
+    }
+
     protected void dump(Context context) {
 
         final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context.getApplicationContext()).getAdapter();
@@ -581,106 +604,121 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
 
     abstract protected void scan(final Context context, int period);
 
-    public void addListener(final String key, final Listener listener) {
-        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                synchronized (_listeners) {
-                    _listeners.put(key, listener);
-                }
-                return null;
+    private static class AddListenerTask extends AsyncTask<Object, Void, Void> {
+        @Override
+        protected Void doInBackground(Object... params) {
+            synchronized (XYSmartScan.instance._listeners) {
+                XYSmartScan.instance._listeners.put((String)params[0], (XYDevice.Listener)params[1]);
             }
-        };
-        asyncTask.executeOnExecutor(_threadPoolListeners);
+            return null;
+        }
+    }
+
+    public void addListener(final String key, final XYDevice.Listener listener) {
+        Object[] params = new Object[2];
+        params[0] = key;
+        params[1] = listener;
+        new AddListenerTask().executeOnExecutor(_threadPoolListeners, params);
+    }
+
+    private static class RemoveListenerTask extends AsyncTask<String, Void, Void> {
+        @Override
+        protected Void doInBackground(String... params) {
+            synchronized (XYSmartScan.instance._listeners) {
+                XYSmartScan.instance._listeners.remove(params[0]);
+            }
+            return null;
+        }
     }
 
     public void removeListener(final String key) {
-        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                synchronized (_listeners) {
-                    _listeners.remove(key);
+        new RemoveListenerTask().executeOnExecutor(_threadPoolListeners, key);
+    }
+
+    private static class ReportEnteredTask extends AsyncTask<XYDevice, Void, Void> {
+        @Override
+        protected Void doInBackground(XYDevice... params) {
+            synchronized (XYSmartScan.instance._listeners) {
+                for (Map.Entry<String, XYDevice.Listener> entry : XYSmartScan.instance._listeners.entrySet()) {
+                    entry.getValue().entered(params[0]);
                 }
-                return null;
             }
-        };
-        asyncTask.executeOnExecutor(_threadPoolListeners);
+            return null;
+        }
     }
 
     private void reportEntered(final XYDevice device) {
-        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                synchronized (_listeners) {
-                    for (Map.Entry<String, Listener> entry : _listeners.entrySet()) {
-                        entry.getValue().entered(device);
-                    }
+        new ReportEnteredTask().executeOnExecutor(_threadPoolListeners, device);
+    }
+
+    private static class ReportExitedTask extends AsyncTask<XYDevice, Void, Void> {
+        @Override
+        protected Void doInBackground(XYDevice... params) {
+            synchronized (XYSmartScan.instance._listeners) {
+                for (Map.Entry<String, XYDevice.Listener> entry : XYSmartScan.instance._listeners.entrySet()) {
+                    entry.getValue().exited(params[0]);
                 }
-                return null;
             }
-        };
-        asyncTask.executeOnExecutor(_threadPoolListeners);
+            return null;
+        }
     }
 
     private void reportExited(final XYDevice device) {
-        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                synchronized (_listeners) {
-                    for (Map.Entry<String, Listener> entry : _listeners.entrySet()) {
-                        entry.getValue().exited(device);
-                    }
+        new ReportExitedTask().executeOnExecutor(_threadPoolListeners, device);
+    }
+
+    private static class ReportDetectedTask extends AsyncTask<XYDevice, Void, Void> {
+        @Override
+        protected Void doInBackground(XYDevice... params) {
+            synchronized (XYSmartScan.instance._listeners) {
+                for (Map.Entry<String, XYDevice.Listener> entry : XYSmartScan.instance._listeners.entrySet()) {
+                    entry.getValue().detected(params[0]);
                 }
-                return null;
             }
-        };
-        asyncTask.executeOnExecutor(_threadPoolListeners);
+            return null;
+        }
     }
 
     private void reportDetected(final XYDevice device) {
-        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                synchronized (_listeners) {
-                    for (Map.Entry<String, Listener> entry : _listeners.entrySet()) {
-                        entry.getValue().detected(device);
-                    }
+        new ReportDetectedTask().executeOnExecutor(_threadPoolListeners, device);
+    }
+
+    private static class ReportButtonPressedTask extends AsyncTask<Object, Void, Void> {
+        @Override
+        protected Void doInBackground(Object... params) {
+            synchronized (XYSmartScan.instance._listeners) {
+                for (Map.Entry<String, XYDevice.Listener> entry : XYSmartScan.instance._listeners.entrySet()) {
+                    entry.getValue().buttonPressed((XYDevice)params[0], (XYDevice.ButtonType)params[1]);
                 }
-                return null;
             }
-        };
-        asyncTask.executeOnExecutor(_threadPoolListeners);
+            return null;
+        }
     }
 
     private void reportButtonPressed(final XYDevice device, final XYDevice.ButtonType buttonType) {
-        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                synchronized (_listeners) {
-                    for (Map.Entry<String, Listener> entry : _listeners.entrySet()) {
-                        entry.getValue().buttonPressed(device, buttonType);
-                    }
+        Object[] params = new Object[2];
+        params[0] = device;
+        params[1] = buttonType;
+        new ReportButtonPressedTask().executeOnExecutor(_threadPoolListeners, params);
+    }
+
+    private static class ReportButtonRecentlyPressedTask extends AsyncTask<Object, Void, Void> {
+        @Override
+        protected Void doInBackground(Object... params) {
+            synchronized (XYSmartScan.instance._listeners) {
+                for (Map.Entry<String, XYDevice.Listener> entry : XYSmartScan.instance._listeners.entrySet()) {
+                    entry.getValue().buttonRecentlyPressed((XYDevice)params[0], (XYDevice.ButtonType)params[1]);
                 }
-                return null;
             }
-        };
-        asyncTask.executeOnExecutor(_threadPoolListeners);
+            return null;
+        }
     }
 
     private void reportButtonRecentlyPressed(final XYDevice device, final XYDevice.ButtonType buttonType) {
-        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                synchronized (_listeners) {
-                    for (Map.Entry<String, Listener> entry : _listeners.entrySet()) {
-                        entry.getValue().buttonRecentlyPressed(device, buttonType);
-                    }
-                }
-                return null;
-            }
-        };
-
-        asyncTask.executeOnExecutor(_threadPoolListeners);
+        Object[] params = new Object[2];
+        params[0] = device;
+        params[1] = buttonType;
+        new ReportButtonRecentlyPressedTask().executeOnExecutor(_threadPoolListeners, params);
     }
 
     // endregion ============= Listeners =============
@@ -717,6 +755,11 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
 
     }
 
+    @Override
+    public void statusChanged(Status status) {
+
+    }
+
     // endregion ============= XYDevice Listener =============
 
     public void refresh(BluetoothGatt gatt) {
@@ -731,25 +774,10 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
 
     private void reportStatusChanged(Status status) {
         synchronized (_listeners) {
-            for (Map.Entry<String, XYSmartScan.Listener> entry : _listeners.entrySet()) {
+            for (Map.Entry<String, XYDevice.Listener> entry : _listeners.entrySet()) {
                 entry.getValue().statusChanged(status);
             }
         }
     }
 
-    public interface Listener {
-        void entered(XYDevice device);
-
-        void exited(XYDevice device);
-
-        void detected(XYDevice device);
-
-        void buttonPressed(XYDevice device, XYDevice.ButtonType buttonType);
-
-        void buttonRecentlyPressed(XYDevice device, XYDevice.ButtonType buttonType);
-
-        void statusChanged(Status status);
-
-        void updated(XYDevice device);
-    }
 }

@@ -181,7 +181,7 @@ class XYSmartScanModern extends XYSmartScan {
                         break;
                     case SCAN_FAILED_APPLICATION_REGISTRATION_FAILED:
                         XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_APPLICATION_REGISTRATION_FAILED", true);
-                        //reset(context); //Seems to happen when stopped in debugger?
+                        reset(context); //Seems to happen when stopped in debugger several times?
                         break;
                     case SCAN_FAILED_FEATURE_UNSUPPORTED:
                         XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_FEATURE_UNSUPPORTED", true);
@@ -327,8 +327,7 @@ class XYSmartScanModern extends XYSmartScan {
 
     private void reset(Context context) {
         logInfo(TAG, "reset");
-        XYBase.logError(TAG, "connTest-resetting bluetooth adapter", true);
-        /*if (Build.VERSION.SDK_INT == 21) {
+        if (Build.VERSION.SDK_INT == 21) {
             if (!_pendingBleRestart21) {
                 restartBle21(context);
             }
@@ -336,16 +335,16 @@ class XYSmartScanModern extends XYSmartScan {
             if (!_pendingBleRestart21Plus) {
                 restartBle21Plus(context);
             }
-        }*/
+        }
     }
 
     private void restartBle21(Context context) {
-        logInfo(TAG, "restartBle21");
+        logError(TAG, "restartBle21", false);
         try {
             final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context).getAdapter();
 
             if (bluetoothAdapter == null) {
-                logInfo(TAG, "Bluetooth Disabled");
+                logError(TAG, "Bluetooth Disallowed or Non-Existant", false);
                 return;
             }
             _pendingBleRestart21 = true;
@@ -357,14 +356,15 @@ class XYSmartScanModern extends XYSmartScan {
     }
 
     private void restartBle21Plus(Context context) {
-        logInfo(TAG, "restartBle21Plus");
+        logError(TAG, "restartBle21Plus", false);
         final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context).getAdapter();
 
         if (bluetoothAdapter == null) {
-            logInfo(TAG, "Bluetooth Disabled");
+            logError(TAG, "Bluetooth Disallowed or Non-Existant", false);
             return;
         }
         _pendingBleRestart21Plus = true;
         bluetoothAdapter.disable();
+        bluetoothAdapter.enable();
     }
 }
