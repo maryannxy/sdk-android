@@ -3,11 +3,13 @@ package com.xyfindables.sdk.sample;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.widget.TextView;
 
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYSmartScan;
 import com.xyfindables.ui.XYBaseActivity;
+import com.xyfindables.ui.views.XYButton;
 
 /**
  * Created by arietrouw on 12/28/17.
@@ -93,6 +95,24 @@ public class XYDeviceActivity extends XYBaseActivity {
             });
             update();
         }
+
+        final XYButton connectButton = findViewById(R.id.connect);
+        connectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                connectButton.setEnabled(false);
+                _device.stayConnected(XYDeviceActivity.this, true);
+            }
+        });
+
+        XYButton disconnectButton = findViewById(R.id.disconnect);
+        disconnectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                connectButton.setEnabled(false);
+                _device.stayConnected(XYDeviceActivity.this, false);
+            }
+        });
     }
 
     @Override
@@ -133,6 +153,12 @@ public class XYDeviceActivity extends XYBaseActivity {
 
                     TextView actionQueueCount = findViewById(R.id.actionQueueCount);
                     actionQueueCount.setText(String.valueOf(_device.getActionQueueCount()));
+
+                    XYButton connectButton = findViewById(R.id.connect);
+                    connectButton.setVisibility(_device.isConnected() ? View.INVISIBLE : View.VISIBLE);
+
+                    XYButton disconnectButton = findViewById(R.id.disconnect);
+                    disconnectButton.setVisibility(_device.isConnected() ? View.VISIBLE : View.INVISIBLE);
                 }
             }
         });

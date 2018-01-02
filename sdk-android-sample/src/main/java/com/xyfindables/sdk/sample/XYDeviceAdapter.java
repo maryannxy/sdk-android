@@ -5,15 +5,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
-import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.XYSmartScan;
 
 import java.util.ArrayList;
-
-/**
- * Created by arietrouw on 12/28/17.
- */
 
 public class XYDeviceAdapter extends BaseAdapter {
 
@@ -82,8 +77,7 @@ public class XYDeviceAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        int deviceCount = _devices.size();
-        return deviceCount;
+        return _devices.size();
     }
 
     @Override
