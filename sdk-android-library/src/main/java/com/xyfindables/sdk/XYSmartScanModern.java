@@ -156,7 +156,9 @@ class XYSmartScanModern extends XYSmartScan {
                             }
                         }
                     }
-
+                    if (_scanResults21.contains(result)) {
+                        logExtreme(TAG, "connTest-getting same scan result !!!!!!!!!!!!!!!!!!!!!!!!!!");
+                    }
                     _scanResults21.add(result);
                     _pulseCount++;
                     _pulseCountForScan++;

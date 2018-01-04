@@ -109,7 +109,7 @@ public class XYDeviceActivity extends XYBaseActivity {
         disconnectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                connectButton.setEnabled(false);
+                connectButton.setEnabled(true);
                 _device.stayConnected(XYDeviceActivity.this, false);
             }
         });

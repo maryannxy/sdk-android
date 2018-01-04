@@ -105,6 +105,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
             final String action = intent.getAction();
 
             if (action == null) {
+                logError(TAG, "connTest-_receiver action is null!", false);
                 return;
             }
 
@@ -396,6 +397,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
         if (lm == null) {
+            logError(TAG, "connTest-lm = null!");
             return false;
         }
 

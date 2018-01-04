@@ -245,7 +245,6 @@ public class XYDevice extends XYBase {
     }
 
     private void setGatt(BluetoothGatt gatt) {
-        XYBase.logExtreme(TAG, "connTest-setGatt = " + gatt + ": previous _gatt = " + _gatt);
 
         if (gatt == _gatt) {
             logError(TAG, "connTest-trying to set same gatt", false);
@@ -254,16 +253,12 @@ public class XYDevice extends XYBase {
 
         // if _gatt is not closed, and we set new _gatt, then we keep reference to old _gatt connection which still exists in ble stack
         if (_gatt != null) {
+            logExtreme(TAG,"connTest-_gatt.close!!!");
             _gatt.close();
-
-            if (_currentScanResult21 != null) {
-                _currentScanResult21 = null;
-            }
-            if (_currentScanResult18 != null) {
-                _currentScanResult18 = null;
-            }
+            // we could set a timer here to null the scanResult if new scanResult is not seen in x seconds
             releaseBleLock();
         }
+        XYBase.logExtreme(TAG, "connTest-setGatt = " + gatt + ": previous _gatt = " + _gatt);
         _gatt = gatt;
     }
 
@@ -391,7 +386,7 @@ public class XYDevice extends XYBase {
     public void stayConnected(final Context context, boolean value) {
         _connectedContext = context;
 
-        logExtreme(TAG, "stayConnected:" + value + ":" + getId());
+        logExtreme(TAG, "stayConnected:" + value + ":" + getId() + " _stayConnectedActive = " + _stayConnectedActive);
         if (value == _stayConnected) {
             return;
         }
@@ -418,7 +413,7 @@ public class XYDevice extends XYBase {
                     return;
                 }
                 if (_currentAction == null) {
-                    logError(TAG, "connTest-Null Action timed out", true);
+                    logError(TAG, "connTest-Null Action timed out", false);
                     // this will be called in endActionFrame so only needs to be called if somehow _currentAction is null and timer is not
                     cancelActionTimer();
                 } else {
@@ -426,7 +421,7 @@ public class XYDevice extends XYBase {
                     endActionFrame(_currentAction, false);
                 }
                 // below should not be necessary since cancelActionTimer is called in endActionFrame
-                // this may have been fail safe vs somehow having null action inside endActionFrame, but currently seems to cause crash (race condition?)
+                // this may have been protecting vs somehow having null action inside endActionFrame, but currently seems to cause crash (race condition?)
 //                if (_actionFrameTimer != null) {
 //                    _actionFrameTimer.cancel();
 //                    _actionFrameTimer = null;
@@ -971,7 +966,6 @@ public class XYDevice extends XYBase {
     }
 
     public void popConnection() {
-        logExtreme(TAG, "connTest-popConnection called");
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -984,13 +978,15 @@ public class XYDevice extends XYBase {
                 }
                 _connectionCount--;
                 if (_connectionCount < 0) {
-                    logError(TAG, "Negative Connection Count:" + getId(), false);
+                    logError(TAG, "connTest-Negative Connection Count:" + getId(), false);
                     _connectionCount = 0;
                 } else {
                     if (_connectionCount == 0) {
                         if (_stayConnectedActive) {
                             _subscribeButton = null;
                             _subscribeButtonModern = null;
+//                            // did not call stop?
+//                            stopSubscribeButton(); do this instead of above two lines?
                             _stayConnectedActive = false;
                         }
                         BluetoothGatt gatt = getGatt();
@@ -1372,7 +1368,8 @@ public class XYDevice extends XYBase {
             _subscribeButtonModern = null;
         }
         XYBase.logExtreme(TAG, "connTest-stopSubscribeButton[" + _connectionCount + "->" + (_connectionCount - 1) + "]:" + getId());
-        _connectionCount--;// erase fake connection count we used before to keep connection alive
+        // erase fake connection count we used before to keep connection alive
+        popConnection();
     }
 
     private Timer _buttonPressedTimer = null;
