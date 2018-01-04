@@ -65,11 +65,9 @@ public class XYDeviceActionBuzzModernConfig extends XYDeviceAction {
                 System.arraycopy(slotPlusOffset, 0, packet, 0, slotPlusOffset.length);
                 System.arraycopy(slice, 0, packet, slotPlusOffset.length, slice.length);
                 characteristic.setValue(packet);
-                if (counter == 14) {
-                    result = true;
-                } else {
-                    result = false;
-                }
+
+                result = (counter == 14);
+
                 if (!gatt.writeCharacteristic(characteristic)) {
                     logError(TAG, "testSoundConfig-writeCharacteristic failed", false);
                     result = true;
