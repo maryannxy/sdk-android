@@ -980,6 +980,7 @@ public class XYDevice extends XYBase {
                 if (_connectionCount < 0) {
                     logError(TAG, "connTest-Negative Connection Count:" + getId(), false);
                     _connectionCount = 0;
+                    // logic flaw??? if connCount < 0, its just 0, we do not close or other
                 } else {
                     if (_connectionCount == 0) {
                         if (_stayConnectedActive) {
@@ -1078,12 +1079,18 @@ public class XYDevice extends XYBase {
         return bluetoothDevice;
     }
 
-    public void pulseOutOfRange() {
+    void pulseOutOfRange() {
+        logExtreme(TAG,"connTest-pulseOutOfRange device = " + getId());
         if (_stayConnectedActive) {
             _stayConnectedActive = false;
             popConnection();
             _isConnected = false;
-            setGatt(null);
+            // disconnect should trigger onConnectionStateChange which calls setGatt(null)
+            if (_gatt != null) {
+                _gatt.disconnect();
+                // calling this in case disconnect callback is not called when ble is off
+                setGatt(null);
+            }
             logExtreme(TAG, "connTest-popConnection3");
         }
         if (XYSmartScan.instance.legacy()) {
@@ -1712,13 +1719,14 @@ public class XYDevice extends XYBase {
 //        return Proximity.OutOfRange;
     }
 
-    public void scanComplete() {
+    void scanComplete() {
         if (isConnected()) {
             _scansMissed = 0;
         } else {
             _scansMissed++;
         }
         if (_scansMissed > _missedPulsesForOutOfRange) {
+            logExtreme(TAG, "connTest-_scansMissed > _missedPulsesForOutOfRange(20)");
             _scansMissed = -999999999; //this is here to prevent double exits
             pulseOutOfRange();
         }
