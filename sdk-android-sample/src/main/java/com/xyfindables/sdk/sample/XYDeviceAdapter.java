@@ -19,7 +19,7 @@ public class XYDeviceAdapter extends BaseAdapter {
 
     public XYDeviceAdapter(Activity activity) {
         _activity = activity;
-        _devices = new ArrayList<XYDevice>();
+        _devices = new ArrayList<>();
         XYSmartScan.instance.addListener(TAG, new XYDevice.Listener() {
             @Override
             public void entered(final XYDevice device) {
