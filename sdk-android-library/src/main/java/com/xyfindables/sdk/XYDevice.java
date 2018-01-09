@@ -58,7 +58,7 @@ public class XYDevice extends XYBase {
 
     public static final HashMap<XYDevice.Family, String> family2prefix;
 
-    private static final int MAX_BLECONNECTIONS = 5;
+    private static final int MAX_BLECONNECTIONS = 4;
     private static final XYSemaphore _bleAccess = new XYSemaphore(MAX_BLECONNECTIONS, true);
 
     private static final int MAX_ACTIONS = 1;
