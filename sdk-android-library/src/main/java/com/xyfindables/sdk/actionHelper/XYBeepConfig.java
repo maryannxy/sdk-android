@@ -6,8 +6,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.action.XYDeviceActionBuzzModernConfig;
 
-import java.util.Arrays;
-
 /**
  * Created by alex.mcelroy on 10/20/2017.
  */

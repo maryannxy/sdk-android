@@ -803,6 +803,7 @@ public class XYDevice extends XYBase {
                                         if (android.os.Build.VERSION.SDK_INT >= 23) {
                                             gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback, android.bluetooth.BluetoothDevice.TRANSPORT_LE);
                                         } else {
+                                            // may want to consider using reflection here to set TRANSPORT_LE param, this could be cause of 133s potentially
                                             gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
                                         }
                                         setGatt(gatt);
