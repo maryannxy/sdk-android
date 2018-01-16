@@ -253,7 +253,7 @@ public class XYDevice extends XYBase {
 
         // if _gatt is not closed, and we set new _gatt, then we keep reference to old _gatt connection which still exists in ble stack
         if (_gatt != null) {
-            logExtreme(TAG,"connTest-_gatt.close!!!");
+            logExtreme(TAG, "connTest-_gatt.close!!!");
             _gatt.close();
             // we could set a timer here to null the scanResult if new scanResult is not seen in x seconds
             releaseBleLock();
@@ -570,12 +570,17 @@ public class XYDevice extends XYBase {
                         switch (newState) {
                             case BluetoothGatt.STATE_CONNECTED:
                                 _isConnected = true;
+                                reportConnectionStateChanged(STATE_CONNECTED);
                                 logExtreme(TAG, "connTest-STATE_CONNECTED status is " + status);
                                 logExtreme(TAG, "connTest-_connectIntent = " + _connectIntent);
 //                                _connectIntent = false;
                                 logInfo(TAG, "onConnectionStateChange:Connected: " + getId());
-                                reportConnectionStateChanged(STATE_CONNECTED);
                                 // call gatt.discoverServices() in ui thread?
+                                try {
+                                    Thread.sleep(600);
+                                } catch (InterruptedException ex) {
+
+                                }
                                 gatt.discoverServices();
                                 logExtreme(TAG, "connTest-discoverServices called in STATE_CONNECTED");
                                 break;
@@ -584,6 +589,7 @@ public class XYDevice extends XYBase {
                                 if (status == 133) {
                                     if (!_connectIntent) {
                                         _isConnected = false;
+                                        reportConnectionStateChanged(STATE_DISCONNECTED);
                                     }
                                     // 133 may disconnect device -> in this case stayConnected can leave us with surplus connectionCount and no way to re-subscribe to button
 //                                    stayConnected(null, false); // hacky?
@@ -591,7 +597,6 @@ public class XYDevice extends XYBase {
                                     No idea why, but it does on Android 5.1 */
                                     logError(TAG, "connTest-Disconnect with 133", false);
                                     if (!_isInOtaMode && !_connectIntent /*&& (_connectionCount <= 1)*/) {
-                                        reportConnectionStateChanged(STATE_DISCONNECTED);
                                         //popConnection();  //hacky?
                                         logError(TAG, "connTest-disconnect inside 133", false);
                                         XYDeviceAction currentAction = _currentAction;
@@ -605,7 +610,7 @@ public class XYDevice extends XYBase {
                                     //XYSmartScan.instance.refresh(gatt);
                                 } else {
                                     _isConnected = false;
-                                    reportConnectionStateChanged(STATE_DISCONNECTED);  // redundant bc called inside closeGatt inside endActionFrame as well? Just add inside gatt!=null ?
+                                    reportConnectionStateChanged(STATE_DISCONNECTED);
                                     XYDeviceAction currentAction = _currentAction;
                                     if (currentAction != null) {
                                         endActionFrame(currentAction, false);
@@ -618,8 +623,8 @@ public class XYDevice extends XYBase {
                                 break;
                             }
                             case BluetoothGatt.STATE_DISCONNECTING:
-                                logInfo(TAG, "onConnectionStateChange:Disconnecting: " + getId());
                                 reportConnectionStateChanged(STATE_DISCONNECTING);
+                                logInfo(TAG, "onConnectionStateChange:Disconnecting: " + getId());
                                 break;
                             default:
                                 logError(TAG, "onConnectionStateChange:Unknown State: " + newState + ":" + getId(), false);
@@ -788,41 +793,35 @@ public class XYDevice extends XYBase {
                             // below is commented out to prevent release being called in UI
                             //stopping the scan and running the connect in ui thread required for 4.x - also required for Samsung Galaxy s7 7.0- and likely other phones as well
 
-                            Handler handler = new Handler(context.getApplicationContext().getMainLooper());
-                            handler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    BluetoothDevice bluetoothDevice = getBluetoothDevice();
-                                    if (bluetoothDevice == null) {
-                                        logError(TAG, "connTest-No Bluetooth Adapter!", false);
-                                        endActionFrame(_currentAction, false);
-                                        releaseBleLock();
-                                        logExtreme(TAG, "connTest-release3");
-                                    } else {
-                                        final BluetoothGatt gatt;
-                                        if (android.os.Build.VERSION.SDK_INT >= 23) {
-                                            gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback, android.bluetooth.BluetoothDevice.TRANSPORT_LE);
-                                        } else {
-                                            // may want to consider using reflection here to set TRANSPORT_LE param, this could be cause of 133s potentially
-                                            gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
-                                        }
-                                        setGatt(gatt);
-                                        if (gatt == null) {
-                                            logExtreme(TAG, "gatt is null");
-                                            endActionFrame(_currentAction, false);
-                                            releaseBleLock();
-                                            logExtreme(TAG, "connTest-release4");
-                                        } else {
-                                            final boolean connected = gatt.connect();
-                                            logExtreme(TAG, "connTest-Connect:" + connected);
-                                            // some sources say must wait 600 ms after connect before discoverServices
-                                            // other sources say call gatt.discoverServices in UI thread
-                                            // 133s seem to start after gatt.connect is called
-//                                        gatt.discoverServices();
-                                        }
-                                    }
+                            BluetoothDevice bluetoothDevice = getBluetoothDevice();
+                            if (bluetoothDevice == null) {
+                                logError(TAG, "connTest-No Bluetooth Adapter!", false);
+                                endActionFrame(_currentAction, false);
+                                releaseBleLock();
+                                logExtreme(TAG, "connTest-release3");
+                            } else {
+                                final BluetoothGatt gatt;
+                                if (android.os.Build.VERSION.SDK_INT >= 23) {
+                                    gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback, android.bluetooth.BluetoothDevice.TRANSPORT_LE);
+                                } else {
+                                    // may want to consider using reflection here to set TRANSPORT_LE param, this could be cause of 133s potentially
+                                    gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
                                 }
-                            });
+                                setGatt(gatt);
+                                if (gatt == null) {
+                                    logExtreme(TAG, "gatt is null");
+                                    endActionFrame(_currentAction, false);
+                                    releaseBleLock();
+                                    logExtreme(TAG, "connTest-release4");
+                                } else {
+                                    final boolean connected = gatt.connect();
+                                    logExtreme(TAG, "connTest-Connect:" + connected);
+                                    // some sources say must wait 600 ms after connect before discoverServices
+                                    // other sources say call gatt.discoverServices in UI thread
+                                    // 133s seem to start after gatt.connect is called
+//                                        gatt.discoverServices();
+                                }
+                            }
                         } else {
                             logError(TAG, "connTest-_bleAccess not acquired", false);
                             endActionFrame(_currentAction, false);
@@ -985,10 +984,7 @@ public class XYDevice extends XYBase {
                 } else {
                     if (_connectionCount == 0) {
                         if (_stayConnectedActive) {
-                            _subscribeButton = null;
-                            _subscribeButtonModern = null;
-//                            // did not call stop?
-//                            stopSubscribeButton(); do this instead of above two lines?
+                            stopSubscribeButton();
                             _stayConnectedActive = false;
                         }
                         BluetoothGatt gatt = getGatt();
@@ -1060,7 +1056,6 @@ public class XYDevice extends XYBase {
             _actionLock.release(MAX_ACTIONS);
             logExtreme(TAG, "_actionLock releaseMAX");
         }
-        reportConnectionStateChanged(STATE_DISCONNECTED);
     }
 
     private static final int STATE_CONNECTED = BluetoothProfile.STATE_CONNECTED;
@@ -1081,7 +1076,7 @@ public class XYDevice extends XYBase {
     }
 
     void pulseOutOfRange() {
-        logExtreme(TAG,"connTest-pulseOutOfRange device = " + getId());
+        logExtreme(TAG, "connTest-pulseOutOfRange device = " + getId());
         if (_stayConnectedActive) {
             _stayConnectedActive = false;
             popConnection();
