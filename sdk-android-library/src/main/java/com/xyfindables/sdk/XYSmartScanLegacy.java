@@ -106,7 +106,7 @@ public class XYSmartScanLegacy extends XYSmartScan {
                     bluetoothAdapter.stopLeScan(_scanCallback);
                     pumpScanResults();
                 }
-                notifyDevicesOfScanComplete();
+                notifyDevicesOfScanComplete(context);
                 dump(context.getApplicationContext());
             }
         };

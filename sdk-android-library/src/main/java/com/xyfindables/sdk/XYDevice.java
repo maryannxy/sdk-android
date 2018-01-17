@@ -52,6 +52,14 @@ public class XYDevice extends XYBase {
     public static final int BATTERYLEVEL_NOTCHECKED = -2;
     public static final int BATTERYLEVEL_SCHEDULED = -3;
 
+    private static final int GATT_DISCOVER = 11;
+    private static final int GATT_CONNECT = 12;
+    private static final int GATT_DISCONNECT = 13;
+    private static final int GATT_CLOSE = 14;
+    private static final int GATT_READ_RSSI = 15;
+
+    private boolean useUIforGatt = false;
+
     public static final HashMap<UUID, XYDevice.Family> uuid2family;
 
     public static final HashMap<XYDevice.Family, UUID> family2uuid;
@@ -244,7 +252,7 @@ public class XYDevice extends XYBase {
         return _gatt;
     }
 
-    private void setGatt(BluetoothGatt gatt) {
+    private void setGatt(Context context, BluetoothGatt gatt) {
 
         if (gatt == _gatt) {
             logError(TAG, "connTest-trying to set same gatt", false);
@@ -254,7 +262,11 @@ public class XYDevice extends XYBase {
         // if _gatt is not closed, and we set new _gatt, then we keep reference to old _gatt connection which still exists in ble stack
         if (_gatt != null) {
             logExtreme(TAG, "connTest-_gatt.close!!!");
-            _gatt.close();
+            if (useUIforGatt) {
+                gattOperationOnUIThread(context, _gatt, GATT_CLOSE);
+            } else {
+                _gatt.close();
+            }
             // we could set a timer here to null the scanResult if new scanResult is not seen in x seconds
             releaseBleLock();
         }
@@ -264,7 +276,11 @@ public class XYDevice extends XYBase {
 
     public int getRssi() {
         if (_gatt != null) {
-            _gatt.readRemoteRssi();
+            if (useUIforGatt && (_connectedContext != null)) {
+                gattOperationOnUIThread(_connectedContext, _gatt, GATT_READ_RSSI);
+            } else {
+                _gatt.readRemoteRssi();
+            }
             return _rssi;
         } else {
             if (XYSmartScan.instance.legacy()) {
@@ -398,14 +414,14 @@ public class XYDevice extends XYBase {
         } else {
             if (_stayConnectedActive) {
                 _stayConnectedActive = false;
-                stopSubscribeButton();
+                stopSubscribeButton(context);
             }
         }
     }
 
     private Timer _actionFrameTimer = null;
 
-    private void startActionTimer() {
+    private void startActionTimer(final Context context) {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -418,7 +434,7 @@ public class XYDevice extends XYBase {
                     cancelActionTimer();
                 } else {
                     logError(TAG, "connTest-Action Timeout", false);
-                    endActionFrame(_currentAction, false);
+                    endActionFrame(context, _currentAction, false);
                 }
                 // below should not be necessary since cancelActionTimer is called in endActionFrame
                 // this may have been protecting vs somehow having null action inside endActionFrame, but currently seems to cause crash (race condition?)
@@ -458,7 +474,7 @@ public class XYDevice extends XYBase {
         _actionLock.release();
     }
 
-    private int startActionFrame(XYDeviceAction action) {
+    private int startActionFrame(Context context, XYDeviceAction action) {
 
         logExtreme(TAG, "startActionFrame");
         action.statusChanged(XYDeviceAction.STATUS_QUEUED, null, null, true);
@@ -475,7 +491,7 @@ public class XYDevice extends XYBase {
         logExtreme(TAG, "startActionFrame-action started");
         _currentAction = action;
         pushConnection();
-        startActionTimer();
+        startActionTimer(context);
         return action.hashCode();
 //            }
 //        } catch (InterruptedException ex) {
@@ -490,7 +506,7 @@ public class XYDevice extends XYBase {
         XYBase.logExtreme(TAG, "connTest-popConnection2");
     }
 
-    private void endActionFrame(XYDeviceAction action, boolean success) {
+    private void endActionFrame(Context context, XYDeviceAction action, boolean success) {
         logExtreme(TAG, "connTest-endActionFrame: success = " + success + ": otaMode = " + _isInOtaMode);
         if (action == null) {
             logError(TAG, "connTest-Ending Null Action", false);
@@ -505,17 +521,43 @@ public class XYDevice extends XYBase {
         cancelActionTimer();
         action.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, success);
         logExtreme(TAG, "connTest-_actionLock[" + getId() + "]:release");
-        popConnection();
+        popConnection(context);
         _currentAction = null;
 //        _connectIntent = false;
         releaseActionLock();
         XYSmartScan.instance.pauseAutoScan(false);
-        logExtreme(TAG, "connTest-popConnection1-pauseAutoScan set back to false");
+        logExtreme(TAG, "connTest-popConnection1-pauseAutoScan(false)");
     }
 
     public final void runOnUiThread(final Context context, Runnable action) {
-        Handler handler = new Handler(context.getMainLooper());
+        Handler handler = new Handler(context.getApplicationContext().getMainLooper());
         handler.post(action);
+    }
+
+    private void gattOperationOnUIThread(Context context, final BluetoothGatt gatt, final int action) {
+        Handler handler = new Handler(context.getApplicationContext().getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                switch (action) {
+                    case GATT_CONNECT:
+                        gatt.connect();
+                        break;
+                    case GATT_DISCONNECT:
+                        gatt.disconnect();
+                        break;
+                    case GATT_DISCOVER:
+                        gatt.discoverServices();
+                        break;
+                    case GATT_CLOSE:
+                        gatt.close();
+                        break;
+                    case GATT_READ_RSSI:
+                        gatt.readRemoteRssi();
+                        break;
+                }
+            }
+        });
     }
 
     // pass timeout param if need be, otherwise default at 60000 MS
@@ -548,16 +590,16 @@ public class XYDevice extends XYBase {
                     return null;
                 }
 
-                XYBase.logInfo(TAG, "connTest-connect[" + getId() + "]:" + _connectionCount);
-                int actionLock = startActionFrame(action);
+                XYBase.logInfo(TAG, "connTest-connecting[" + getId() + "]:" + _connectionCount);
+                int actionLock = startActionFrame(context, action);
                 if (actionLock == 0) {
                     XYDeviceAction currentAction = _currentAction;
                     // if this is being triggered, could cause issue since gatt may not be disconnected at this point
-                    closeGatt();
+                    closeGatt(context);
                     XYBase.logExtreme(TAG, "connTest-closeGatt2");
                     if (currentAction != null) {
                         logError(TAG, "connTest-statusChanged:failed to get actionLock", false);
-                        endActionFrame(currentAction, false);
+                        endActionFrame(context, currentAction, false);
                     }
                     return null;
                 }
@@ -582,7 +624,11 @@ public class XYDevice extends XYBase {
                                 } catch (InterruptedException ex) {
 
                                 }
-                                gatt.discoverServices();
+                                if (useUIforGatt) {
+                                    gattOperationOnUIThread(context, gatt, GATT_DISCOVER);
+                                } else {
+                                    gatt.discoverServices();
+                                }
                                 logExtreme(TAG, "connTest-discoverServices called in STATE_CONNECTED");
                                 break;
                             case BluetoothGatt.STATE_DISCONNECTED: {
@@ -602,11 +648,11 @@ public class XYDevice extends XYBase {
                                         logError(TAG, "connTest-disconnect inside 133", false);
                                         XYDeviceAction currentAction = _currentAction;
                                         if (currentAction != null) {
-                                            endActionFrame(currentAction, false);
+                                            endActionFrame(context, currentAction, false);
                                         } else {
                                             logError(TAG, "connTest-trying to disconnect inside 133 with null currentAction", false);
                                         }
-                                        setGatt(null); // need to close gatt on device we no longer see, this will cause gatt to be null when pop connection is called since it is delayed 6 seconds
+                                        setGatt(context,null); // need to close gatt on device we no longer see, this will cause gatt to be null when pop connection is called since it is delayed 6 seconds
                                     }
                                     //XYSmartScan.instance.refresh(gatt);
                                 } else {
@@ -614,11 +660,11 @@ public class XYDevice extends XYBase {
                                     reportConnectionStateChanged(STATE_DISCONNECTED);
                                     XYDeviceAction currentAction = _currentAction;
                                     if (currentAction != null) {
-                                        endActionFrame(currentAction, false);
+                                        endActionFrame(context, currentAction, false);
                                     } else {
                                         logError(TAG, "connTest-trying to disconnect with null currentAction", false);
                                     }
-                                    setGatt(null); // need to close gatt on device we no longer see, this will cause gatt to be null when pop connection is called since it is delayed 6 seconds
+                                    setGatt(context,null); // need to close gatt on device we no longer see, this will cause gatt to be null when pop connection is called since it is delayed 6 seconds
 
                                 }
                                 break;
@@ -631,11 +677,11 @@ public class XYDevice extends XYBase {
                                 logError(TAG, "connTest-onConnectionStateChange:Unknown State: " + newState + ":" + getId(), false);
                                 XYDeviceAction currentAction = _currentAction;
                                 // if this is being triggered, could be issue, since the gatt may not be disconnected in at this point
-                                closeGatt();
+                                closeGatt(context);
                                 logExtreme(TAG, "connTest-closeGatt4");
                                 if (currentAction != null) {
                                     logError(TAG, "statusChanged:unknown", false);
-                                    endActionFrame(currentAction, false);
+                                    endActionFrame(context, currentAction, false);
                                 }
                                 break;
                         }
@@ -651,42 +697,84 @@ public class XYDevice extends XYBase {
                     }
 
                     @Override
-                    public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+                    public void onServicesDiscovered(final BluetoothGatt gatt, final int status) {
 
                         super.onServicesDiscovered(gatt, status);
 
-                        final XYDeviceAction currentAction = _currentAction;
-                        XYBase.logExtreme(TAG, "connTest-onServicesDiscovered");
-                        if (currentAction != null) {
-                            if (status == BluetoothGatt.GATT_SUCCESS) {
-                                logInfo(TAG, "connTest-onServicesDiscovered:" + status);
-                                currentAction.statusChanged(XYDeviceAction.STATUS_SERVICE_FOUND, gatt, null, true);
-                                // concurrent mod ex on many devices with below line
-                                BluetoothGattService service = gatt.getService(currentAction.getServiceId());
-                                if (service != null) {
-                                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(currentAction.getCharacteristicId());
-                                    logExtreme(TAG, "connTest-onServicesDiscovered-service not null");
-                                    if (characteristic != null) {
-                                        if (currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_FOUND, gatt, characteristic, true)) {
-                                            logExtreme(TAG, "connTest-onServicesDiscovered-characteristic not null");
-                                            endActionFrame(currentAction, false);
+                        if (useUIforGatt) {
+                            Handler handler = new Handler(context.getApplicationContext().getMainLooper());
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    final XYDeviceAction currentAction = _currentAction;
+                                    XYBase.logExtreme(TAG, "connTest-onServicesDiscovered");
+                                    if (currentAction != null) {
+                                        if (status == BluetoothGatt.GATT_SUCCESS) {
+                                            logInfo(TAG, "connTest-onServicesDiscovered:" + status);
+                                            currentAction.statusChanged(XYDeviceAction.STATUS_SERVICE_FOUND, gatt, null, true);
+                                            // concurrent mod ex on many devices with below line
+                                            BluetoothGattService service = gatt.getService(currentAction.getServiceId());;
+                                            if (service != null) {
+                                                BluetoothGattCharacteristic characteristic = service.getCharacteristic(currentAction.getCharacteristicId());;
+                                                logExtreme(TAG, "connTest-onServicesDiscovered-service not null");
+                                                if (characteristic != null) {
+                                                    if (currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_FOUND, gatt, characteristic, true)) {
+                                                        logExtreme(TAG, "connTest-onServicesDiscovered-characteristic not null");
+                                                        endActionFrame(context, currentAction, false);
+                                                    } else {
+                                                        logExtreme(TAG, "connTest-do nothing"); // herein lies the issue- something in endActionFrame is triggering 133-timing? executing actions too close together?
+                                                    }
+                                                } else {
+                                                    logError(TAG, "connTest-statusChanged:characteristic null", false); // this happens a decent amount. What is causing this?
+                                                    endActionFrame(context, currentAction, false);
+                                                }
+                                            } else {
+                                                logError(TAG, "connTest-statusChanged:service null, gatt = " + gatt + " currentAction = " + currentAction, false); // this happens a decent amount. What is causing this?
+                                                endActionFrame(context, currentAction, false);
+                                            }
                                         } else {
-                                            logExtreme(TAG, "connTest-do nothing"); // herein lies the issue- something in endActionFrame is triggering 133-timing? executing actions too close together?
+                                            logError(TAG, "connTest-statusChanged:onServicesDiscovered Failed: " + status, true);
+                                            endActionFrame(context, currentAction, false);
                                         }
                                     } else {
-                                        logError(TAG, "connTest-statusChanged:characteristic null", false); // this happens a decent amount. What is causing this?
-                                        endActionFrame(currentAction, false);
+                                        logError(TAG, "connTest-null _currentAction", true);
+                                    }
+                                }
+                            });
+                        } else {
+                            final XYDeviceAction currentAction = _currentAction;
+                            XYBase.logExtreme(TAG, "connTest-onServicesDiscovered");
+                            if (currentAction != null) {
+                                if (status == BluetoothGatt.GATT_SUCCESS) {
+                                    logInfo(TAG, "connTest-onServicesDiscovered:" + status);
+                                    currentAction.statusChanged(XYDeviceAction.STATUS_SERVICE_FOUND, gatt, null, true);
+                                    // concurrent mod ex on many devices with below line
+                                    BluetoothGattService service = gatt.getService(currentAction.getServiceId());;
+                                    if (service != null) {
+                                        BluetoothGattCharacteristic characteristic = service.getCharacteristic(currentAction.getCharacteristicId());;
+                                        logExtreme(TAG, "connTest-onServicesDiscovered-service not null");
+                                        if (characteristic != null) {
+                                            if (currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_FOUND, gatt, characteristic, true)) {
+                                                logExtreme(TAG, "connTest-onServicesDiscovered-characteristic not null");
+                                                endActionFrame(context, currentAction, false);
+                                            } else {
+                                                logExtreme(TAG, "connTest-do nothing"); // herein lies the issue- something in endActionFrame is triggering 133-timing? executing actions too close together?
+                                            }
+                                        } else {
+                                            logError(TAG, "connTest-statusChanged:characteristic null", false); // this happens a decent amount. What is causing this?
+                                            endActionFrame(context, currentAction, false);
+                                        }
+                                    } else {
+                                        logError(TAG, "connTest-statusChanged:service null, gatt = " + gatt + " currentAction = " + currentAction, false); // this happens a decent amount. What is causing this?
+                                        endActionFrame(context, currentAction, false);
                                     }
                                 } else {
-                                    logError(TAG, "connTest-statusChanged:service null, gatt = " + gatt + " currentAction = " + currentAction, false); // this happens a decent amount. What is causing this?
-                                    endActionFrame(currentAction, false);
+                                    logError(TAG, "connTest-statusChanged:onServicesDiscovered Failed: " + status, true);
+                                    endActionFrame(context, currentAction, false);
                                 }
                             } else {
-                                logError(TAG, "connTest-statusChanged:onServicesDiscovered Failed: " + status, true);
-                                endActionFrame(currentAction, false);
+                                logError(TAG, "connTest-null _currentAction", true);
                             }
-                        } else {
-                            logError(TAG, "connTest-null _currentAction", true);
                         }
                     }
 
@@ -697,11 +785,11 @@ public class XYDevice extends XYBase {
                         if (status == BluetoothGatt.GATT_SUCCESS) {
                             logInfo(TAG, "onCharacteristicRead:" + status);
                             if (_currentAction != null && _currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_READ, gatt, characteristic, true)) {
-                                endActionFrame(_currentAction, true);
+                                endActionFrame(context, _currentAction, true);
                             }
                         } else {
                             logError(TAG, "onCharacteristicRead Failed: " + status, false);
-                            endActionFrame(_currentAction, false);
+                            endActionFrame(context, _currentAction, false);
                         }
                     }
 
@@ -712,11 +800,11 @@ public class XYDevice extends XYBase {
                         if (status == BluetoothGatt.GATT_SUCCESS) {
                             logInfo(TAG, "onCharacteristicWrite:" + status);
                             if (_currentAction != null && _currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, characteristic, true)) {
-                                endActionFrame(_currentAction, true);
+                                endActionFrame(context, _currentAction, true);
                             }
                         } else {
                             logError(TAG, "onCharacteristicWrite Failed: " + status, false);
-                            endActionFrame(_currentAction, false);
+                            endActionFrame(context, _currentAction, false);
                         }
                     }
 
@@ -750,11 +838,11 @@ public class XYDevice extends XYBase {
                         if (status == BluetoothGatt.GATT_SUCCESS) {
                             logInfo(TAG, "onDescriptorWrite:" + status);
                             if (_currentAction != null && _currentAction.statusChanged(descriptor, XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, true)) {
-                                endActionFrame(_currentAction, true);
+                                endActionFrame(context, _currentAction, true);
                             }
                         } else {
                             logError(TAG, "onDescriptorWrite Failed: " + status, false);
-                            endActionFrame(_currentAction, false);
+                            endActionFrame(context, _currentAction, false);
                         }
                         logInfo(TAG, "onDescriptorWrite: " + descriptor + " : status = " + status);
                     }
@@ -795,64 +883,106 @@ public class XYDevice extends XYBase {
                             // below is commented out to prevent release being called in UI
                             //stopping the scan and running the connect in ui thread required for 4.x - also required for Samsung Galaxy s7 7.0- and likely other phones as well
 
-                            BluetoothDevice bluetoothDevice = getBluetoothDevice();
+                            final BluetoothDevice bluetoothDevice = getBluetoothDevice();
                             if (bluetoothDevice == null) {
                                 logError(TAG, "connTest-No Bluetooth Adapter!", false);
-                                endActionFrame(_currentAction, false);
+                                endActionFrame(context, _currentAction, false);
                                 releaseBleLock();
                                 logExtreme(TAG, "connTest-release3");
                             } else {
-                                final BluetoothGatt gatt;
-                                if (android.os.Build.VERSION.SDK_INT >= 23) {
-                                    gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback, android.bluetooth.BluetoothDevice.TRANSPORT_LE);
+                                if (useUIforGatt) {
+                                    Handler handler = new Handler(context.getApplicationContext().getMainLooper());
+                                    handler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            final BluetoothGatt gatt;
+                                            if (android.os.Build.VERSION.SDK_INT >= 23) {
+                                                gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback, android.bluetooth.BluetoothDevice.TRANSPORT_LE);
+                                            } else {
+                                                // may want to consider using reflection here to set TRANSPORT_LE param, this could be cause of 133s potentially
+                                                gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
+                                            }
+                                            setGatt(context, gatt);
+                                            if (gatt == null) {
+                                                logExtreme(TAG, "gatt is null");
+                                                endActionFrame(context, _currentAction, false);
+                                                releaseBleLock();
+                                                logExtreme(TAG, "connTest-release4");
+                                            } else {
+                                                final boolean connected = gatt.connect();
+                                                logExtreme(TAG, "connTest-Connect:" + connected);
+                                            }
+                                        }
+                                    });
                                 } else {
-                                    // may want to consider using reflection here to set TRANSPORT_LE param, this could be cause of 133s potentially
-                                    gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
-                                }
-                                setGatt(gatt);
-                                if (gatt == null) {
-                                    logExtreme(TAG, "gatt is null");
-                                    endActionFrame(_currentAction, false);
-                                    releaseBleLock();
-                                    logExtreme(TAG, "connTest-release4");
-                                } else {
-                                    final boolean connected = gatt.connect();
-                                    logExtreme(TAG, "connTest-Connect:" + connected);
-                                    // some sources say must wait 600 ms after connect before discoverServices
-                                    // other sources say call gatt.discoverServices in UI thread
-                                    // 133s seem to start after gatt.connect is called
-//                                        gatt.discoverServices();
+                                    final BluetoothGatt gatt;
+                                    if (android.os.Build.VERSION.SDK_INT >= 23) {
+                                        gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback, android.bluetooth.BluetoothDevice.TRANSPORT_LE);
+                                    } else {
+                                        // may want to consider using reflection here to set TRANSPORT_LE param, this could be cause of 133s potentially
+                                        gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
+                                    }
+                                    setGatt(context, gatt);
+                                    if (gatt == null) {
+                                        logExtreme(TAG, "gatt is null");
+                                        endActionFrame(context, _currentAction, false);
+                                        releaseBleLock();
+                                        logExtreme(TAG, "connTest-release4");
+                                    } else {
+                                        final boolean connected = gatt.connect();
+                                        logExtreme(TAG, "connTest-Connect:" + connected);
+                                    }
                                 }
                             }
                         } else {
                             logError(TAG, "connTest-_bleAccess not acquired", false);
-                            endActionFrame(_currentAction, false);
+                            endActionFrame(context, _currentAction, false);
                         }
                     } catch (InterruptedException ex) {
                         logError(TAG, "connTest-not acquired: interrupted", true);
-                        endActionFrame(_currentAction, false);
+                        endActionFrame(context, _currentAction, false);
                     }
                 } else {
                     logExtreme(TAG, "connTest-already have Gatt");
-                    BluetoothGatt gatt = getGatt();
+                    final BluetoothGatt gatt = getGatt();
                     if (gatt == null) {
                         logExtreme(TAG, "gatt is null");
-                        endActionFrame(_currentAction, false);
+                        endActionFrame(context, _currentAction, false);
                         releaseBleLock();
                         logExtreme(TAG, "connTest-release5");
                     } else {
                         // should already be connected but just in case -> is now commented out because cause issues calling this when already connected on some phones
 //                            boolean connected = gatt.connect();
                         // null pointer exception here, somehow gatt is null?
-                        List<BluetoothGattService> services = gatt.getServices();
-                        if (services.size() > 0) {
-                            callback.onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS);
+                        if (useUIforGatt) {
+                            Handler handler = new Handler(context.getApplicationContext().getMainLooper());
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    List<BluetoothGattService> services = gatt.getServices();
+                                    if (services.size() > 0) {
+                                        callback.onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS);
+                                    } else {
+                                        if (!gatt.discoverServices()) {
+                                            logExtreme(TAG, "connTest-FAIL discoverServices");
+                                            endActionFrame(context, _currentAction, false);
+                                        } else {
+                                            logExtreme(TAG, "connTest-discoverServices called inside callback if gatt not null");
+                                        }
+                                    }
+                                }
+                            });
                         } else {
-                            if (!gatt.discoverServices()) {
-                                logExtreme(TAG, "connTest-FAIL discoverServices");
-                                endActionFrame(_currentAction, false);
+                            List<BluetoothGattService> services = gatt.getServices();
+                            if (services.size() > 0) {
+                                callback.onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS);
                             } else {
-                                logExtreme(TAG, "connTest-discoverServices called inside callback if gatt not null");
+                                if (!gatt.discoverServices()) {
+                                    logExtreme(TAG, "connTest-FAIL discoverServices");
+                                    endActionFrame(context, _currentAction, false);
+                                } else {
+                                    logExtreme(TAG, "connTest-discoverServices called inside callback if gatt not null");
+                                }
                             }
                         }
                     }
@@ -967,7 +1097,7 @@ public class XYDevice extends XYBase {
         }
     }
 
-    public void popConnection() {
+    public void popConnection(final Context context) {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -986,15 +1116,19 @@ public class XYDevice extends XYBase {
                 } else {
                     if (_connectionCount == 0) {
                         if (_stayConnectedActive) {
-                            stopSubscribeButton();
+                            stopSubscribeButton(context);
                             _stayConnectedActive = false;
                         }
                         BluetoothGatt gatt = getGatt();
                         if (gatt != null) {
                             logExtreme(TAG, "connTest-gatt.disconnect!!!!!!!!!!");
-                            gatt.disconnect();
+                            if (useUIforGatt) {
+                                gattOperationOnUIThread(context, gatt, GATT_DISCONNECT);
+                            } else {
+                                gatt.disconnect();
+                            }
                             logExtreme(TAG, "connTest-closeGatt1");
-                            closeGatt();
+                            closeGatt(context);
                         } else {
                             // this should occur when out of range or take battery out since there is 6 second delay, and gatt will be set null in disconnect
                             logError(TAG, "connTest-popConnection gat is null!", false);
@@ -1011,7 +1145,7 @@ public class XYDevice extends XYBase {
         return _isConnected;
     }
 
-    private void closeGatt() {
+    private void closeGatt(Context context) {
         logExtreme(TAG, "closeGatt");
         if (_connectionCount > 0) {
             logError(TAG, "Closing GATT with open connections!", true);
@@ -1047,7 +1181,11 @@ public class XYDevice extends XYBase {
             } catch (InterruptedException ex) {
                 logError(TAG, "connTest-" + ex.toString(), true);
             }
-            gatt.close();
+            if (useUIforGatt) {
+                gattOperationOnUIThread(context, gatt, GATT_CLOSE);
+            } else {
+                gatt.close();
+            }
             XYBase.logExtreme(TAG, "connTest-gatt.close inside closeGatt");
 //            setGatt(null);
 //            releaseBleLock();
@@ -1077,17 +1215,21 @@ public class XYDevice extends XYBase {
         return bluetoothDevice;
     }
 
-    void pulseOutOfRange() {
+    void pulseOutOfRange(Context context) {
         logExtreme(TAG, "connTest-pulseOutOfRange device = " + getId());
         if (_stayConnectedActive) {
             _stayConnectedActive = false;
-            popConnection();
+            popConnection(context);
             _isConnected = false;
             // disconnect should trigger onConnectionStateChange which calls setGatt(null)
             if (_gatt != null) {
-                _gatt.disconnect();
+                if (useUIforGatt) {
+                    gattOperationOnUIThread(context, _gatt, GATT_DISCONNECT);
+                } else {
+                    _gatt.disconnect();
+                }
                 // calling this in case disconnect callback is not called when ble is off
-                setGatt(null);
+                setGatt(context,null);
             }
             logExtreme(TAG, "connTest-popConnection3");
         }
@@ -1362,7 +1504,7 @@ public class XYDevice extends XYBase {
         return _id;
     }
 
-    private void stopSubscribeButton() {
+    private void stopSubscribeButton(Context context) {
         if (_subscribeButton != null) {
             _subscribeButton.stop();
             _subscribeButton = null;
@@ -1374,7 +1516,7 @@ public class XYDevice extends XYBase {
         }
         XYBase.logExtreme(TAG, "connTest-stopSubscribeButton[" + _connectionCount + "->" + (_connectionCount - 1) + "]:" + getId());
         // erase fake connection count we used before to keep connection alive
-        popConnection();
+        popConnection(context);
     }
 
     private Timer _buttonPressedTimer = null;
@@ -1612,15 +1754,17 @@ public class XYDevice extends XYBase {
         }
     }
 
-    public static UUID getUUID(Family family) {
+    private static UUID getUUID(Family family) {
         return family2uuid.get(family);
     }
 
+    /*
     public void clearScanResults() {
         _currentScanResult18 = null;
         _currentScanResult21 = null;
         pulseOutOfRange();
     }
+    */
 
     public Proximity getProximity() {
 
@@ -1717,7 +1861,7 @@ public class XYDevice extends XYBase {
 //        return Proximity.OutOfRange;
     }
 
-    void scanComplete() {
+    void scanComplete(Context context) {
         if (isConnected()) {
             _scansMissed = 0;
         } else {
@@ -1726,7 +1870,7 @@ public class XYDevice extends XYBase {
         if (_scansMissed > _missedPulsesForOutOfRange) {
             logExtreme(TAG, "connTest-_scansMissed > _missedPulsesForOutOfRange(20)");
             _scansMissed = -999999999; //this is here to prevent double exits
-            pulseOutOfRange();
+            pulseOutOfRange(context);
         }
     }
 

@@ -116,7 +116,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                         case BluetoothAdapter.STATE_OFF:
                             logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_OFF");
                             setStatus(Status.BluetoothDisabled);
-                            setAllToOutOfRange();
+                            setAllToOutOfRange(context);
                             break;
                         case BluetoothAdapter.STATE_TURNING_OFF:
                             logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_TURNING_OFF");
@@ -200,11 +200,11 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         return _receiver;
     }
 
-    private void setAllToOutOfRange() {
+    private void setAllToOutOfRange(Context context) {
         try {
             if (_devicesLock.tryLock(defaultLockTimeout, defaultLockTimeUnits)) {
                 for (Map.Entry<String, XYDevice> entry : _devices.entrySet()) {
-                    entry.getValue().pulseOutOfRange();
+                    entry.getValue().pulseOutOfRange(context);
                 }
                 _devicesLock.unlock();
             } else {
@@ -370,17 +370,17 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         }
     }
 
-    public void pauseAutoScan(boolean pause) {
+    void pauseAutoScan(boolean pause) {
         logExtreme(TAG, "pauseAutoScan:" + pause);
         if (pause == this.paused) {
             return;
         }
         if (pause) {
-            //if (_scanningControl.tryAcquire()) {
+            if (_scanningControl.tryAcquire()) {
                 this.paused = true;
-            //}
+            }
         } else {
-            //_scanningControl.release();
+            _scanningControl.release();
             this.paused = false;
         }
     }
@@ -554,12 +554,12 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         }
     }
 
-    protected void notifyDevicesOfScanComplete() {
+    protected void notifyDevicesOfScanComplete(Context context) {
         logExtreme(TAG, "notifyDevicesOfScanComplete");
         List<XYDevice> deviceList = getDevices();
 
         for (XYDevice device : deviceList) {
-            device.scanComplete();
+            device.scanComplete(context);
         }
     }
 

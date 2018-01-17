@@ -252,7 +252,7 @@ class XYSmartScanModern extends XYSmartScan {
                         _scansWithoutPulses = 0;
                     }
                 }
-                notifyDevicesOfScanComplete();
+                notifyDevicesOfScanComplete(context);
             }
         };
 
