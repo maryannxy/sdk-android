@@ -552,6 +552,7 @@ public class XYDevice extends XYBase {
                 int actionLock = startActionFrame(action);
                 if (actionLock == 0) {
                     XYDeviceAction currentAction = _currentAction;
+                    // if this is being triggered, could cause issue since gatt may not be disconnected at this point
                     closeGatt();
                     XYBase.logExtreme(TAG, "connTest-closeGatt2");
                     if (currentAction != null) {
@@ -627,8 +628,9 @@ public class XYDevice extends XYBase {
                                 logInfo(TAG, "onConnectionStateChange:Disconnecting: " + getId());
                                 break;
                             default:
-                                logError(TAG, "onConnectionStateChange:Unknown State: " + newState + ":" + getId(), false);
+                                logError(TAG, "connTest-onConnectionStateChange:Unknown State: " + newState + ":" + getId(), false);
                                 XYDeviceAction currentAction = _currentAction;
+                                // if this is being triggered, could be issue, since the gatt may not be disconnected in at this point
                                 closeGatt();
                                 logExtreme(TAG, "connTest-closeGatt4");
                                 if (currentAction != null) {
