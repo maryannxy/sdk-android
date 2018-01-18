@@ -370,7 +370,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         }
     }
 
-    void pauseAutoScan(boolean pause) {
+     void pauseAutoScan(boolean pause) {
         logExtreme(TAG, "pauseAutoScan:" + pause);
         if (pause == this.paused) {
             return;

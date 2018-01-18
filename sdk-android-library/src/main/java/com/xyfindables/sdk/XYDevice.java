@@ -1924,8 +1924,10 @@ public class XYDevice extends XYBase {
     private void handleButtonPulse() {
 //        Log.v(TAG, "handleButtonPulse");
         if (_buttonRecentlyPressed) {
+            logExtreme(TAG, "ringTest-handleButtonPulse-buttonRecentlyPressed, ignore handleButtonPulse");
             //reportButtonRecentlyPressed(ButtonType.Single);
         } else {
+            logExtreme(TAG, "ringTest-handleButtonPulse-reportButtonPressed");
             reportButtonPressed(ButtonType.Single);
             _buttonRecentlyPressed = true;
 
@@ -1933,6 +1935,7 @@ public class XYDevice extends XYBase {
                 @Override
                 public void run() {
                     _buttonRecentlyPressed = false;
+                    logExtreme(TAG, "ringTest-handleButtonPulse-buttonRecentlyPressed set back to false");
                 }
             };
             Timer timer = new Timer();
