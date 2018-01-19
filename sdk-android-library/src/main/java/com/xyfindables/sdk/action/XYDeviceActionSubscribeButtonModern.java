@@ -35,7 +35,7 @@ public abstract class XYDeviceActionSubscribeButtonModern extends XYDeviceAction
             _gatt = null;
             _characteristic = null;
         } else {
-            logError(TAG, "connTest-Stopping non-started button notifications", false);
+            logError(TAG, "connTest-Stopping non-started button notifications, gatt = " + _gatt + " and characteristic = " + _characteristic , false);
         }
     }
 

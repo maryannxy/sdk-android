@@ -2,6 +2,7 @@ package com.xyfindables.sdk;
 
 import android.annotation.TargetApi;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -58,6 +59,7 @@ public class XYDevice extends XYBase {
     private static final int GATT_CLOSE = 14;
     private static final int GATT_READ_RSSI = 15;
 
+    // change this boolean to send gatt operations to the UI thread for testing
     private boolean useUIforGatt = false;
 
     public static final HashMap<UUID, XYDevice.Family> uuid2family;
@@ -248,12 +250,14 @@ public class XYDevice extends XYBase {
         }
     }
 
+    // may want to refactor this out inside XYDevice to avoid operation on closed gatt object
+    // ex: gatt = _gatt, _gatt.close, gatt.connect - this particular case should not occur, but similar cases may
     public BluetoothGatt getGatt() {
         return _gatt;
     }
 
     private void setGatt(Context context, BluetoothGatt gatt) {
-
+        logExtreme(TAG, "connTest-setGatt called");
         if (gatt == _gatt) {
             logError(TAG, "connTest-trying to set same gatt", false);
             return;
@@ -270,7 +274,7 @@ public class XYDevice extends XYBase {
             // we could set a timer here to null the scanResult if new scanResult is not seen in x seconds
             releaseBleLock();
         }
-        XYBase.logExtreme(TAG, "connTest-setGatt = " + gatt + ": previous _gatt = " + _gatt);
+        logExtreme(TAG, "connTest-setGatt: gatt = " + gatt + ": previous _gatt = " + _gatt);
         _gatt = gatt;
     }
 
@@ -409,11 +413,13 @@ public class XYDevice extends XYBase {
         _stayConnected = value;
         if (_stayConnected) {
             if (!_stayConnectedActive) {
+                logExtreme(TAG, "stayConnected-startSubscribeButton, id = " + getId());
                 startSubscribeButton();
             }
         } else {
             if (_stayConnectedActive) {
                 _stayConnectedActive = false;
+                logExtreme(TAG, "stayConnected-stopSubscribeButton");
                 stopSubscribeButton(context);
             }
         }
@@ -566,7 +572,7 @@ public class XYDevice extends XYBase {
         return null;
     }
 
-    public AsyncTask queueAction(final Context context, final XYDeviceAction action, final int timeout) {
+    private AsyncTask queueAction(final Context context, final XYDeviceAction action, final int timeout) {
 
         if (BuildConfig.DEBUG) {
             logExtreme(TAG, "connTest-queueAction-action = " + action.getClass().getSuperclass().getSimpleName());
@@ -584,6 +590,7 @@ public class XYDevice extends XYBase {
             protected Void doInBackground(Void... params) {
 
                 if (getBluetoothDevice() == null) {
+                    // this is effectively the same as checking if a device is in range, since outOfRangeRssi == a null scanResult
                     logError(TAG, "connTest-getBluetoothDevice() == null", false);
                     // need to complete action here
                     action.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, false);
@@ -638,6 +645,12 @@ public class XYDevice extends XYBase {
                                         _isConnected = false;
                                         reportConnectionStateChanged(STATE_DISCONNECTED);
                                     }
+                                    /*
+                                    if (_stayConnectedActive) {
+                                        // if 133 during subscribe, there will be excess connCount
+                                        _connectionCount--;
+                                    }
+                                    */
                                     // 133 may disconnect device -> in this case stayConnected can leave us with surplus connectionCount and no way to re-subscribe to button
 //                                    stayConnected(null, false); // hacky?
                                     /* Ignoring the 133 seems to keep the connection alive.
@@ -652,6 +665,7 @@ public class XYDevice extends XYBase {
                                         } else {
                                             logError(TAG, "connTest-trying to disconnect inside 133 with null currentAction", false);
                                         }
+                                        // consider calling stayConnected (false) here to break last open connection || do we want to try reconnect?
                                         setGatt(context,null); // need to close gatt on device we no longer see, this will cause gatt to be null when pop connection is called since it is delayed 6 seconds
                                     }
                                     //XYSmartScan.instance.refresh(gatt);
@@ -897,9 +911,20 @@ public class XYDevice extends XYBase {
                                         public void run() {
                                             final BluetoothGatt gatt;
                                             if (android.os.Build.VERSION.SDK_INT >= 23) {
+                                                logExtreme(TAG, "connTest-connectGatt >= 23");
+                                                // read definition of cancelDiscovery - says should always be called before connect - seems to be more stable using this
+                                           /*     BluetoothManager bluetoothManager = getBluetoothManager(context);
+                                                if (bluetoothManager != null) {
+                                                    BluetoothAdapter adapter = bluetoothManager.getAdapter();
+                                                    if (adapter != null) {
+                                                        logExtreme(TAG, "connTest-cancelDiscovery");
+                                                        adapter.cancelDiscovery();
+                                                    }
+                                                }*/
                                                 gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback, android.bluetooth.BluetoothDevice.TRANSPORT_LE);
                                             } else {
                                                 // may want to consider using reflection here to set TRANSPORT_LE param, this could be cause of 133s potentially
+                                                logExtreme(TAG, "connTest-connectGatt < 23");
                                                 gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
                                             }
                                             setGatt(context, gatt);
@@ -917,9 +942,20 @@ public class XYDevice extends XYBase {
                                 } else {
                                     final BluetoothGatt gatt;
                                     if (android.os.Build.VERSION.SDK_INT >= 23) {
+                                        logExtreme(TAG, "connTest-connectGatt >= 23");
+                                        // read definition of cancelDiscovery - says should always be called before connect - seems to be more stable using this
+                                        /*BluetoothManager bluetoothManager = getBluetoothManager(context);
+                                        if (bluetoothManager != null) {
+                                            BluetoothAdapter adapter = bluetoothManager.getAdapter();
+                                            if (adapter != null) {
+                                                logExtreme(TAG, "connTest-cancelDiscovery");
+                                                adapter.cancelDiscovery();
+                                            }
+                                        }*/
                                         gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback, android.bluetooth.BluetoothDevice.TRANSPORT_LE);
                                     } else {
                                         // may want to consider using reflection here to set TRANSPORT_LE param, this could be cause of 133s potentially
+                                        logExtreme(TAG, "connTest-connectGatt < 23");
                                         gatt = bluetoothDevice.connectGatt(context.getApplicationContext(), false, callback);
                                     }
                                     setGatt(context, gatt);
@@ -1097,7 +1133,7 @@ public class XYDevice extends XYBase {
         }
     }
 
-    public void popConnection(final Context context) {
+    private void popConnection(final Context context) {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -1116,7 +1152,8 @@ public class XYDevice extends XYBase {
                 } else {
                     if (_connectionCount == 0) {
                         if (_stayConnectedActive) {
-                            stopSubscribeButton(context);
+                            _subscribeButton = null;
+                            _subscribeButtonModern = null;
                             _stayConnectedActive = false;
                         }
                         BluetoothGatt gatt = getGatt();
@@ -1190,6 +1227,7 @@ public class XYDevice extends XYBase {
 //            setGatt(null);
 //            releaseBleLock();
 //            logExtreme(TAG, "connTest-release2");
+            _gatt = null;
         }
         _currentAction = null; //just to make sure
         if (_actionLock.availablePermits() == 0) {
@@ -1216,7 +1254,7 @@ public class XYDevice extends XYBase {
     }
 
     void pulseOutOfRange(Context context) {
-        logExtreme(TAG, "connTest-pulseOutOfRange device = " + getId());
+        logExtreme(TAG, "pulseOutOfRange device = " + getId());
         if (_stayConnectedActive) {
             _stayConnectedActive = false;
             popConnection(context);
@@ -1233,6 +1271,11 @@ public class XYDevice extends XYBase {
             }
             logExtreme(TAG, "connTest-popConnection3");
         }
+
+        // this way we will check the battery again when it comes back in range
+        // since we do not know how long it has been out of range and how much battery drain has therefore ensued
+        _batteryLevel = BATTERYLEVEL_NOTCHECKED;
+
         if (XYSmartScan.instance.legacy()) {
             pulseOutOfRange18();
         } else {
@@ -1242,6 +1285,10 @@ public class XYDevice extends XYBase {
 
     public int getBatteryLevel() {
         return _batteryLevel;
+    }
+
+    public void setBatteryLevel(int value) {
+        _batteryLevel = value;
     }
 
     public long getTimeSinceCharged() {
@@ -1868,7 +1915,7 @@ public class XYDevice extends XYBase {
             _scansMissed++;
         }
         if (_scansMissed > _missedPulsesForOutOfRange) {
-            logExtreme(TAG, "connTest-_scansMissed > _missedPulsesForOutOfRange(20)");
+            logExtreme(TAG, "_scansMissed > _missedPulsesForOutOfRange(20)");
             _scansMissed = -999999999; //this is here to prevent double exits
             pulseOutOfRange(context);
         }
@@ -1908,7 +1955,7 @@ public class XYDevice extends XYBase {
         }
     }
 
-    private void reportDetected() {
+    public void reportDetected() {
 //        Log.i(TAG, "reportDetected");
         if (_firstDetectedTime == 0) {
             _firstDetectedTime = System.currentTimeMillis();
