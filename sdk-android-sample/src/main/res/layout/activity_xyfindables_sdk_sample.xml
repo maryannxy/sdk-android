@@ -4,44 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="10dp"
+    android:layout_alignParentTop="true"
+    android:layout_alignParentStart="true"
     android:orientation="vertical"
     tools:context="com.xyfindables.sdk.sample.XYFindablesSdkSampleActivity">
-
-    <LinearLayout
+    <include layout="@layout/toolbar" />
+    <include layout="@layout/blestats_view" />
+    <ListView
+        android:id="@+id/listview"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Crashlytics Version: " />
-
-        <TextView
-            android:id="@+id/txtCrashlyticsVersion"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Crashlytics Status: " />
-
-        <TextView
-            android:id="@+id/txtCrashlyticsStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="None" />
-    </LinearLayout>
-
-    <Button
-        android:id="@+id/btnTestLogging"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Test Logging"/>
+        tools:listitem="@layout/device_item"
+        android:layout_height="match_parent">
+    </ListView>
 
 </LinearLayout>

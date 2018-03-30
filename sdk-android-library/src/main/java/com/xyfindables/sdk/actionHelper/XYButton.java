@@ -2,18 +2,13 @@ package com.xyfindables.sdk.actionHelper;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.telecom.Call;
-import android.util.Log;
-
-import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.action.XYDeviceActionGetButtonState;
 import com.xyfindables.sdk.action.XYDeviceActionGetButtonStateModern;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButton;
 import com.xyfindables.sdk.action.XYDeviceActionSubscribeButtonModern;
 
-import java.util.UUID;
+import static com.xyfindables.core.XYBase.logError;
 
 /**
  * Created by alex.mcelroy on 9/6/2017.
@@ -23,22 +18,20 @@ public class XYButton extends XYActionHelper {
 
     private static final String TAG = XYBeep.class.getSimpleName();
 
+    public interface Callback extends XYActionHelper.Callback {
+        void started(boolean success, int value);
+    }
+
     protected XYButton(XYDevice device, final Callback callback) {
         if (device.getFamily() == XYDevice.Family.XY4) {
             action = new XYDeviceActionGetButtonStateModern(device) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
-                        case STATUS_CHARACTERISTIC_READ:
-                            value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                            break;
                         case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
-                            if (!gatt.readCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
+                            callback.started(success, value);
                             break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
@@ -51,17 +44,11 @@ public class XYButton extends XYActionHelper {
             action = new XYDeviceActionGetButtonState(device) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
-                        case STATUS_CHARACTERISTIC_READ:
-                            value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                            break;
                         case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
-                            if (!gatt.readCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
+                            callback.started(success, value);
                             break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
@@ -81,28 +68,12 @@ public class XYButton extends XYActionHelper {
             action = new XYDeviceActionSubscribeButtonModern(device) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_UPDATED: {
                             notification.updated(success);
-                            Log.i(TAG, "statusChanged:Updated:" + characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
-                            return true;
-                        }
-                        case STATUS_CHARACTERISTIC_FOUND: {
-                            Log.i(TAG, "statusChanged:Characteristic Found");
-                            if (!gatt.setCharacteristicNotification(characteristic, true)) {
-                                XYBase.logError(TAG, "Characteristic Notification Failed");
-                            } else {
-                                _gatt = gatt;
-                                _characteristic = characteristic;
-                            }
-                            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG);
-                            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                            if (!gatt.writeDescriptor(descriptor)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
-                            return true;
+                            break;
                         }
                     }
                     return result;
@@ -112,28 +83,12 @@ public class XYButton extends XYActionHelper {
             action = new XYDeviceActionSubscribeButton(device) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
                         case STATUS_CHARACTERISTIC_UPDATED: {
                             notification.updated(success);
-                            Log.i(TAG, "statusChanged:Updated:" + characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
-                            return true;
-                        }
-                        case STATUS_CHARACTERISTIC_FOUND: {
-                            Log.i(TAG, "statusChanged:Characteristic Found");
-                            if (!gatt.setCharacteristicNotification(characteristic, true)) {
-                                XYBase.logError(TAG, "Characteristic Notification Failed");
-                            } else {
-                                _gatt = gatt;
-                                _characteristic = characteristic;
-                            }
-                            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG);
-                            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                            if (!gatt.writeDescriptor(descriptor)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
-                            return true;
+                            break;
                         }
                     }
                     return result;
@@ -148,7 +103,7 @@ public class XYButton extends XYActionHelper {
             _gatt = null;
             _characteristic = null;
         } else {
-            XYBase.logError(TAG, "Stopping non-started button notifications");
+            logError(TAG, "connTest-Stopping non-started button notifications", true);
         }
     }
 }

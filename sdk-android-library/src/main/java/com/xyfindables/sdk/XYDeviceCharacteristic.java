@@ -50,50 +50,57 @@ public class XYDeviceCharacteristic {
 
     public static final UUID GpsProfile = UUID.fromString("2abbAA00-0439-3000-E001-00001001FFFF");
 
-    public static final UUID XY4PrimaryStayAwake = UUID.fromString("a44eacf4-0104-0001-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryUnlock = UUID.fromString("a44eacf4-0104-0002-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryLock = UUID.fromString("a44eacf4-0104-0003-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryMajor = UUID.fromString("a44eacf4-0104-0004-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryMinor = UUID.fromString("a44eacf4-0104-0005-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryUUID = UUID.fromString("a44eacf4-0104-0006-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryButtonState = UUID.fromString("a44eacf4-0104-0007-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryBuzzer = UUID.fromString("a44eacf4-0104-0008-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryBuzzerConfig = UUID.fromString("a44eacf4-0104-0009-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryAdConfig = UUID.fromString("a44eacf4-0104-000a-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryButtonConfig = UUID.fromString("a44eacf4-0104-000b-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryLastError = UUID.fromString("a44eacf4-0104-000c-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryUptime = UUID.fromString("a44eacf4-0104-000d-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryReset = UUID.fromString("a44eacf4-0104-000e-0000-5f784c9977b5");
-    public static final UUID XY4PrimarySelfTest = UUID.fromString("a44eacf4-0104-000f-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryDebug = UUID.fromString("a44eacf4-0104-0010-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryLeftBehind = UUID.fromString("a44eacf4-0104-0011-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryEddystoneUID = UUID.fromString("a44eacf4-0104-0012-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryEddystoneURL = UUID.fromString("a44eacf4-0104-0013-0000-5f784c9977b5");
-    public static final UUID XY4PrimaryEddystoneEID = UUID.fromString("a44eacf4-0104-0014-0000-5f784c9977b5");
+    public static final UUID XY4PrimaryStayAwake = UUID.fromString("a44eacf4-0104-0001-0001-5f784c9977b5");
+    public static final UUID XY4PrimaryUnlock = UUID.fromString("a44eacf4-0104-0001-0002-5f784c9977b5");
+    public static final UUID XY4PrimaryLock = UUID.fromString("a44eacf4-0104-0001-0003-5f784c9977b5");
+    public static final UUID XY4PrimaryMajor = UUID.fromString("a44eacf4-0104-0001-0004-5f784c9977b5");
+    public static final UUID XY4PrimaryMinor = UUID.fromString("a44eacf4-0104-0001-0005-5f784c9977b5");
+    public static final UUID XY4PrimaryUUID = UUID.fromString("a44eacf4-0104-0001-0006-5f784c9977b5");
+    public static final UUID XY4PrimaryButtonState = UUID.fromString("a44eacf4-0104-0001-0007-5f784c9977b5");
+    public static final UUID XY4PrimaryBuzzer = UUID.fromString("a44eacf4-0104-0001-0008-5f784c9977b5");
+    public static final UUID XY4PrimaryBuzzerConfig = UUID.fromString("a44eacf4-0104-0001-0009-5f784c9977b5");
+    public static final UUID XY4PrimaryAdConfig = UUID.fromString("a44eacf4-0104-0001-000a-5f784c9977b5");
+    public static final UUID XY4PrimaryButtonConfig = UUID.fromString("a44eacf4-0104-0001-000b-5f784c9977b5");
+    public static final UUID XY4PrimaryLastError = UUID.fromString("a44eacf4-0104-0001-000c-5f784c9977b5");
+    public static final UUID XY4PrimaryUptime = UUID.fromString("a44eacf4-0104-0001-000d-5f784c9977b5");
+    public static final UUID XY4PrimaryReset = UUID.fromString("a44eacf4-0104-0001-000e-5f784c9977b5");
+    public static final UUID XY4PrimarySelfTest = UUID.fromString("a44eacf4-0104-0001-000f-5f784c9977b5");
+    public static final UUID XY4PrimaryDebug = UUID.fromString("a44eacf4-0104-0001-0010-5f784c9977b5");
+    public static final UUID XY4PrimaryLeftBehind = UUID.fromString("a44eacf4-0104-0001-0011-5f784c9977b5");
+    public static final UUID XY4PrimaryEddystoneUID = UUID.fromString("a44eacf4-0104-0001-0012-5f784c9977b5");
+    public static final UUID XY4PrimaryEddystoneURL = UUID.fromString("a44eacf4-0104-0001-0013-5f784c9977b5");
+    public static final UUID XY4PrimaryEddystoneEID = UUID.fromString("a44eacf4-0104-0001-0014-5f784c9977b5");
+    public static final UUID XY4PrimaryColor = UUID.fromString("a44eacf4-0104-0001-0015-5f784c9977b5");
+    public static final UUID XY4PrimaryHardwareCreateDate = UUID.fromString("a44eacf4-0104-0001-0017-5f784c9977b5");
 
-    public static final UUID XY4GenericDeviceName = UUID.fromString("a44eacf4-0104-2a00-0000-5f784c9977b5");
-    public static final UUID XY4GenericAppearance = UUID.fromString("a44eacf4-0104-2a01-0000-5f784c9977b5");
-    public static final UUID XY4GenericPrivacyFlag = UUID.fromString("a44eacf4-0104-2a02-0000-5f784c9977b5");
-    public static final UUID XY4GenericConnParams = UUID.fromString("a44eacf4-0104-2a04-0000-5f784c9977b5");
+    // dialog ota characteristics start
+    public static final UUID SPOTA_MEM_DEV_UUID = UUID.fromString("8082caa8-41a6-4021-91c6-56f9b954cc34");
+    public static final UUID SPOTA_GPIO_MAP_UUID = UUID.fromString("724249f0-5eC3-4b5f-8804-42345af08651");
+    public static final UUID SPOTA_MEM_INFO_UUID = UUID.fromString("6c53db25-47a1-45fe-a022-7c92fb334fd4");
+    public static final UUID SPOTA_PATCH_LEN_UUID = UUID.fromString("9d84b9a3-000c-49d8-9183-855b673fda31");
+    public static final UUID SPOTA_PATCH_DATA_UUID = UUID.fromString("457871e8-d516-4ca1-9116-57d0b17b9cb2");
+    public static final UUID SPOTA_SERV_STATUS_UUID = UUID.fromString("5f78df94-798c-46f5-990a-b3eb6a065c88");
+    public static final UUID SPOTA_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+    // dialog ota characteristics end
 
-    public static final UUID XY4AttributeServiceChanged = UUID.fromString("a44eacf4-0104-2a05-0000-5f784c9977b5");
+    public static final UUID DeviceName = UUID.fromString("00002a00-0000-1000-8000-00805f9b34fb");
+    public static final UUID Appearance = UUID.fromString("00002a01-0000-1000-8000-00805f9b34fb");
+    public static final UUID PrivacyFlag = UUID.fromString("00002a02-0000-1000-8000-00805f9b34fb");
+    public static final UUID ConnParams = UUID.fromString("00002a04-0000-1000-8000-00805f9b34fb");
 
-    public static final UUID XY4DeviceManufacturer = UUID.fromString("a44eacf4-0104-2a29-0000-5f784c9977b5");
-    public static final UUID XY4DeviceModel = UUID.fromString("a44eacf4-0104-2a24-0000-5f784c9977b5");
-    public static final UUID XY4DeviceSoftware = UUID.fromString("a44eacf4-0104-2a28-0000-5f784c9977b5");
-    public static final UUID XY4DeviceHardware = UUID.fromString("a44eacf4-0104-2a27-0000-5f784c9977b5");
-    public static final UUID XY4DeviceFirmware = UUID.fromString("a44eacf4-0104-2a26-0000-5f784c9977b5");
-    public static final UUID XY4DeviceSystemID = UUID.fromString("a44eacf4-0104-2a23-0000-5f784c9977b5");
+    public static final UUID AttributeServiceChanged = UUID.fromString("00002a05-0000-1000-8000-00805f9b34fb");
 
-    public static final UUID XY4PowerLevel = UUID.fromString("a44eacf4-0104-2a07-0000-5f784c9977b5");
+    public static final UUID DeviceManufacturer = UUID.fromString("00002a29-0000-1000-8000-00805f9b34fb");
+    public static final UUID DeviceModel = UUID.fromString("00002a24-0000-1000-8000-00805f9b34fb");
+    public static final UUID DeviceSoftware = UUID.fromString("00002a28-0000-1000-8000-00805f9b34fb");
+    public static final UUID DeviceHardware = UUID.fromString("00002a27-0000-1000-8000-00805f9b34fb");
+    public static final UUID DeviceFirmware = UUID.fromString("00002a26-0000-1000-8000-00805f9b34fb");
+    public static final UUID DeviceSystemID = UUID.fromString("00002a23-0000-1000-8000-00805f9b34fb");
 
-    public static final UUID XY4AlertLevel = UUID.fromString("a44eacf4-0104-2a06-0000-5f784c9977b5");
+    public static final UUID PowerLevel = UUID.fromString("00002a07-0000-1000-8000-00805f9b34fb");
 
-    public static final UUID XY4BatteryLevel = UUID.fromString("a44eacf4-0104-2a19-0000-5f784c9977b5");
+    public static final UUID AlertLevel = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb");
 
-    public static final UUID XY4TimeCurrent = UUID.fromString("a44eacf4-0104-2a2b-0000-5f784c9977b5");
-    public static final UUID XY4TimeLocal = UUID.fromString("a44eacf4-0104-2a0f-0000-5f784c9977b5");
-
-
-
+    public static final UUID TimeCurrent = UUID.fromString("00002a2b-0000-1000-8000-00805f9b34fb");
+    public static final UUID TimeLocal = UUID.fromString("00002a0f-0000-1000-8000-00805f9b34fb");
 }

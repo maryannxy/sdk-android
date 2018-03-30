@@ -2,8 +2,6 @@ package com.xyfindables.sdk.actionHelper;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.util.Log;
-
 import com.xyfindables.sdk.XYDevice;
 import com.xyfindables.sdk.action.XYDeviceActionGetSelfTest;
 import com.xyfindables.sdk.action.XYDeviceActionGetSelfTestModern;
@@ -23,18 +21,9 @@ public class XYSelfTest extends XYActionHelper {
             action = new XYDeviceActionGetSelfTestModern(device) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
-                            if (!gatt.readCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
-                            break;
-                        case STATUS_CHARACTERISTIC_READ:
-                            value = characteristic.getValue();
-                            break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
                     }
@@ -45,18 +34,9 @@ public class XYSelfTest extends XYActionHelper {
             action = new XYDeviceActionGetSelfTest(device) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
-                            if (!gatt.readCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
-                            break;
-                        case STATUS_CHARACTERISTIC_READ:
-                            value = characteristic.getValue();
-                            break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
                     }
@@ -71,16 +51,9 @@ public class XYSelfTest extends XYActionHelper {
             action = new XYDeviceActionSetSelfTestModern(device, value) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
-                            characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                            if (!gatt.writeCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
-                            break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
                             break;
@@ -92,16 +65,9 @@ public class XYSelfTest extends XYActionHelper {
             action = new XYDeviceActionSetSelfTest(device, value) {
                 @Override
                 public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
-                    Log.v(TAG, "statusChanged:" + status + ":" + success);
+                    logExtreme(TAG, "statusChanged:" + status + ":" + success);
                     boolean result = super.statusChanged(status, gatt, characteristic, success);
                     switch (status) {
-                        case STATUS_CHARACTERISTIC_FOUND:
-                            callback.started(success);
-                            characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                            if (!gatt.writeCharacteristic(characteristic)) {
-                                statusChanged(STATUS_COMPLETED, gatt, characteristic, false);
-                            }
-                            break;
                         case STATUS_COMPLETED:
                             callback.completed(success);
                             break;

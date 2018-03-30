@@ -4,10 +4,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.content.Context;
-import android.media.audiofx.AudioEffect;
 import android.os.AsyncTask;
-import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.xyfindables.core.XYBase;
 import com.xyfindables.sdk.XYDevice;
@@ -38,7 +35,7 @@ public abstract class XYDeviceAction extends XYBase {
     public static final int STATUS_CHARACTERISTIC_UPDATED = 7;
     public static final int STATUS_COMPLETED = 8;
 
-    protected static ThreadPoolExecutor _threadPool;
+    private static ThreadPoolExecutor _threadPool;
 
     public XYDeviceAction(XYDevice device) {
         _device = device;
@@ -57,11 +54,11 @@ public abstract class XYDeviceAction extends XYBase {
     }
 
     public void start(final Context context) {
-        Log.i(TAG, this.getClass().getSuperclass().getSimpleName() + ":starting...");
+        logInfo(TAG, this.getClass().getSuperclass().getSimpleName() + ":starting...");
         AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
-                Log.i(TAG, "running...");
+                logInfo(TAG, "running...");
                 _device.queueAction(context.getApplicationContext(), XYDeviceAction.this);
                 return null;
             }
@@ -74,7 +71,7 @@ public abstract class XYDeviceAction extends XYBase {
 
     public boolean statusChanged(int status, BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean success) {
         if (!success) {
-            XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":statusChanged(failed):" + status, false);
+            logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":statusChanged(failed):" + status, false);
         }
         switch (status) {
             case STATUS_QUEUED:
@@ -85,7 +82,7 @@ public abstract class XYDeviceAction extends XYBase {
                 if (!_servicesDiscovered) {
                     _servicesDiscovered = true;
                 } else {
-                    XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Second Service Found Received", false);
+                    logError(TAG, "connTest-" + this.getClass().getSuperclass().getSimpleName() + ":Second Service Found Received", true);
                 }
                 break;
             case STATUS_CHARACTERISTIC_FOUND:
@@ -93,7 +90,7 @@ public abstract class XYDeviceAction extends XYBase {
                 if (!_characteristicFound) {
                     _characteristicFound = true;
                 } else {
-                    XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Second Characteristic Found Received", false);
+                    logError(TAG, "connTest-" + this.getClass().getSuperclass().getSimpleName() + ":Second Characteristic Found Received", true);
                 }
                 break;
             case STATUS_CHARACTERISTIC_READ:
@@ -102,7 +99,7 @@ public abstract class XYDeviceAction extends XYBase {
                 return true;
             case STATUS_COMPLETED:
                 if (!success) {
-                    XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Completed with Failure", false);
+                    logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Completed with Failure", false);
                 }
                 break;
         }
@@ -111,7 +108,7 @@ public abstract class XYDeviceAction extends XYBase {
 
     public boolean statusChanged(BluetoothGattDescriptor descriptor ,int status, BluetoothGatt gatt, boolean success) {
         if (!success) {
-            XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":statusChanged(failed):" + status, false);
+            logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":statusChanged(failed):" + status, false);
         }
         switch (status) {
             case STATUS_QUEUED:
@@ -122,7 +119,7 @@ public abstract class XYDeviceAction extends XYBase {
                 if (!_servicesDiscovered) {
                     _servicesDiscovered = true;
                 } else {
-                    XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Second Service Found Received", false);
+                    logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Second Service Found Received", true);
                 }
                 break;
             case STATUS_CHARACTERISTIC_FOUND:
@@ -130,7 +127,7 @@ public abstract class XYDeviceAction extends XYBase {
                 if (!_characteristicFound) {
                     _characteristicFound = true;
                 } else {
-                    XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Second Characteristic Found Received", false);
+                    logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Second Characteristic Found Received", true);
                 }
                 break;
             case STATUS_CHARACTERISTIC_READ:
@@ -139,7 +136,7 @@ public abstract class XYDeviceAction extends XYBase {
                 return true;
             case STATUS_COMPLETED:
                 if (!success) {
-                    XYBase.logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Completed with Failure", false);
+                    logError(TAG, this.getClass().getSuperclass().getSimpleName() + ":Completed with Failure", false);
                 }
                 break;
         }

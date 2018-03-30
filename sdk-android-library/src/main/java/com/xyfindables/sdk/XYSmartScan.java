@@ -1,6 +1,5 @@
 package com.xyfindables.sdk;
 
-import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothManager;
@@ -9,19 +8,19 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Looper;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.xyfindables.core.XYBase;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -34,15 +33,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-
-import io.fabric.sdk.android.Fabric;
-
-import static com.xyfindables.sdk.XYSmartScan.Status.LocationDisabled;
-import static com.xyfindables.sdk.XYSmartScan.Status.None;
-
-/**
- * Created by arietrouw on 12/20/16.
- */
 
 public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
 
@@ -71,10 +61,11 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
     final private static ThreadPoolExecutor _threadPoolListeners = new ThreadPoolExecutor(1, 5, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 
     private static int defaultLockTimeout = 10;
-    protected static final int scansWithOutPulsesBeforeRestart = 100;
+    static final int scansWithOutPulsesBeforeRestart = 100;
     private static int _missedPulsesForOutOfRange = 20;
 
     private static TimeUnit defaultLockTimeUnits = TimeUnit.SECONDS;
+    private static long startTime = Calendar.getInstance().getTimeInMillis();
 
     private Status _status = Status.None;
 
@@ -89,29 +80,34 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
     private Timer _autoScanTimer;
     private boolean paused = false;
 
-    protected HashMap<String, XYDevice> _devices;
-    protected int _scanCount = 0;
-    protected int _pulseCount = 0;
+    private HashMap<String, XYDevice> _devices;
+    int _scanCount = 0;
+    int _pulseCount = 0;
 
-    protected int _processedPulseCount = 0;
-    protected int _scansWithoutPulses = 0;
+    int _processedPulseCount = 0;
+    int _scansWithoutPulses = 0;
 
     private long _currenDeviceId;
 
-    protected Semaphore _scanningControl = new Semaphore(1, true);
+    Semaphore _scanningControl = new Semaphore(1, true);
 
-    private final HashMap<String, Listener> _listeners = new HashMap<>();
+    private final HashMap<String, XYDevice.Listener> _listeners = new HashMap<>();
 
-    protected BluetoothManager getBluetoothManager(Context context) {
+    BluetoothManager getBluetoothManager(Context context) {
         return (BluetoothManager)context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
     }
 
     private boolean _receiverRegistered = false;
 
-    protected final BroadcastReceiver _receiver = new BroadcastReceiver() {
+    final BroadcastReceiver _receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
+
+            if (action == null) {
+                logError(TAG, "connTest-_receiver action is null!", false);
+                return;
+            }
 
             switch (action) {
                 case BluetoothAdapter.ACTION_STATE_CHANGED:
@@ -119,22 +115,22 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                             BluetoothAdapter.ERROR);
                     switch (state) {
                         case BluetoothAdapter.STATE_OFF:
-                            Log.i(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_OFF");
+                            logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_OFF");
                             setStatus(Status.BluetoothDisabled);
                             setAllToOutOfRange();
                             break;
                         case BluetoothAdapter.STATE_TURNING_OFF:
-                            Log.i(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_TURNING_OFF");
+                            logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_TURNING_OFF");
                             break;
                         case BluetoothAdapter.STATE_ON:
-                            Log.i(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_ON");
+                            logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_ON");
                             setStatus(Status.Enabled);
                             break;
                         case BluetoothAdapter.STATE_TURNING_ON:
-                            Log.i(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_TURNING_ON");
+                            logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_TURNING_ON");
                             break;
                         default:
-                            Log.e(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:Unknwon State:" + state);
+                            logError(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:Unknwon State:" + state, true);
                             break;
                     }
                     break;
@@ -145,43 +141,43 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                             BluetoothAdapter.ERROR);
                     switch (scanMode) {
                         case BluetoothAdapter.SCAN_MODE_NONE:
-                            Log.i(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:SCAN_MODE_NONE");
+                            logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:SCAN_MODE_NONE");
                             break;
                         case BluetoothAdapter.SCAN_MODE_CONNECTABLE:
-                            Log.i(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:SCAN_MODE_CONNECTABLE");
+                            logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:SCAN_MODE_CONNECTABLE");
                             break;
                         case BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE:
-                            Log.i(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:SCAN_MODE_CONNECTABLE_DISCOVERABLE");
+                            logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:SCAN_MODE_CONNECTABLE_DISCOVERABLE");
                             break;
                         default:
-                            Log.e(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:????:" + scanMode);
+                            logError(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:????:" + scanMode, true);
                             break;
                     }
                     switch (prevScanMode) {
                         case BluetoothAdapter.SCAN_MODE_NONE:
-                            Log.i(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:SCAN_MODE_NONE");
+                            logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:SCAN_MODE_NONE");
                             break;
                         case BluetoothAdapter.SCAN_MODE_CONNECTABLE:
-                            Log.i(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:SCAN_MODE_CONNECTABLE");
+                            logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:SCAN_MODE_CONNECTABLE");
                             break;
                         case BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE:
-                            Log.i(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:SCAN_MODE_CONNECTABLE_DISCOVERABLE");
+                            logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:SCAN_MODE_CONNECTABLE_DISCOVERABLE");
                             break;
                         default:
-                            Log.e(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:????:" + prevScanMode);
+                            logError(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:????:" + prevScanMode, false); // occurs too often?
                             break;
                     }
                     break;
                 default:
-                    Log.e(TAG, "Unknown Action:" + action);
+                    logError(TAG, "Unknown Action:" + action, false);
                     break;
             }
         }
     };
 
-    protected XYSmartScan() {
+    XYSmartScan() {
         super();
-        Log.v(TAG, TAG);
+        logInfo(TAG, TAG);
         _devices = new HashMap<>();
     }
 
@@ -213,15 +209,15 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                 }
                 _devicesLock.unlock();
             } else {
-                XYBase.logError(TAG, "getDevices failed due to lock:" + _devicesLock.getHoldCount());
+                XYBase.logError(TAG, "getDevices failed due to lock:" + _devicesLock.getHoldCount(), true);
             }
         } catch (InterruptedException ex) {
-            XYBase.logException(TAG, ex);
+            XYBase.logException(TAG, ex, true);
         }
     }
 
     public void init(Context context, long currentDeviceId, int missedPulsesForOutOfRange) {
-        Log.v(TAG, "init");
+        logInfo(TAG, "init");
 
         _missedPulsesForOutOfRange = missedPulsesForOutOfRange;
 
@@ -266,7 +262,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context.getApplicationContext()).getAdapter();
 
         if (bluetoothAdapter == null) {
-            Log.i(TAG, "Bluetooth Disabled");
+            logInfo(TAG, "Bluetooth Disabled");
             return;
         }
         bluetoothAdapter.enable();
@@ -284,7 +280,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
 
     public XYDevice deviceFromId(String id) {
         if (id == null || id.isEmpty()) {
-            XYBase.logError(TAG, "Tried to get a null device");
+            XYBase.logError(TAG, "Tried to get a null device", true);
             return null;
         }
 
@@ -296,11 +292,11 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                 device = _devices.get(id);
                 _devicesLock.unlock();
             } else {
-                XYBase.logError(TAG, "deviceFromId failed due to lock (getUniqueId):" + _devicesLock.getHoldCount());
+                logError(TAG, "deviceFromId failed due to lock (getUniqueId):" + _devicesLock.getHoldCount(), true);
                 return null;
             }
         } catch (InterruptedException ex) {
-            XYBase.logException(TAG, ex);
+            logException(TAG, ex, true);
             return null;
         }
 
@@ -311,11 +307,11 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                     _devices.put(id, device);
                     _devicesLock.unlock();
                 } else {
-                    XYBase.logError(TAG, "deviceFromId failed due to lock (put):" + _devicesLock.getHoldCount());
+                    logError(TAG, "deviceFromId failed due to lock (put):" + _devicesLock.getHoldCount(), true);
                     return null;
                 }
             } catch (InterruptedException ex) {
-                XYBase.logException(TAG, ex);
+                logException(TAG, ex, true);
                 return null;
             }
         }
@@ -337,13 +333,13 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
     }
 
     public void startAutoScan(final Context context, int interval, int period) {
-        Log.v(TAG, "startAutoScan:" + interval + ":" + period);
+        logExtreme(TAG, "startAutoScan:" + interval + ":" + period);
         if (_autoScanTimer != null) {
             //XYData.logError(TAG, "startAutoScan already Started (_autoScanTimer != null)");
             stopAutoScan();
         }
         if (_autoScanTimerTask != null) {
-            XYBase.logError(TAG, "startAutoScan already Started (_autoScanTimerTask != null)");
+            XYBase.logError(TAG, "connTest-startAutoScan already Started (_autoScanTimerTask != null)", true);
             stopAutoScan();
         }
         _autoScanPeriod = period;
@@ -360,23 +356,23 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
     }
 
     public void stopAutoScan() {
-        Log.v(TAG, "stopAutoScan");
+        logExtreme(TAG, "stopAutoScan");
         if (_autoScanTimer != null) {
             _autoScanTimer.cancel();
             _autoScanTimer = null;
         } else {
-            XYBase.logError(TAG, "stopAutoScan already Stopped (_autoScanTimer == null)");
+            XYBase.logError(TAG, "stopAutoScan already Stopped (_autoScanTimer == null)", false);
         }
         if (_autoScanTimerTask != null) {
             _autoScanTimerTask.cancel();
             _autoScanTimerTask = null;
         } else {
-            XYBase.logError(TAG, "stopAutoScan already Stopped (_autoScanTimerTask == null)");
+            XYBase.logError(TAG, "stopAutoScan already Stopped (_autoScanTimerTask == null)", false);
         }
     }
 
     public void pauseAutoScan(boolean pause) {
-        Log.v(TAG, "pauseAutoScan:" + pause);
+        logExtreme(TAG, "pauseAutoScan:" + pause);
         if (pause == this.paused) {
             return;
         }
@@ -398,57 +394,62 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
     }
 
     public boolean areLocationServicesAvailable(@NonNull Context context) {
-        LocationManager lm = null;
-        boolean gps_enabled, network_enabled;
+        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
-        if (lm == null)
-            lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        if (lm == null) {
+            logError(TAG, "connTest-lm = null!");
+            return false;
+        }
+
+        boolean gps_enabled, network_enabled;
 
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
         network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
         if (gps_enabled && network_enabled) {
-            Log.w(TAG, "returning 3");
+            logInfo(TAG, "returning 3");
             setStatus(Status.None);
             return true;
         } else if (gps_enabled) {
-            Log.w(TAG, "returning 2");
+            logInfo(TAG, "returning 2");
             setStatus(Status.LocationDisabled);
             return false;
         } else if (network_enabled) {
-            Log.w(TAG, "returning 1");
+            logInfo(TAG, "returning 1");
             setStatus(Status.LocationDisabled);
             return false;
         } else {
-            Log.w(TAG, "returning 0");
+            logInfo(TAG, "returning 0");
             setStatus(Status.LocationDisabled);
             return false;
         }
     }
 
     public static boolean isLocationAvailable(@NonNull Context context) {
-        LocationManager lm = null;
-        boolean gps_enabled, network_enabled;
+        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
-        if (lm == null)
-            lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        if (lm == null) {
+            return false;
+        }
+
+        boolean gps_enabled, network_enabled;
 
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
         network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
         if (gps_enabled && network_enabled) {
-            Log.w(TAG, "returning 3");
+            logInfo(TAG, "returning 3");
             return true;
         } else if (gps_enabled) {
-            Log.w(TAG, "returning 2");
+            logInfo(TAG, "returning 2");
             return false;
         } else if (network_enabled) {
-            Log.w(TAG, "returning 1");
+            logInfo(TAG, "returning 1");
             return false;
         } else {
-            Log.w(TAG, "returning 0");
+            logInfo(TAG, "returning 0");
             return false;
         }
     }
@@ -473,6 +474,34 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         return _status;
     }
 
+    public int getDeviceCount() {
+        return _devices.size();
+    }
+
+    public XYDevice getDevice(int index) {
+        try {
+            int count = 0;
+            XYDevice device = null;
+            if (_devicesLock.tryLock(defaultLockTimeout, defaultLockTimeUnits)) {
+                for (Map.Entry<String, XYDevice> entry : _devices.entrySet()) {
+                    if (count == index) {
+                        device = entry.getValue();
+                        break;
+                    }
+                    count++;
+                }
+                _devicesLock.unlock();
+                return device;
+            } else {
+                XYBase.logError(TAG, "getDevices failed due to lock:" + _devicesLock.getHoldCount(), true);
+                return null;
+            }
+        } catch (InterruptedException ex) {
+            XYBase.logException(TAG, ex, true);
+            return null;
+        }
+    }
+
     public List<XYDevice> getDevices() {
         try {
             ArrayList<XYDevice> list = new ArrayList<>();
@@ -483,11 +512,11 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                 _devicesLock.unlock();
                 return list;
             } else {
-                XYBase.logError(TAG, "getDevices failed due to lock:" + _devicesLock.getHoldCount());
+                XYBase.logError(TAG, "getDevices failed due to lock:" + _devicesLock.getHoldCount(), true);
                 return null;
             }
         } catch (InterruptedException ex) {
-            XYBase.logException(TAG, ex);
+            XYBase.logException(TAG, ex, true);
             return null;
         }
     }
@@ -496,7 +525,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         //check for ibeacon header
         if (iBeaconBytes[0] == 0x02 && iBeaconBytes[1] == 0x15) {
             if (iBeaconBytes.length != 23) {
-                XYBase.logError(TAG, "iBeacon should have 23 bytes");
+                XYBase.logError(TAG, "iBeacon should have 23 bytes", true);
                 return null;
             }
             String hexString = bytesToHex(iBeaconBytes);
@@ -516,7 +545,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
                 return null;
             }
 
-            if (family == XYDevice.Family.XY2 || family == XYDevice.Family.XY3 || family == XYDevice.Family.Gps) {
+            if (family == XYDevice.Family.XY2 || family == XYDevice.Family.XY3 || family == XYDevice.Family.Gps || family == XYDevice.Family.XY4) {
                 minor = minor & 0xfff0 | 0x0004;
             }
 
@@ -527,7 +556,7 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
     }
 
     protected void notifyDevicesOfScanComplete() {
-        Log.v(TAG, "notifyDevicesOfScanComplete");
+        logExtreme(TAG, "notifyDevicesOfScanComplete");
         List<XYDevice> deviceList = getDevices();
 
         for (XYDevice device : deviceList) {
@@ -535,132 +564,163 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
         }
     }
 
+    public int getPulseCount() {
+        return _pulseCount;
+    }
+
+    public long getPulsesPerSecond() {
+        long seconds = ((Calendar.getInstance().getTimeInMillis() - startTime) / 1000);
+        if (seconds == 0) {
+            return _pulseCount;
+        }
+        return _pulseCount / seconds;
+    }
+
+    public int getScanCount() {
+        return _scanCount;
+    }
+
     protected void dump(Context context) {
 
         final BluetoothAdapter bluetoothAdapter = getBluetoothManager(context.getApplicationContext()).getAdapter();
 
         if (bluetoothAdapter == null) {
-            Log.i(TAG, "Bluetooth Disabled");
+            logInfo(TAG, "Bluetooth Disabled");
             return;
         }
 
-        Log.v(TAG, "=========================");
-        Log.v(TAG, "bluetoothAdapter:scanMode:" + bluetoothAdapter.getScanMode());
-        Log.v(TAG, "bluetoothAdapter:state:" + bluetoothAdapter.getState());
-        Log.v(TAG, "bluetoothAdapter:name:" + bluetoothAdapter.getName());
-        Log.v(TAG, "bluetoothAdapter:address:" + bluetoothAdapter.getAddress());
-        Log.v(TAG, "bluetoothAdapter:GATT Connection State:" + bluetoothAdapter.getProfileConnectionState(BluetoothProfile.GATT));
-        Log.v(TAG, "scanCount:" + _scanCount);
-        Log.v(TAG, "pulseCount:" + _pulseCount);
-        Log.v(TAG, "processedPulseCount:" + _pulseCount);
-        Log.v(TAG, "mainLooper:" + Looper.getMainLooper().toString());
-        Log.v(TAG, "=========================");
+        logExtreme(TAG, "=========================");
+        logExtreme(TAG, "bluetoothAdapter:scanMode:" + bluetoothAdapter.getScanMode());
+        logExtreme(TAG, "bluetoothAdapter:state:" + bluetoothAdapter.getState());
+        logExtreme(TAG, "bluetoothAdapter:name:" + bluetoothAdapter.getName());
+        logExtreme(TAG, "bluetoothAdapter:address:" + bluetoothAdapter.getAddress());
+        logExtreme(TAG, "bluetoothAdapter:GATT Connection State:" + bluetoothAdapter.getProfileConnectionState(BluetoothProfile.GATT));
+        logExtreme(TAG, "scanCount:" + _scanCount);
+        logExtreme(TAG, "pulseCount:" + _pulseCount);
+        logExtreme(TAG, "processedPulseCount:" + _pulseCount);
+        logExtreme(TAG, "mainLooper:" + Looper.getMainLooper().toString());
+        logExtreme(TAG, "=========================");
     }
 
     // region ============= Listeners =============
 
     abstract protected void scan(final Context context, int period);
 
-    public void addListener(final String key, final Listener listener) {
-        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                synchronized (_listeners) {
-                    _listeners.put(key, listener);
-                }
-                return null;
+    private static class AddListenerTask extends AsyncTask<Object, Void, Void> {
+        @Override
+        protected Void doInBackground(Object... params) {
+            synchronized (XYSmartScan.instance._listeners) {
+                XYSmartScan.instance._listeners.put((String)params[0], (XYDevice.Listener)params[1]);
             }
-        };
-        asyncTask.executeOnExecutor(_threadPoolListeners);
+            return null;
+        }
+    }
+
+    public void addListener(final String key, final XYDevice.Listener listener) {
+        Object[] params = new Object[2];
+        params[0] = key;
+        params[1] = listener;
+        new AddListenerTask().executeOnExecutor(_threadPoolListeners, params);
+    }
+
+    private static class RemoveListenerTask extends AsyncTask<String, Void, Void> {
+        @Override
+        protected Void doInBackground(String... params) {
+            synchronized (XYSmartScan.instance._listeners) {
+                XYSmartScan.instance._listeners.remove(params[0]);
+            }
+            return null;
+        }
     }
 
     public void removeListener(final String key) {
-        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                synchronized (_listeners) {
-                    _listeners.remove(key);
+        new RemoveListenerTask().executeOnExecutor(_threadPoolListeners, key);
+    }
+
+    private static class ReportEnteredTask extends AsyncTask<XYDevice, Void, Void> {
+        @Override
+        protected Void doInBackground(XYDevice... params) {
+            synchronized (XYSmartScan.instance._listeners) {
+                for (Map.Entry<String, XYDevice.Listener> entry : XYSmartScan.instance._listeners.entrySet()) {
+                    entry.getValue().entered(params[0]);
                 }
-                return null;
             }
-        };
-        asyncTask.executeOnExecutor(_threadPoolListeners);
+            return null;
+        }
     }
 
     private void reportEntered(final XYDevice device) {
-        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                synchronized (_listeners) {
-                    for (Map.Entry<String, Listener> entry : _listeners.entrySet()) {
-                        entry.getValue().entered(device);
-                    }
+        new ReportEnteredTask().executeOnExecutor(_threadPoolListeners, device);
+    }
+
+    private static class ReportExitedTask extends AsyncTask<XYDevice, Void, Void> {
+        @Override
+        protected Void doInBackground(XYDevice... params) {
+            synchronized (XYSmartScan.instance._listeners) {
+                for (Map.Entry<String, XYDevice.Listener> entry : XYSmartScan.instance._listeners.entrySet()) {
+                    entry.getValue().exited(params[0]);
                 }
-                return null;
             }
-        };
-        asyncTask.executeOnExecutor(_threadPoolListeners);
+            return null;
+        }
     }
 
     private void reportExited(final XYDevice device) {
-        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                synchronized (_listeners) {
-                    for (Map.Entry<String, Listener> entry : _listeners.entrySet()) {
-                        entry.getValue().exited(device);
-                    }
+        new ReportExitedTask().executeOnExecutor(_threadPoolListeners, device);
+    }
+
+    private static class ReportDetectedTask extends AsyncTask<XYDevice, Void, Void> {
+        @Override
+        protected Void doInBackground(XYDevice... params) {
+            synchronized (XYSmartScan.instance._listeners) {
+                for (Map.Entry<String, XYDevice.Listener> entry : XYSmartScan.instance._listeners.entrySet()) {
+                    entry.getValue().detected(params[0]);
                 }
-                return null;
             }
-        };
-        asyncTask.executeOnExecutor(_threadPoolListeners);
+            return null;
+        }
     }
 
     private void reportDetected(final XYDevice device) {
-        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                synchronized (_listeners) {
-                    for (Map.Entry<String, Listener> entry : _listeners.entrySet()) {
-                        entry.getValue().detected(device);
-                    }
+        new ReportDetectedTask().executeOnExecutor(_threadPoolListeners, device);
+    }
+
+    private static class ReportButtonPressedTask extends AsyncTask<Object, Void, Void> {
+        @Override
+        protected Void doInBackground(Object... params) {
+            synchronized (XYSmartScan.instance._listeners) {
+                for (Map.Entry<String, XYDevice.Listener> entry : XYSmartScan.instance._listeners.entrySet()) {
+                    entry.getValue().buttonPressed((XYDevice)params[0], (XYDevice.ButtonType)params[1]);
                 }
-                return null;
             }
-        };
-        asyncTask.executeOnExecutor(_threadPoolListeners);
+            return null;
+        }
     }
 
     private void reportButtonPressed(final XYDevice device, final XYDevice.ButtonType buttonType) {
-        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                synchronized (_listeners) {
-                    for (Map.Entry<String, Listener> entry : _listeners.entrySet()) {
-                        entry.getValue().buttonPressed(device, buttonType);
-                    }
+        Object[] params = new Object[2];
+        params[0] = device;
+        params[1] = buttonType;
+        new ReportButtonPressedTask().executeOnExecutor(_threadPoolListeners, params);
+    }
+
+    private static class ReportButtonRecentlyPressedTask extends AsyncTask<Object, Void, Void> {
+        @Override
+        protected Void doInBackground(Object... params) {
+            synchronized (XYSmartScan.instance._listeners) {
+                for (Map.Entry<String, XYDevice.Listener> entry : XYSmartScan.instance._listeners.entrySet()) {
+                    entry.getValue().buttonRecentlyPressed((XYDevice)params[0], (XYDevice.ButtonType)params[1]);
                 }
-                return null;
             }
-        };
-        asyncTask.executeOnExecutor(_threadPoolListeners);
+            return null;
+        }
     }
 
     private void reportButtonRecentlyPressed(final XYDevice device, final XYDevice.ButtonType buttonType) {
-        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                synchronized (_listeners) {
-                    for (Map.Entry<String, Listener> entry : _listeners.entrySet()) {
-                        entry.getValue().buttonRecentlyPressed(device, buttonType);
-                    }
-                }
-                return null;
-            }
-        };
-
-        asyncTask.executeOnExecutor(_threadPoolListeners);
+        Object[] params = new Object[2];
+        params[0] = device;
+        params[1] = buttonType;
+        new ReportButtonRecentlyPressedTask().executeOnExecutor(_threadPoolListeners, params);
     }
 
     // endregion ============= Listeners =============
@@ -688,43 +748,38 @@ public abstract class XYSmartScan extends XYBase implements XYDevice.Listener {
     }
 
     @Override
+    public void readRemoteRssi(XYDevice device, int rssi) {
+
+    }
+
+    @Override
     public void updated(XYDevice device) {
+
+    }
+
+    @Override
+    public void statusChanged(Status status) {
 
     }
 
     // endregion ============= XYDevice Listener =============
 
     public void refresh(BluetoothGatt gatt) {
-        XYBase.logError(TAG, "Calling refresh");
+        XYBase.logError(TAG, "connTest-Calling refresh", true);
         try {
             Method refresh = gatt.getClass().getMethod("refresh");
             refresh.invoke(gatt);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ex) {
-            XYBase.logException(TAG, ex);
+            XYBase.logException(TAG, ex, true);
         }
     }
 
     private void reportStatusChanged(Status status) {
         synchronized (_listeners) {
-            for (Map.Entry<String, XYSmartScan.Listener> entry : _listeners.entrySet()) {
+            for (Map.Entry<String, XYDevice.Listener> entry : _listeners.entrySet()) {
                 entry.getValue().statusChanged(status);
             }
         }
     }
 
-    public interface Listener {
-        void entered(XYDevice device);
-
-        void exited(XYDevice device);
-
-        void detected(XYDevice device);
-
-        void buttonPressed(XYDevice device, XYDevice.ButtonType buttonType);
-
-        void buttonRecentlyPressed(XYDevice device, XYDevice.ButtonType buttonType);
-
-        void statusChanged(Status status);
-
-        void updated(XYDevice device);
-    }
 }
