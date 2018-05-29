@@ -56,9 +56,9 @@ repositories {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.google.firebase:firebase-core:11.8.0'
-    implementation project(path: ':xycore')
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    api 'com.google.firebase:firebase-core:11.8.0'
+    api project(path: ':xycore')
 }
 
 apply plugin: 'com.google.gms.google-services'
