@@ -40,7 +40,7 @@ abstract class XYDeviceAction(val device: XYDevice) : XYBase() {
         asyncTask.executeOnExecutor(_threadPool)
     }
 
-    fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+    open fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
         if (!success) {
             logError(TAG, this.javaClass.superclass.simpleName + ":statusChanged(failed):" + status, false)
         }
@@ -70,7 +70,7 @@ abstract class XYDeviceAction(val device: XYDevice) : XYBase() {
         return false
     }
 
-    fun statusChanged(descriptor: BluetoothGattDescriptor, status: Int, gatt: BluetoothGatt, success: Boolean): Boolean {
+    open fun statusChanged(descriptor: BluetoothGattDescriptor?, status: Int, gatt: BluetoothGatt?, success: Boolean): Boolean {
         if (!success) {
             logError(TAG, this.javaClass.superclass.simpleName + ":statusChanged(failed):" + status, false)
         }

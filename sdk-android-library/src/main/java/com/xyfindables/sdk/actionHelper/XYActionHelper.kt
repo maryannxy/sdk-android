@@ -12,11 +12,11 @@ abstract class XYActionHelper {
 
     var action: XYDeviceAction? = null
 
-    protected interface Callback {
+    interface Callback {
         fun completed(success: Boolean)
     }
 
-    protected interface Notification {
+    interface Notification {
         fun updated(status: Boolean)
     }
 

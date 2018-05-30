@@ -28,6 +28,7 @@ android {
 }
 
 buildscript {
+    ext.kotlin_version = '1.2.41'
     repositories {
         jcenter()
         maven { url 'https://maven.fabric.io/public' }
@@ -36,6 +37,7 @@ buildscript {
         classpath 'com.android.tools.build:gradle:3.1.2'
         classpath 'com.google.gms:google-services:4.0.1'
         classpath 'io.fabric.tools:gradle:1.25.4'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
@@ -44,6 +46,8 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     api project(path: ':sdk-android-library')
     api project(path: ':xycore')
+    api project(path: ':xyui')
 }
 
 apply plugin: 'com.google.gms.google-services'
+apply plugin: 'kotlin-android'

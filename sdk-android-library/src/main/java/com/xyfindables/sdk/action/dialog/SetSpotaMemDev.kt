@@ -26,18 +26,20 @@ abstract class SetSpotaMemDev protected constructor(device: XYDevice, private va
         logAction(TAG, TAG)
     }
 
-    override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+    override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
         logExtreme(TAG, "statusChanged:$status:$success")
         var result = super.statusChanged(status, gatt, characteristic, success)
         when (status) {
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
-                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT32, 0)
-                if (!gatt.writeCharacteristic(characteristic)) {
-                    logError(TAG, "testOta-SetSpotaMemDev write failed", false)
-                    result = true
-                } else {
-                    logExtreme(TAG, "testOta-SetSpotaMemDev write succeed")
-                    result = false
+                characteristic?.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT32, 0)
+                if (gatt !== null) {
+                    if (!gatt.writeCharacteristic(characteristic)) {
+                        logError(TAG, "testOta-SetSpotaMemDev write failed", false)
+                        result = true
+                    } else {
+                        logExtreme(TAG, "testOta-SetSpotaMemDev write succeed")
+                        result = false
+                    }
                 }
             }
         }

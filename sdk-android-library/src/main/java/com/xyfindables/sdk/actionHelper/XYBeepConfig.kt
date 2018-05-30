@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 
 import com.xyfindables.sdk.XYDevice
+import com.xyfindables.sdk.action.XYDeviceAction
 import com.xyfindables.sdk.action.XYDeviceActionBuzzModernConfig
 
 import java.util.Arrays
@@ -25,7 +26,7 @@ class XYBeepConfig(device: XYDevice, slot: Int, song: ByteArray, callback: Callb
             System.arraycopy(slotArray, 0, config, 0, 1)
             System.arraycopy(song, 0, config, 1, song.size)
             action = object : XYDeviceActionBuzzModernConfig(device, config) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     when (status) {

@@ -10,6 +10,8 @@ import com.xyfindables.sdk.XYDevice
 import com.xyfindables.sdk.XYSmartScan
 import com.xyfindables.ui.XYBaseActivity
 import com.xyfindables.ui.views.XYButton
+import com.xyfindables.ui.views.XYEditText
+import com.xyfindables.ui.views.XYTextView
 
 /**
  * Created by arietrouw on 12/28/17.
@@ -19,7 +21,7 @@ class XYDeviceActivity : XYBaseActivity() {
 
     private var _device: XYDevice? = null
 
-    protected fun onCreate(savedInstanceState: Bundle) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val intent = getIntent()
         val deviceId = intent.getStringExtra(XYDeviceActivity.EXTRA_DEVICEID)
@@ -32,7 +34,7 @@ class XYDeviceActivity : XYBaseActivity() {
         setContentView(R.layout.device_activity)
     }
 
-    protected fun onPostCreate(savedInstanceState: Bundle) {
+    override fun onPostCreate(savedInstanceState: Bundle?) {
         super.onPostCreate(savedInstanceState)
         if (_device != null) {
             _device!!.addListener(TAG, object : XYDevice.Listener {
@@ -83,60 +85,60 @@ class XYDeviceActivity : XYBaseActivity() {
             update()
         }
 
-        val connectButton = findViewById(R.id.connect)
+        val connectButton : XYButton = findViewById(R.id.connect)
         connectButton.setOnClickListener(View.OnClickListener {
             connectButton.setEnabled(false)
             _device!!.stayConnected(this@XYDeviceActivity, true)
         })
 
-        val disconnectButton = findViewById(R.id.disconnect)
+        val disconnectButton : XYButton = findViewById(R.id.disconnect)
         disconnectButton.setOnClickListener(View.OnClickListener {
             connectButton.setEnabled(true)
             _device!!.stayConnected(this@XYDeviceActivity, false)
         })
     }
 
-    protected fun onResume() {
+    override fun onResume() {
         super.onResume()
     }
 
     fun update() {
         runOnUiThread(Runnable {
             if (_device != null) {
-                val nameView = findViewById(R.id.name)
+                val nameView : TextView = findViewById(R.id.name)
                 nameView.setText(_device!!.family.name)
 
-                val rssiView = findViewById(R.id.rssi)
+                val rssiView : TextView = findViewById(R.id.rssi)
                 rssiView.setText(_device!!.rssi.toString())
 
-                val majorView = findViewById(R.id.major)
+                val majorView : TextView = findViewById(R.id.major)
                 majorView.setText(_device!!.major.toString())
 
-                val minorView = findViewById(R.id.minor)
+                val minorView : TextView = findViewById(R.id.minor)
                 minorView.setText(_device!!.minor.toString())
 
-                val pulsesView = findViewById(R.id.pulseCount)
+                val pulsesView : TextView = findViewById(R.id.pulseCount)
                 pulsesView.setText(_device!!.detectCount.toString())
 
-                val enterView = findViewById(R.id.enterCount)
+                val enterView : TextView = findViewById(R.id.enterCount)
                 enterView.setText(_device!!.enterCount.toString())
 
-                val exitView = findViewById(R.id.exitCount)
+                val exitView : TextView = findViewById(R.id.exitCount)
                 exitView.setText(_device!!.exitCount.toString())
 
-                val actionSuccessView = findViewById(R.id.actionSuccessCount)
+                val actionSuccessView : TextView = findViewById(R.id.actionSuccessCount)
                 actionSuccessView.setText(_device!!.actionSuccessCount.toString())
 
-                val actionFailCount = findViewById(R.id.actionFailCount)
+                val actionFailCount : TextView = findViewById(R.id.actionFailCount)
                 actionFailCount.setText(_device!!.actionFailCount.toString())
 
-                val actionQueueCount = findViewById(R.id.actionQueueCount)
+                val actionQueueCount : TextView = findViewById(R.id.actionQueueCount)
                 actionQueueCount.setText(_device!!.actionQueueCount.toString())
 
-                val connectButton = findViewById(R.id.connect)
+                val connectButton : TextView = findViewById(R.id.connect)
                 connectButton.setVisibility(if (_device!!.isConnected) View.INVISIBLE else View.VISIBLE)
 
-                val disconnectButton = findViewById(R.id.disconnect)
+                val disconnectButton : TextView = findViewById(R.id.disconnect)
                 disconnectButton.setVisibility(if (_device!!.isConnected) View.VISIBLE else View.INVISIBLE)
             }
         })

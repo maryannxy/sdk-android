@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 
 import com.xyfindables.sdk.XYDevice
+import com.xyfindables.sdk.action.XYDeviceAction
 import com.xyfindables.sdk.action.XYDeviceActionGetBatteryLevel
 
 /**
@@ -18,7 +19,7 @@ class XYBattery(device: XYDevice, callback: Callback) : XYActionHelper() {
 
     init {
         action = object : XYDeviceActionGetBatteryLevel(device) {
-            override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+            override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                 logExtreme(TAG, "statusChanged:$status:$success")
                 val result = super.statusChanged(status, gatt, characteristic, success)
                 when (status) {

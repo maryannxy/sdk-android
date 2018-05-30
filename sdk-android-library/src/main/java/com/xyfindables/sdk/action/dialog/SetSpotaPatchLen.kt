@@ -26,15 +26,17 @@ abstract class SetSpotaPatchLen(device: XYDevice, internal var value: Int) : XYD
         logAction(TAG, TAG)
     }
 
-    override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+    override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
         logExtreme(TAG, "statusChanged:$status:$success")
         var result = super.statusChanged(status, gatt, characteristic, success)
         when (status) {
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
-                characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT16, 0)
-                if (!gatt.writeCharacteristic(characteristic)) {
-                    logError(TAG, "testOta-SetSpotaPatchLen write failed", false)
-                    result = true
+                characteristic?.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT16, 0)
+                if (gatt !== null) {
+                    if (!gatt.writeCharacteristic(characteristic)) {
+                        logError(TAG, "testOta-SetSpotaPatchLen write failed", false)
+                        result = true
+                    }
                 }
             }
         }

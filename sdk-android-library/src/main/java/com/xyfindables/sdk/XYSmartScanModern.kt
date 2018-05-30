@@ -2,6 +2,7 @@ package com.xyfindables.sdk
 
 import android.annotation.TargetApi
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.content.BroadcastReceiver
@@ -24,7 +25,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  */
 
 @TargetApi(21)
-internal class XYSmartScanModern : XYSmartScan() {
+open class XYSmartScanModern : XYSmartScan() {
 
     private var _pendingBleRestart21 = false
     private var _pendingBleRestart21Plus = false
@@ -35,55 +36,53 @@ internal class XYSmartScanModern : XYSmartScan() {
 
     private val _scanResults21: ConcurrentLinkedQueue<android.bluetooth.le.ScanResult>
 
-    override val receiver: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val action = intent.action
-
-            if (action == BluetoothAdapter.ACTION_STATE_CHANGED) {
-                val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
-                        BluetoothAdapter.ERROR)
-                when (state) {
-                    BluetoothAdapter.STATE_OFF -> {
-                        logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_OFF")
-                        if (_pendingBleRestart21) {
-                            val bluetoothAdapter = getBluetoothManager(context).adapter
-
-                            if (bluetoothAdapter == null) {
-                                logInfo(TAG, "Bluetooth Disabled")
-                                return
-                            }
-                            bluetoothAdapter.enable()
-                            _pendingBleRestart21 = false
-                        } else if (_pendingBleRestart21Plus) {
-                            val bluetoothAdapter = getBluetoothManager(context).adapter
-
-                            if (bluetoothAdapter == null) {
-                                logInfo(TAG, "Bluetooth Disabled")
-                                return
-                            }
-                            bluetoothAdapter.enable()
-                            _pendingBleRestart21Plus = false
-                        } else {
-                            setStatus(XYSmartScan.Status.BluetoothDisabled)
-                        }
-                    }
-                    else -> {
-                    }
-                }
-            }
-
-            _receiver.onReceive(context, intent)
-        }
-    }
-
     init {
         logExtreme(TAG, "XYSmartScanModern")
 
-        _scanResults21 = ConcurrentLinkedQueue()
-    }
+        legacy = false
 
-    override fun legacy(): Boolean {
-        return false
+        _scanResults21 = ConcurrentLinkedQueue()
+
+        receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                val action = intent.action
+
+                if (action == BluetoothAdapter.ACTION_STATE_CHANGED) {
+                    val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
+                            BluetoothAdapter.ERROR)
+                    when (state) {
+                        BluetoothAdapter.STATE_OFF -> {
+                            logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_OFF")
+                            if (_pendingBleRestart21) {
+                                val bluetoothAdapter = getBluetoothManager(context).adapter
+
+                                if (bluetoothAdapter == null) {
+                                    logInfo(TAG, "Bluetooth Disabled")
+                                    return
+                                }
+                                bluetoothAdapter.enable()
+                                _pendingBleRestart21 = false
+                            } else if (_pendingBleRestart21Plus) {
+                                val bluetoothAdapter = getBluetoothManager(context).adapter
+
+                                if (bluetoothAdapter == null) {
+                                    logInfo(TAG, "Bluetooth Disabled")
+                                    return
+                                }
+                                bluetoothAdapter.enable()
+                                _pendingBleRestart21Plus = false
+                            } else {
+                                setStatus(XYSmartScan.Status.BluetoothDisabled)
+                            }
+                        }
+                        else -> {
+                        }
+                    }
+                }
+
+                receiver?.onReceive(context, intent)
+            }
+        }
     }
 
     @TargetApi(21)
@@ -112,7 +111,7 @@ internal class XYSmartScanModern : XYSmartScan() {
 
         val settings: Any
 
-        _scanCount++
+        scanCount++
 
         val bluetoothAdapter = getBluetoothManager(context).adapter
 
@@ -147,7 +146,7 @@ internal class XYSmartScanModern : XYSmartScan() {
                         logExtreme(TAG, "connTest-getting same scan result !!!!!!!!!!!!!!!!!!!!!!!!!!")
                     }
                     _scanResults21.add(result)
-                    _pulseCount++
+                    pulseCount++
                     _pulseCountForScan++
                 }
             }
@@ -156,7 +155,7 @@ internal class XYSmartScanModern : XYSmartScan() {
                 logExtreme(TAG, "scan21:onBatchScanResults:" + results.size)
                 for (result in results) {
                     _scanResults21.add(result)
-                    _pulseCount++
+                    pulseCount++
                     _pulseCountForScan++
                 }
             }
@@ -241,6 +240,10 @@ internal class XYSmartScanModern : XYSmartScan() {
         dump(context)
         _scanningControl.release()
         logExtreme(TAG, "scan21:finish")
+    }
+
+    override fun statusChanged(status: Status) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     private fun processScanResult21(xyId: String, scanResult: android.bluetooth.le.ScanResult) {

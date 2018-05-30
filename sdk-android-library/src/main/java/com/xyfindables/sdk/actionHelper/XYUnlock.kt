@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 
 import com.xyfindables.sdk.XYDevice
+import com.xyfindables.sdk.action.XYDeviceAction
 import com.xyfindables.sdk.action.XYDeviceActionUnlock
 import com.xyfindables.sdk.action.XYDeviceActionUnlockModern
 
@@ -18,7 +19,7 @@ class XYUnlock(device: XYDevice, value: ByteArray, callback: Callback) : XYActio
     init {
         if (device.family === XYDevice.Family.XY4) {
             action = object : XYDeviceActionUnlockModern(device, _defaultXy4UnlockCode) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     when (status) {
@@ -29,7 +30,7 @@ class XYUnlock(device: XYDevice, value: ByteArray, callback: Callback) : XYActio
             }
         } else {
             action = object : XYDeviceActionUnlock(device, value) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     when (status) {

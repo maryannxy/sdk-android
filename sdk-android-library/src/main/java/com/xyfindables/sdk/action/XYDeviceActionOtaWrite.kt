@@ -25,7 +25,7 @@ abstract class XYDeviceActionOtaWrite(private val _device: XYDevice, var value: 
         logAction(TAG, TAG)
     }
 
-    override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+    override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
 
         logExtreme(TAG, "testOta-statusChanged:$status:$success")
         var result = super.statusChanged(status, gatt, characteristic, success)
@@ -33,16 +33,20 @@ abstract class XYDeviceActionOtaWrite(private val _device: XYDevice, var value: 
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
                 _device.otaMode(true)
                 logExtreme(TAG, "testOta-found: " + counter + " : " + success + ": length: " + value.size)
-                characteristic.value = value[counter]
-                gatt.writeCharacteristic(characteristic)
+                characteristic?.value = value[counter]
+                if (gatt !== null) {
+                    gatt!!.writeCharacteristic(characteristic)
+                }
                 logExtreme(TAG, "testOta-value = " + bytesToHex(value[counter]))
             }
             XYDeviceAction.STATUS_CHARACTERISTIC_WRITE -> {
                 counter++
                 if (counter < value.size) {
                     logExtreme(TAG, "testOta-write: $counter : $success")
-                    characteristic.value = value[counter]
-                    gatt.writeCharacteristic(characteristic)
+                    characteristic?.value = value[counter]
+                    if (gatt !== null) {
+                        gatt!!.writeCharacteristic(characteristic)
+                    }
                     logExtreme(TAG, "testOta-value = " + bytesToHex(value[counter]))
                     result = false
                 } else {
@@ -64,7 +68,7 @@ abstract class XYDeviceActionOtaWrite(private val _device: XYDevice, var value: 
         private fun bytesToHex(bytes: ByteArray): String {
             val hexChars = CharArray(bytes.size * 2)
             for (j in bytes.indices) {
-                val v = bytes[j] and 0xFF
+                val v = bytes[j].toInt() and 0xFF
                 hexChars[j * 2] = hexArray[v.ushr(4)]
                 hexChars[j * 2 + 1] = hexArray[v and 0x0F]
             }

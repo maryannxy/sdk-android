@@ -16,7 +16,7 @@ import java.util.UUID
 
 abstract class XYDeviceActionGetHardwareCreateDate(device: XYDevice) : XYDeviceAction(device) {
 
-    var value: ByteArray
+    var value: ByteArray? = null
 
     override val serviceId: UUID
         get() = XYDeviceService.XY4Primary
@@ -28,14 +28,20 @@ abstract class XYDeviceActionGetHardwareCreateDate(device: XYDevice) : XYDeviceA
         logAction(TAG, TAG)
     }
 
-    override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+    override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
         logExtreme(TAG, "statusChanged:$status:$success")
         var result = super.statusChanged(status, gatt, characteristic, success)
         when (status) {
-            XYDeviceAction.STATUS_CHARACTERISTIC_READ -> value = characteristic.value
-            XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> if (!gatt.readCharacteristic(characteristic)) {
-                logError(TAG, "connTest-Characteristic Read Failed", false)
-                result = true
+            XYDeviceAction.STATUS_CHARACTERISTIC_READ -> {
+                value = characteristic?.value
+            }
+            XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
+                if (gatt !== null) {
+                    if (!gatt!!.readCharacteristic(characteristic)) {
+                        logError(TAG, "connTest-Characteristic Read Failed", false)
+                        result = true
+                    }
+                }
             }
         }
         return result

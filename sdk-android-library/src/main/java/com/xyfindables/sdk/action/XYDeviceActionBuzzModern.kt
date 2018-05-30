@@ -24,14 +24,16 @@ abstract class XYDeviceActionBuzzModern protected constructor(device: XYDevice, 
         logAction(TAG, TAG)
     }
 
-    override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+    override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
         logExtreme(TAG, "statusChanged:$status:$success")
         var result = super.statusChanged(status, gatt, characteristic, success)
-        when (status) {
-            XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
-                characteristic.value = value
-                if (!gatt.writeCharacteristic(characteristic)) {
-                    result = true
+        if (gatt !== null) {
+            when (status) {
+                XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
+                    characteristic?.value = value
+                    if (!gatt!!.writeCharacteristic(characteristic)) {
+                        result = true
+                    }
                 }
             }
         }

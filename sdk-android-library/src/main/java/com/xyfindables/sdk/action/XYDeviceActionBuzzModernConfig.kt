@@ -27,7 +27,7 @@ open class XYDeviceActionBuzzModernConfig protected constructor(device: XYDevice
         logAction(TAG, TAG)
     }
 
-    override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+    override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
         logExtreme(TAG, "statusChanged:$status:$success")
         var result = super.statusChanged(status, gatt, characteristic, success)
         when (status) {
@@ -38,29 +38,33 @@ open class XYDeviceActionBuzzModernConfig protected constructor(device: XYDevice
                 var packet = ByteArray(slotPlusOffset.size + slice.size)
                 System.arraycopy(slotPlusOffset, 0, packet, 0, slotPlusOffset.size)
                 System.arraycopy(slice, 0, packet, slotPlusOffset.size, slice.size)
-                characteristic.value = packet
-                if (!gatt.writeCharacteristic(characteristic)) {
-                    result = true
+                characteristic?.value = packet
+                if (gatt != null) {
+                    if (!gatt!!.writeCharacteristic(characteristic)) {
+                        result = true
+                    }
                 }
             }
             XYDeviceAction.STATUS_CHARACTERISTIC_WRITE -> {
                 counter++
                 logExtreme(TAG, "testSoundConfig: write: " + success + "counter: " + counter)
-                slotPlusOffset = byteArrayOf(value[0], (counter * 9).toByte())
-                slice = Arrays.copyOfRange(value, counter * 18 + 1, counter * 18 + 19)
+                var slotPlusOffset = byteArrayOf(value[0], (counter * 9).toByte())
+                var slice = Arrays.copyOfRange(value, counter * 18 + 1, counter * 18 + 19)
                 if (counter == 14) {
                     slice = Arrays.copyOfRange(value, 256, 257)
                 }
-                packet = ByteArray(slotPlusOffset.size + slice.size)
+                var packet = ByteArray(slotPlusOffset.size + slice.size)
                 System.arraycopy(slotPlusOffset, 0, packet, 0, slotPlusOffset.size)
                 System.arraycopy(slice, 0, packet, slotPlusOffset.size, slice.size)
-                characteristic.setValue(packet)
+                characteristic?.setValue(packet)
 
                 result = counter == 14
 
-                if (!gatt.writeCharacteristic(characteristic)) {
-                    logError(TAG, "testSoundConfig-writeCharacteristic failed", false)
-                    result = true
+                if (gatt !== null) {
+                    if (!gatt!!.writeCharacteristic(characteristic)) {
+                        logError(TAG, "testSoundConfig-writeCharacteristic failed", false)
+                        result = true
+                    }
                 }
             }
         }

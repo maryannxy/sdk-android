@@ -114,7 +114,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
                 gatt!!.readRemoteRssi()
                 return _rssi
             } else {
-                return if (XYSmartScan.instance.legacy()) {
+                return if (XYSmartScan.instance.legacy) {
                     rssi18
                 } else {
                     rssi21
@@ -139,7 +139,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
         }
 
     private val txPowerLevel: Int
-        get() = if (XYSmartScan.instance.legacy()) {
+        get() = if (XYSmartScan.instance.legacy) {
             txPowerLevel18
         } else {
             txPowerLevel21
@@ -330,14 +330,8 @@ class XYDevice internal constructor(id: String) : XYBase() {
         }
     }
 
-    protected override fun finalize() {
+    protected fun finalize() {
         instanceCount--
-
-        try {
-            super.finalize()
-        } catch (ex: Throwable) {
-        }
-
     }
 
     @TargetApi(18)
@@ -604,7 +598,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
                                         } else {
                                             logError(TAG, "connTest-trying to disconnect inside 133 with null currentAction", false)
                                         }
-                                        gatt = null // need to close gatt on device we no longer see, this will cause gatt to be null when pop connection is called since it is delayed 6 seconds
+                                        gatt.close() // need to close gatt on device we no longer see, this will cause gatt to be null when pop connection is called since it is delayed 6 seconds
                                     }
                                     //XYSmartScan.instance.refresh(gatt);
                                 } else {
@@ -616,7 +610,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
                                     } else {
                                         logError(TAG, "connTest-trying to disconnect with null currentAction", false)
                                     }
-                                    gatt = null // need to close gatt on device we no longer see, this will cause gatt to be null when pop connection is called since it is delayed 6 seconds
+                                    gatt.close() // need to close gatt on device we no longer see, this will cause gatt to be null when pop connection is called since it is delayed 6 seconds
 
                                 }
                             }
@@ -1033,7 +1027,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
             }
             logExtreme(TAG, "connTest-popConnection3")
         }
-        if (XYSmartScan.instance.legacy()) {
+        if (XYSmartScan.instance.legacy) {
             pulseOutOfRange18()
         } else {
             pulseOutOfRange21()
@@ -1122,10 +1116,11 @@ class XYDevice internal constructor(id: String) : XYBase() {
     }
 
     private fun checkTimeSinceCharged(context: Context) {
+        var device = this
         if (family == Family.Gps) {
             logExtreme(TAG, "checkTimeSinceCharged")
-            val getTimeSinceCharged = object : XYDeviceActionGetBatterySinceCharged(this) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+            val getTimeSinceCharged = object : XYDeviceActionGetBatterySinceCharged(device) {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     if (status == XYDeviceAction.STATUS_CHARACTERISTIC_READ) {
                         if (success) {
@@ -1133,7 +1128,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
                             timeSinceCharged = 0
                             for (i in 0..3) {
                                 timeSinceCharged = timeSinceCharged shl 8
-                                timeSinceCharged = timeSinceCharged xor (value[i].toLong() and 0xFF)
+                                timeSinceCharged = timeSinceCharged xor (value!![i].toLong() and 0xFF)
                             }
                             reportDetected()
                         }
@@ -1175,7 +1170,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
             if (scanRecord != null) {
                 val manufacturerData = scanResult.scanRecord!!.getManufacturerSpecificData(0x004c)
                 if (manufacturerData != null) {
-                    if (manufacturerData[21] and 0x08 == 0x08 && scanResult.rssi != outOfRangeRssi) {
+                    if (manufacturerData[21].toInt() and 0x08 == 0x08 && scanResult.rssi != outOfRangeRssi) {
                         if (family == Family.Gps || family == Family.XY4) {
                             if (_currentScanResult18 == null) {
                                 _currentScanResult18 = scanResult
@@ -1226,7 +1221,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
                 val manufacturerData = scanResult.scanRecord!!.getManufacturerSpecificData(0x004c)
 
                 if (manufacturerData != null) {
-                    if (manufacturerData[21] and 0x08 == 0x08 && scanResult.rssi != outOfRangeRssi) {
+                    if (manufacturerData[21].toInt() and 0x08 == 0x08 && scanResult.rssi != outOfRangeRssi) {
                         if (family == Family.Gps || family == Family.XY4) {
                             if (_currentScanResult21 == null) {
                                 _currentScanResult21 = scanResult
@@ -1280,6 +1275,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
     }
 
     private fun startSubscribeButton() {
+        var device = this
         if (_connectedContext == null) {
             return
         }
@@ -1292,11 +1288,11 @@ class XYDevice internal constructor(id: String) : XYBase() {
         _connectionCount++ // do not use pushConnection here because then this action will be null inside pushConnection and throw error
 
         if (family == Family.XY4) {
-            _subscribeButtonModern = object : XYDeviceActionSubscribeButtonModern(this) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+            _subscribeButtonModern = object : XYDeviceActionSubscribeButtonModern(device) {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     if (status == XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED) {
-                        val buttonValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0)!!
+                        val buttonValue = characteristic?.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0)!!
                         logExtreme(TAG, "ButtonCharacteristicUpdated:$buttonValue")
                         _buttonRecentlyPressed = true
                         if (_buttonPressedTimer != null) {
@@ -1326,11 +1322,11 @@ class XYDevice internal constructor(id: String) : XYBase() {
             }
             _subscribeButtonModern!!.start(_connectedContext!!.applicationContext)
         } else {
-            _subscribeButton = object : XYDeviceActionSubscribeButton(this) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+            _subscribeButton = object : XYDeviceActionSubscribeButton(device) {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     if (status == XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED) {
-                        val buttonValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0)!!
+                        val buttonValue = characteristic?.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0)!!
                         logExtreme(TAG, "ButtonCharacteristicUpdated:$buttonValue")
                         _buttonRecentlyPressed = true
                         _buttonRecentlyPressed = true
@@ -1717,7 +1713,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
         }
 
         fun getPrefix(family: Family): String {
-            return family2prefix[family]
+            return family2prefix[family]!!
         }
 
         fun getMajor(id: String): Int {

@@ -4,10 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 
 import com.xyfindables.sdk.XYDevice
-import com.xyfindables.sdk.action.XYDeviceActionBuzzModern
-import com.xyfindables.sdk.action.XYDeviceActionBuzz
-import com.xyfindables.sdk.action.XYDeviceActionBuzzSelect
-import com.xyfindables.sdk.action.XYDeviceActionBuzzSelectModern
+import com.xyfindables.sdk.action.*
 
 /**
  * Created by alex.mcelroy on 9/5/2017.
@@ -22,7 +19,7 @@ class XYBeep : XYActionHelper {
     constructor(device: XYDevice, callback: Callback) {
         if (device.family === XYDevice.Family.XY4) {
             action = object : XYDeviceActionBuzzModern(device, value) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     when (status) {
@@ -34,7 +31,7 @@ class XYBeep : XYActionHelper {
             }
         } else {
             action = object : XYDeviceActionBuzz(device) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     when (status) {
@@ -51,7 +48,7 @@ class XYBeep : XYActionHelper {
         if (device.family === XYDevice.Family.XY4) {
             val value = byteArrayOf(index.toByte(), 3.toByte())
             action = object : XYDeviceActionBuzzSelectModern(device, value) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     when (status) {
@@ -63,7 +60,7 @@ class XYBeep : XYActionHelper {
             }
         } else {
             action = object : XYDeviceActionBuzzSelect(device, index) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     when (status) {

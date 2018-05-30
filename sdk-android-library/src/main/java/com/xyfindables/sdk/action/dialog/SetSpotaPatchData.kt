@@ -27,34 +27,38 @@ abstract class SetSpotaPatchData(private val _device: XYDevice, private val valu
         logAction(TAG, TAG)
     }
 
-    override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+    override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
         var result = super.statusChanged(status, gatt, characteristic, success)
         when (status) {
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
                 //                if (Build.VERSION.SDK_INT >= 21) {
                 //                    gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
                 //                }
-                characteristic.value = value[counter]
+                characteristic?.value = value[counter]
                 //                Log.v(TAG, "testOta-write-hexValue = : " + counter + " : " + bytesToHex(value[counter]));
-                characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
-                if (!gatt.writeCharacteristic(characteristic)) {
-                    logError(TAG, "testOta-SetSpotaPatchData writeCharacteristic failed", false)
-                    result = true
-                } else {
-                    result = false
-                }
-            }
-            XYDeviceAction.STATUS_CHARACTERISTIC_WRITE -> {
-                counter++
-                if (counter < value.size) {
-                    characteristic.value = value[counter]
-                    //                    Log.v(TAG, "testOta-write-hexValue = : " + counter + " : " + bytesToHex(value[counter]));
-                    characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+                characteristic?.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+                if (gatt !== null) {
                     if (!gatt.writeCharacteristic(characteristic)) {
                         logError(TAG, "testOta-SetSpotaPatchData writeCharacteristic failed", false)
                         result = true
                     } else {
                         result = false
+                    }
+                }
+            }
+            XYDeviceAction.STATUS_CHARACTERISTIC_WRITE -> {
+                counter++
+                if (counter < value.size) {
+                    characteristic?.value = value[counter]
+                    //                    Log.v(TAG, "testOta-write-hexValue = : " + counter + " : " + bytesToHex(value[counter]));
+                    characteristic?.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+                    if (gatt !== null) {
+                        if (!gatt.writeCharacteristic(characteristic)) {
+                            logError(TAG, "testOta-SetSpotaPatchData writeCharacteristic failed", false)
+                            result = true
+                        } else {
+                            result = false
+                        }
                     }
                 }
             }
@@ -70,7 +74,7 @@ abstract class SetSpotaPatchData(private val _device: XYDevice, private val valu
         private fun bytesToHex(bytes: ByteArray): String {
             val hexChars = CharArray(bytes.size * 2)
             for (j in bytes.indices) {
-                val v = bytes[j] and 0xFF
+                val v = bytes[j].toInt() and 0xFF
                 hexChars[j * 2] = hexArray[v.ushr(4)]
                 hexChars[j * 2 + 1] = hexArray[v and 0x0F]
             }

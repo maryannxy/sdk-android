@@ -3,7 +3,9 @@ package com.xyfindables.sdk
 import android.annotation.TargetApi
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
 
 import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.bluetooth.ScanRecordLegacy
@@ -17,18 +19,69 @@ import java.util.concurrent.ConcurrentLinkedQueue
  */
 
 @TargetApi(18)
-class XYSmartScanLegacy internal constructor() : XYSmartScan() {
+open class XYSmartScanLegacy internal constructor() : XYSmartScan() {
 
-    private val _scanResults: ConcurrentLinkedQueue<ScanResultLegacy>
+    private var scanResults = ConcurrentLinkedQueue<ScanResultLegacy>()
 
-    private val _scanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-        _scanResults.add(ScanResultLegacy(device, ScanRecordLegacy.parseFromBytes(scanRecord), rssi, System.currentTimeMillis()))
-        _pulseCount++
+    private val scanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
+        scanResults.add(ScanResultLegacy(device, ScanRecordLegacy.parseFromBytes(scanRecord), rssi, System.currentTimeMillis()))
+        pulseCount++
     }
 
     init {
         logExtreme(TAG, TAG)
-        _scanResults = ConcurrentLinkedQueue()
+        scanResults = ConcurrentLinkedQueue()
+
+        receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                val action = intent.action
+
+                if (action == null) {
+                    XYBase.logError(TAG, "connTest-_receiver action is null!", false)
+                    return
+                }
+
+                when (action) {
+                    BluetoothAdapter.ACTION_STATE_CHANGED -> {
+                        val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
+                                BluetoothAdapter.ERROR)
+                        when (state) {
+                            BluetoothAdapter.STATE_OFF -> {
+                                XYBase.logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_OFF")
+                                setStatus(Status.BluetoothDisabled)
+                                setAllToOutOfRange()
+                            }
+                            BluetoothAdapter.STATE_TURNING_OFF -> XYBase.logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_TURNING_OFF")
+                            BluetoothAdapter.STATE_ON -> {
+                                XYBase.logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_ON")
+                                setStatus(Status.Enabled)
+                            }
+                            BluetoothAdapter.STATE_TURNING_ON -> XYBase.logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_TURNING_ON")
+                            else -> XYBase.logError(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:Unknwon State:$state", true)
+                        }
+                    }
+                    BluetoothAdapter.ACTION_SCAN_MODE_CHANGED -> {
+                        val scanMode = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE,
+                                BluetoothAdapter.ERROR)
+                        val prevScanMode = intent.getIntExtra(BluetoothAdapter.EXTRA_PREVIOUS_SCAN_MODE,
+                                BluetoothAdapter.ERROR)
+                        when (scanMode) {
+                            BluetoothAdapter.SCAN_MODE_NONE -> XYBase.logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:SCAN_MODE_NONE")
+                            BluetoothAdapter.SCAN_MODE_CONNECTABLE -> XYBase.logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:SCAN_MODE_CONNECTABLE")
+                            BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE -> XYBase.logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:SCAN_MODE_CONNECTABLE_DISCOVERABLE")
+                            else -> XYBase.logError(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:????:$scanMode", true)
+                        }
+                        when (prevScanMode) {
+                            BluetoothAdapter.SCAN_MODE_NONE -> XYBase.logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:SCAN_MODE_NONE")
+                            BluetoothAdapter.SCAN_MODE_CONNECTABLE -> XYBase.logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:SCAN_MODE_CONNECTABLE")
+                            BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE -> XYBase.logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:SCAN_MODE_CONNECTABLE_DISCOVERABLE")
+                            else -> XYBase.logError(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:????:$prevScanMode", false)
+                        }
+                    }
+                    else -> XYBase.logError(TAG, "Unknown Action:$action", false)
+                }
+            }
+        }
     }
 
     private fun processScanResult(xyId: String, scanResult: ScanResultLegacy) {
@@ -56,10 +109,10 @@ class XYSmartScanLegacy internal constructor() : XYSmartScan() {
     }
 
     private fun pumpScanResults() {
-        var result: ScanResultLegacy? = _scanResults.poll()
+        var result: ScanResultLegacy? = scanResults.poll()
         while (result != null) {
             processScanResult(result)
-            result = _scanResults.poll()
+            result = scanResults.poll()
         }
     }
 
@@ -69,7 +122,7 @@ class XYSmartScanLegacy internal constructor() : XYSmartScan() {
             return
         }
 
-        _scanCount++
+        scanCount++
 
         val bluetoothAdapter = getBluetoothManager(context.applicationContext).adapter
 
@@ -92,7 +145,7 @@ class XYSmartScanLegacy internal constructor() : XYSmartScan() {
                 logExtreme(TAG, "stopTimerTask")
                 pumpTimer.cancel()
                 if (bluetoothAdapter != null) {
-                    bluetoothAdapter.stopLeScan(_scanCallback)
+                    bluetoothAdapter.stopLeScan(scanCallback)
                     pumpScanResults()
                 }
                 notifyDevicesOfScanComplete()
@@ -103,9 +156,13 @@ class XYSmartScanLegacy internal constructor() : XYSmartScan() {
         val stopTimer = Timer()
         stopTimer.schedule(stopTimerTask, period.toLong())
 
-        bluetoothAdapter.startLeScan(_scanCallback)
+        bluetoothAdapter.startLeScan(scanCallback)
         _scanningControl.release()
         logExtreme(TAG, "scan:finish")
+    }
+
+    override fun statusChanged(status: Status) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     companion object {

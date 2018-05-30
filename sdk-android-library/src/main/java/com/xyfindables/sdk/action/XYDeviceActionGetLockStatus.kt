@@ -14,7 +14,7 @@ import java.util.UUID
 
 abstract class XYDeviceActionGetLockStatus(device: XYDevice) : XYDeviceAction(device) {
 
-    var value: String
+    var value: String? = null
 
     override val serviceId: UUID
         get() = XYDeviceService.BasicConfig
@@ -26,22 +26,28 @@ abstract class XYDeviceActionGetLockStatus(device: XYDevice) : XYDeviceAction(de
         logAction(TAG, TAG)
     }
 
-    override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+    override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
         logExtreme(TAG, "statusChanged:$status:$success")
         var result = super.statusChanged(status, gatt, characteristic, success)
         when (status) {
             XYDeviceAction.STATUS_CHARACTERISTIC_READ -> {
-                val versionBytes = characteristic.value
-                if (versionBytes.size > 0) {
-                    value = ""
-                    for (b in versionBytes) {
-                        value += String.format("%02x:", b)
+                if (characteristic !== null) {
+                    val versionBytes = characteristic!!.value
+                    if (versionBytes.size > 0) {
+                        value = ""
+                        for (b in versionBytes) {
+                            value += String.format("%02x:", b)
+                        }
                     }
                 }
             }
-            XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> if (!gatt.readCharacteristic(characteristic)) {
-                logError(TAG, "connTest-Characteristic Read Failed", false)
-                result = true
+            XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
+                if (gatt !== null) {
+                    if (!gatt.readCharacteristic(characteristic)) {
+                        logError(TAG, "connTest-Characteristic Read Failed", false)
+                        result = true
+                    }
+                }
             }
         }
         return result

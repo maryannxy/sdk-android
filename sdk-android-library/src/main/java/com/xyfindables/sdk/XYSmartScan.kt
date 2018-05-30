@@ -50,12 +50,13 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
 
     private val _devices: HashMap<String, XYDevice>
     var scanCount = 0
-        internal set
+
     var pulseCount = 0
-        internal set
 
     internal var _processedPulseCount = 0
     internal var _scansWithoutPulses = 0
+
+    internal var receiver: BroadcastReceiver? = null
 
     var currentDeviceId: Long = 0
         private set
@@ -66,57 +67,7 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
 
     private var _receiverRegistered = false
 
-    protected// occurs too often?
-    val receiver: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val action = intent.action
-
-            if (action == null) {
-                logError(TAG, "connTest-_receiver action is null!", false)
-                return
-            }
-
-            when (action) {
-                BluetoothAdapter.ACTION_STATE_CHANGED -> {
-                    val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
-                            BluetoothAdapter.ERROR)
-                    when (state) {
-                        BluetoothAdapter.STATE_OFF -> {
-                            logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_OFF")
-                            setStatus(Status.BluetoothDisabled)
-                            setAllToOutOfRange()
-                        }
-                        BluetoothAdapter.STATE_TURNING_OFF -> logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_TURNING_OFF")
-                        BluetoothAdapter.STATE_ON -> {
-                            logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_ON")
-                            setStatus(Status.Enabled)
-                        }
-                        BluetoothAdapter.STATE_TURNING_ON -> logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_TURNING_ON")
-                        else -> logError(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:Unknwon State:$state", true)
-                    }
-                }
-                BluetoothAdapter.ACTION_SCAN_MODE_CHANGED -> {
-                    val scanMode = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE,
-                            BluetoothAdapter.ERROR)
-                    val prevScanMode = intent.getIntExtra(BluetoothAdapter.EXTRA_PREVIOUS_SCAN_MODE,
-                            BluetoothAdapter.ERROR)
-                    when (scanMode) {
-                        BluetoothAdapter.SCAN_MODE_NONE -> logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:SCAN_MODE_NONE")
-                        BluetoothAdapter.SCAN_MODE_CONNECTABLE -> logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:SCAN_MODE_CONNECTABLE")
-                        BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE -> logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:SCAN_MODE_CONNECTABLE_DISCOVERABLE")
-                        else -> logError(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:????:$scanMode", true)
-                    }
-                    when (prevScanMode) {
-                        BluetoothAdapter.SCAN_MODE_NONE -> logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:SCAN_MODE_NONE")
-                        BluetoothAdapter.SCAN_MODE_CONNECTABLE -> logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:SCAN_MODE_CONNECTABLE")
-                        BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE -> logInfo(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:SCAN_MODE_CONNECTABLE_DISCOVERABLE")
-                        else -> logError(TAG, "BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:PREV:????:$prevScanMode", false)
-                    }
-                }
-                else -> logError(TAG, "Unknown Action:$action", false)
-            }
-        }
-    }
+    var legacy = true
 
     val outOfRangePulsesMissed: Int
         get() = _missedPulsesForOutOfRange
@@ -187,11 +138,7 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
         _devices = HashMap()
     }
 
-    fun legacy(): Boolean {
-        return true
-    }
-
-    private fun setAllToOutOfRange() {
+    internal fun setAllToOutOfRange() {
         try {
             if (_devicesLock.tryLock(defaultLockTimeout.toLong(), defaultLockTimeUnits)) {
                 for ((_, value) in _devices) {
@@ -309,7 +256,7 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
         val scanner = this
         _autoScanTimerTask = object : TimerTask() {
             override fun run() {
-                scanner.scan(context.applicationContext, this.period)
+                scanner.scan(context.applicationContext, period)
             }
         }
         _autoScanTimer = Timer()
@@ -447,9 +394,9 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
                     hexString.substring(20, 24) + "-" +
                     hexString.substring(24, 36)
 
-            val major = (iBeaconBytes[18] and 0xff) * 0x100 + (iBeaconBytes[19] and 0xff)
+            val major = (iBeaconBytes[18].toInt() and 0xff) * 0x100 + (iBeaconBytes[19].toInt() and 0xff)
 
-            var minor = (iBeaconBytes[20] and 0xff) * 0x100 + (iBeaconBytes[21] and 0xff)
+            var minor = (iBeaconBytes[20].toInt() and 0xff) * 0x100 + (iBeaconBytes[21].toInt() and 0xff)
 
             val family = XYDevice.uuid2family[UUID.fromString(uuid)] ?: return null
 
@@ -644,10 +591,6 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
 
     }
 
-    fun statusChanged(status: Status) {
-
-    }
-
     // endregion ============= XYDevice Listener =============
 
     fun refresh(gatt: BluetoothGatt) {
@@ -700,7 +643,7 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
         private fun bytesToHex(bytes: ByteArray): String {
             val hexChars = CharArray(bytes.size * 2)
             for (j in bytes.indices) {
-                val v = bytes[j] and 0xFF
+                val v = bytes[j].toInt() and 0xFF
                 hexChars[j * 2] = hexArray[v.ushr(4)]
                 hexChars[j * 2 + 1] = hexArray[v and 0x0F]
             }

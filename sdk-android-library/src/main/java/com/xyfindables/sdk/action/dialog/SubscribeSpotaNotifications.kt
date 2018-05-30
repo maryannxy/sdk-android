@@ -39,7 +39,7 @@ abstract class SubscribeSpotaNotifications(device: XYDevice) : XYDeviceAction(de
         }
     }
 
-    override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+    override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
         logExtreme(TAG, "statusChanged:$status:$success")
         val result = super.statusChanged(status, gatt, characteristic, success)
         when (status) {
@@ -49,21 +49,23 @@ abstract class SubscribeSpotaNotifications(device: XYDevice) : XYDeviceAction(de
             }
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
                 logExtreme(TAG, "testOta-subscribeSpotaNotifications:statusChanged:Characteristic Found")
-                if (!gatt.setCharacteristicNotification(characteristic, true)) {
-                    logError(TAG, "testOta-notifications-Characteristic Notification Failed", false)
-                    return true
-                } else {
-                    logExtreme(TAG, "testOta-notifications-Characteristic Notification Succeeded")
-                    _gatt = gatt
-                    _characteristic = characteristic
-                }
-                val descriptor = characteristic.getDescriptor(XYDeviceCharacteristic.SPOTA_DESCRIPTOR_UUID)
-                descriptor.value = byteArrayOf(0x01, 0x00)
-                if (!gatt.writeDescriptor(descriptor)) {
-                    logError(TAG, "testOta-notifications-Write Descriptor failed", false)
-                    return true
-                } else {
-                    logExtreme(TAG, "testOta-notifications-Write Descriptor succeeded")
+                if (gatt !== null) {
+                    if (!gatt.setCharacteristicNotification(characteristic, true)) {
+                        logError(TAG, "testOta-notifications-Characteristic Notification Failed", false)
+                        return true
+                    } else {
+                        logExtreme(TAG, "testOta-notifications-Characteristic Notification Succeeded")
+                        _gatt = gatt
+                        _characteristic = characteristic
+                    }
+                    val descriptor = characteristic?.getDescriptor(XYDeviceCharacteristic.SPOTA_DESCRIPTOR_UUID)
+                    descriptor?.value = byteArrayOf(0x01, 0x00)
+                    if (!gatt.writeDescriptor(descriptor)) {
+                        logError(TAG, "testOta-notifications-Write Descriptor failed", false)
+                        return true
+                    } else {
+                        logExtreme(TAG, "testOta-notifications-Write Descriptor succeeded")
+                    }
                 }
                 return false
             }

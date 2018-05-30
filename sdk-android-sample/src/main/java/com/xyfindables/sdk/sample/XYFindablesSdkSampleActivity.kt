@@ -18,7 +18,7 @@ class XYFindablesSdkSampleActivity : XYBaseActivity() {
     private var _adapter: BaseAdapter? = null
     private var _listView: ListView? = null
 
-    protected fun onCreate(savedInstanceState: Bundle) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         val crashlytics = Crashlytics()
         Fabric.with(this, crashlytics, Crashlytics())
         XYBase.init(this)
@@ -29,11 +29,11 @@ class XYFindablesSdkSampleActivity : XYBaseActivity() {
         _listView!!.adapter = _adapter
     }
 
-    protected fun onPostCreate(savedInstanceState: Bundle) {
+    override fun onPostCreate(savedInstanceState: Bundle?) {
         super.onPostCreate(savedInstanceState)
     }
 
-    protected fun onResume() {
+    override fun onResume() {
         super.onResume()
         val permissions = XYPermissions(this)
         permissions.requestPermission(android.Manifest.permission.ACCESS_FINE_LOCATION, "Location services are needed to access and track your finders.", XYPermissions.LOCATION_PERMISSIONS_REQ_CODE)

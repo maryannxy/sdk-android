@@ -3,10 +3,7 @@ package com.xyfindables.sdk.actionHelper
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import com.xyfindables.sdk.XYDevice
-import com.xyfindables.sdk.action.XYDeviceActionGetRegistration
-import com.xyfindables.sdk.action.XYDeviceActionGetRegistrationModern
-import com.xyfindables.sdk.action.XYDeviceActionSetRegistration
-import com.xyfindables.sdk.action.XYDeviceActionSetRegistrationModern
+import com.xyfindables.sdk.action.*
 
 /**
  * Created by alex.mcelroy on 9/6/2017.
@@ -21,7 +18,7 @@ class XYStayAwake : XYActionHelper {
     constructor(device: XYDevice, callback: Callback) {
         if (device.family === XYDevice.Family.XY4) {
             action = object : XYDeviceActionGetRegistrationModern(device) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     when (status) {
@@ -33,7 +30,7 @@ class XYStayAwake : XYActionHelper {
             }
         } else {
             action = object : XYDeviceActionGetRegistration(device) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     when (status) {
@@ -49,7 +46,7 @@ class XYStayAwake : XYActionHelper {
     constructor(device: XYDevice, value: Boolean, callback: Callback) {
         if (device.family === XYDevice.Family.XY4) {
             action = object : XYDeviceActionSetRegistrationModern(device, value) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     when (status) {
@@ -60,7 +57,7 @@ class XYStayAwake : XYActionHelper {
             }
         } else {
             action = object : XYDeviceActionSetRegistration(device, value) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "testOta-statusChanged:$status:$success")
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     when (status) {

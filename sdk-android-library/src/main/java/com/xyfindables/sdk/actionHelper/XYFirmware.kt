@@ -3,6 +3,7 @@ package com.xyfindables.sdk.actionHelper
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import com.xyfindables.sdk.XYDevice
+import com.xyfindables.sdk.action.XYDeviceAction
 import com.xyfindables.sdk.action.XYDeviceActionGetVersion
 import com.xyfindables.sdk.action.XYDeviceActionGetVersionModern
 
@@ -19,11 +20,11 @@ class XYFirmware(device: XYDevice, callback: Callback) : XYActionHelper() {
     init {
         if (device.family === XYDevice.Family.XY4) {
             action = object : XYDeviceActionGetVersionModern(device) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     when (status) {
-                        XYDeviceAction.STATUS_CHARACTERISTIC_READ -> callback.started(success, value)
+                        XYDeviceAction.STATUS_CHARACTERISTIC_READ -> callback.started(success, value!!)
                         XYDeviceAction.STATUS_COMPLETED -> callback.completed(success)
                     }
                     return result
@@ -31,11 +32,11 @@ class XYFirmware(device: XYDevice, callback: Callback) : XYActionHelper() {
             }
         } else {
             action = object : XYDeviceActionGetVersion(device) {
-                override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+                override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")
                     val result = super.statusChanged(status, gatt, characteristic, success)
                     when (status) {
-                        XYDeviceAction.STATUS_CHARACTERISTIC_READ -> callback.started(success, value)
+                        XYDeviceAction.STATUS_CHARACTERISTIC_READ -> callback.started(success, value!!)
                         XYDeviceAction.STATUS_COMPLETED -> callback.completed(success)
                     }
                     return result

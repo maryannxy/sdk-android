@@ -66,13 +66,13 @@ class XYDeviceAdapter(private val _activity: Activity) : BaseAdapter() {
     }
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-        var convertView = convertView
-        if (convertView == null) {
-            convertView = _activity.layoutInflater.inflate(R.layout.device_item, parent, false)
+        var view = convertView
+        if (view == null) {
+            view = _activity.layoutInflater.inflate(R.layout.device_item, parent, false)
         }
-        (convertView as XYDeviceItemView).setDevice(getItem(position) as XYDevice)
+        (view as XYDeviceItemView).setDevice(getItem(position) as XYDevice)
 
-        return convertView
+        return view
     }
 
     companion object {

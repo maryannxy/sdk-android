@@ -38,26 +38,28 @@ abstract class XYDeviceActionSubscribeButtonModern(device: XYDevice) : XYDeviceA
         }
     }
 
-    override fun statusChanged(status: Int, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, success: Boolean): Boolean {
+    override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
         logExtreme(TAG, "statusChanged:$status:$success")
         var result = super.statusChanged(status, gatt, characteristic, success)
         when (status) {
             XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED -> {
-                logExtreme(TAG, "statusChanged:Updated:" + characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0)!!)
+                logExtreme(TAG, "statusChanged:Updated:" + characteristic?.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0)!!)
                 result = false
             }
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
                 logExtreme(TAG, "statusChanged:Characteristic Found")
-                if (!gatt.setCharacteristicNotification(characteristic, true)) {
-                    logError(TAG, "connTest-Characteristic Notification Failed", false)
-                } else {
-                    _gatt = gatt
-                    _characteristic = characteristic
-                }
-                val descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG)
-                descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                if (!gatt.writeDescriptor(descriptor)) {
-                    result = true
+                if (gatt !== null) {
+                    if (!gatt.setCharacteristicNotification(characteristic, true)) {
+                        logError(TAG, "connTest-Characteristic Notification Failed", false)
+                    } else {
+                        _gatt = gatt
+                        _characteristic = characteristic
+                    }
+                    val descriptor = characteristic?.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG)
+                    descriptor?.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                    if (!gatt.writeDescriptor(descriptor)) {
+                        result = true
+                    }
                 }
             }
         }
