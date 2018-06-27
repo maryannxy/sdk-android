@@ -23,6 +23,8 @@ import com.xyfindables.sdk.action.dialog.SubscribeSpotaNotifications
 import com.xyfindables.sdk.actionHelper.XYBattery
 import com.xyfindables.sdk.actionHelper.XYFirmware
 import com.xyfindables.sdk.bluetooth.ScanResultLegacy
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.async
 
 import java.util.Comparator
 import java.util.Date
@@ -34,6 +36,7 @@ import java.util.UUID
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 
 /**
  * Created by arietrouw on 12/20/16.
@@ -1443,7 +1446,9 @@ class XYDevice internal constructor(id: String) : XYBase() {
         enterCount++
         synchronized(_listeners) {
             for ((_, value) in _listeners) {
-                value.entered(this)
+                async(CommonPool) {
+                    value.entered(this@XYDevice)
+                }
             }
         }
     }
@@ -1453,7 +1458,9 @@ class XYDevice internal constructor(id: String) : XYBase() {
         exitCount++
         synchronized(_listeners) {
             for ((_, value) in _listeners) {
-                value.exited(this)
+                async(CommonPool) {
+                    value.exited(this@XYDevice)
+                }
             }
         }
     }
@@ -1466,7 +1473,9 @@ class XYDevice internal constructor(id: String) : XYBase() {
         detectCount++
         synchronized(_listeners) {
             for ((_, value) in _listeners) {
-                value.detected(this)
+                async(CommonPool) {
+                    value.detected(this@XYDevice)
+                }
             }
         }
     }

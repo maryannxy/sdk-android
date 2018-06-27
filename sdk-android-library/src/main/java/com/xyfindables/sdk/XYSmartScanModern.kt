@@ -79,8 +79,6 @@ open class XYSmartScanModern : XYSmartScan() {
                         }
                     }
                 }
-
-                receiver?.onReceive(context, intent)
             }
         }
     }

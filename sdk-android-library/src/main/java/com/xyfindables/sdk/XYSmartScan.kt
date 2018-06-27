@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.Looper
 
 import com.xyfindables.core.XYBase
+import kotlinx.coroutines.experimental.async
 
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
@@ -445,114 +446,70 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
 
     protected abstract fun scan(context: Context, period: Int)
 
-    private class AddListenerTask : AsyncTask<Any, Void, Void>() {
-        override fun doInBackground(vararg params: Any): Void? {
-            synchronized(XYSmartScan.instance._listeners) {
-                XYSmartScan.instance._listeners.put(params[0] as String, params[1] as XYDevice.Listener)
-            }
-            return null
-        }
-    }
-
     fun addListener(key: String, listener: XYDevice.Listener) {
-        val params = arrayOfNulls<Any>(2)
-        params[0] = key
-        params[1] = listener
-        AddListenerTask().executeOnExecutor(_threadPoolListeners, *params)
-    }
-
-    private class RemoveListenerTask : AsyncTask<String, Void, Void>() {
-        override fun doInBackground(vararg params: String): Void? {
+        async {
             synchronized(XYSmartScan.instance._listeners) {
-                XYSmartScan.instance._listeners.remove(params[0])
+                XYSmartScan.instance._listeners.put(key, listener)
             }
-            return null
         }
     }
 
     fun removeListener(key: String) {
-        RemoveListenerTask().executeOnExecutor(_threadPoolListeners, key)
-    }
-
-    private class ReportEnteredTask : AsyncTask<XYDevice, Void, Void>() {
-        override fun doInBackground(vararg params: XYDevice): Void? {
+        async {
             synchronized(XYSmartScan.instance._listeners) {
-                for ((_, value) in XYSmartScan.instance._listeners) {
-                    value.entered(params[0])
-                }
+                XYSmartScan.instance._listeners.remove(key)
             }
-            return null
         }
     }
 
     private fun reportEntered(device: XYDevice) {
-        ReportEnteredTask().executeOnExecutor(_threadPoolListeners, device)
-    }
-
-    private class ReportExitedTask : AsyncTask<XYDevice, Void, Void>() {
-        override fun doInBackground(vararg params: XYDevice): Void? {
+        async {
             synchronized(XYSmartScan.instance._listeners) {
                 for ((_, value) in XYSmartScan.instance._listeners) {
-                    value.exited(params[0])
+                    value.entered(device)
                 }
             }
-            return null
         }
     }
 
     private fun reportExited(device: XYDevice) {
-        ReportExitedTask().executeOnExecutor(_threadPoolListeners, device)
-    }
-
-    private class ReportDetectedTask : AsyncTask<XYDevice, Void, Void>() {
-        override fun doInBackground(vararg params: XYDevice): Void? {
+        async {
             synchronized(XYSmartScan.instance._listeners) {
                 for ((_, value) in XYSmartScan.instance._listeners) {
-                    value.detected(params[0])
+                    value.exited(device)
                 }
             }
-            return null
         }
     }
 
     private fun reportDetected(device: XYDevice) {
-        ReportDetectedTask().executeOnExecutor(_threadPoolListeners, device)
-    }
-
-    private class ReportButtonPressedTask : AsyncTask<Any, Void, Void>() {
-        override fun doInBackground(vararg params: Any): Void? {
+        async {
             synchronized(XYSmartScan.instance._listeners) {
                 for ((_, value) in XYSmartScan.instance._listeners) {
-                    value.buttonPressed(params[0] as XYDevice, params[1] as XYDevice.ButtonType)
+                    value.detected(device)
                 }
             }
-            return null
         }
     }
 
     private fun reportButtonPressed(device: XYDevice, buttonType: XYDevice.ButtonType) {
-        val params = arrayOfNulls<Any>(2)
-        params[0] = device
-        params[1] = buttonType
-        ReportButtonPressedTask().executeOnExecutor(_threadPoolListeners, *params)
-    }
-
-    private class ReportButtonRecentlyPressedTask : AsyncTask<Any, Void, Void>() {
-        override fun doInBackground(vararg params: Any): Void? {
+        async {
             synchronized(XYSmartScan.instance._listeners) {
                 for ((_, value) in XYSmartScan.instance._listeners) {
-                    value.buttonRecentlyPressed(params[0] as XYDevice, params[1] as XYDevice.ButtonType)
+                    value.buttonPressed(device, buttonType)
                 }
             }
-            return null
         }
     }
 
     private fun reportButtonRecentlyPressed(device: XYDevice, buttonType: XYDevice.ButtonType) {
-        val params = arrayOfNulls<Any>(2)
-        params[0] = device
-        params[1] = buttonType
-        ReportButtonRecentlyPressedTask().executeOnExecutor(_threadPoolListeners, *params)
+        async {
+            synchronized(XYSmartScan.instance._listeners) {
+                for ((_, value) in XYSmartScan.instance._listeners) {
+                    value.buttonRecentlyPressed(device, buttonType)
+                }
+            }
+        }
     }
 
     // endregion ============= Listeners =============
