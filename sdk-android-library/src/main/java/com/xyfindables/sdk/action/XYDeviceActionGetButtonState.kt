@@ -36,7 +36,7 @@ abstract class XYDeviceActionGetButtonState(device: XYDevice) : XYDeviceAction(d
             }
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
                 if (gatt !== null) {
-                    if (!gatt!!.readCharacteristic(characteristic)) {
+                    if (!gatt.readCharacteristic(characteristic)) {
                         result = true
                     }
                 }

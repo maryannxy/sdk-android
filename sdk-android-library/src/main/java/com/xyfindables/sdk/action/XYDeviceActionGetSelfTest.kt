@@ -35,10 +35,8 @@ open class XYDeviceActionGetSelfTest(device: XYDevice) : XYDeviceAction(device) 
                 value = characteristic?.value
             }
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
-                if (gatt !== null) {
-                    if (!gatt!!.readCharacteristic(characteristic)) {
-                        result = true
-                    }
+                if (!gatt!!.readCharacteristic(characteristic)) {
+                    result = true
                 }
             }
         }

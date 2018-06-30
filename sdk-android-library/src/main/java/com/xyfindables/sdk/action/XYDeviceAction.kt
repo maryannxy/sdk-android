@@ -8,6 +8,8 @@ import android.os.AsyncTask
 
 import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.XYDevice
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.async
 
 import java.util.UUID
 import java.util.concurrent.LinkedBlockingQueue
@@ -30,14 +32,10 @@ abstract class XYDeviceAction(val device: XYDevice) : XYBase() {
 
     fun start(context: Context) {
         logInfo(TAG, this.javaClass.superclass.simpleName + ":starting...")
-        val asyncTask = object : AsyncTask<Void, Void, Void>() {
-            override fun doInBackground(vararg params: Void): Void? {
-                logInfo(TAG, "running...")
-                device.queueAction(context.applicationContext, this@XYDeviceAction)
-                return null
-            }
+        async (CommonPool) {
+            logInfo(TAG, "running...")
+            device.queueAction(context.applicationContext, this@XYDeviceAction)
         }
-        asyncTask.executeOnExecutor(_threadPool)
     }
 
     open fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {

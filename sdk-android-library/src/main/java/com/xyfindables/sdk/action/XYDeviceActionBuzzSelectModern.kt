@@ -25,14 +25,14 @@ abstract class XYDeviceActionBuzzSelectModern protected constructor(device: XYDe
         logAction(TAG, TAG)
     }
 
-    override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, succes: Boolean): Boolean {
-        logExtreme(TAG, "statusChanged:$status:$succes")
-        var result = super.statusChanged(status, gatt, characteristic, succes)
+    override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
+        logExtreme(TAG, "statusChanged:$status:$success")
+        var result = super.statusChanged(status, gatt, characteristic, success)
         when (status) {
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
                 characteristic?.value = _value
                 if (gatt !== null) {
-                    if (!gatt!!.writeCharacteristic(characteristic)) {
+                    if (!gatt.writeCharacteristic(characteristic)) {
                         logError(TAG, "testSoundConfig-writeCharacteristic failed", false)
                         result = true
                     }

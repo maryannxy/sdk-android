@@ -84,21 +84,15 @@ open class XYSmartScanModern : XYSmartScan() {
     }
 
     @TargetApi(21)
-    private fun getSettings21(adapter: BluetoothAdapter): Any {
+    private fun getSettings21(): Any {
         var builder = android.bluetooth.le.ScanSettings.Builder()
-        /*if (adapter.isOffloadedScanBatchingSupported()) {
-            builder = builder.setReportDelay(150);
-        }*/
         builder = builder.setScanMode(android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY)
         return builder.build()
     }
 
     @TargetApi(23)
-    private fun getSettings23(adapter: BluetoothAdapter): Any {
+    private fun getSettings23(): Any {
         var builder = android.bluetooth.le.ScanSettings.Builder()
-        /*if (adapter.isOffloadedScanBatchingSupported()) {
-            builder = builder.setReportDelay(150);
-        }*/
         builder = builder.setScanMode(android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY)
         return builder.build()
     }
@@ -120,9 +114,9 @@ open class XYSmartScanModern : XYSmartScan() {
         }
 
         if (Build.VERSION.SDK_INT >= 23) {
-            settings = getSettings23(bluetoothAdapter)
+            settings = getSettings23()
         } else {
-            settings = getSettings21(bluetoothAdapter)
+            settings = getSettings21()
         }
 
         val scanCallback = object : android.bluetooth.le.ScanCallback() {
@@ -204,15 +198,16 @@ open class XYSmartScanModern : XYSmartScan() {
                 logInfo(TAG, "stopTimerTask")
                 pumpTimer.cancel()
                 try {
-                    if (scanner != null) {
-                        scanner.stopScan(scanCallback)
-                        scanner.flushPendingScanResults(scanCallback)
-                    }
+                    scanner.stopScan(scanCallback)
+                    scanner.flushPendingScanResults(scanCallback)
                 } catch (ex: IllegalStateException) {
                     //this happens if the bt adapter was turned off after previous check
                     //effectivly, we treat it as no scan results found
+                    logError(ex.toString(), false)
                 } catch (ex: NullPointerException) {
+                    logError(ex.toString(), false)
                 } catch (ex: ConcurrentModificationException) {
+                    logError(ex.toString(), false)
                 }
 
                 pumpScanResults21()

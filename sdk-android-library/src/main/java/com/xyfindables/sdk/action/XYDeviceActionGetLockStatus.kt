@@ -31,22 +31,18 @@ abstract class XYDeviceActionGetLockStatus(device: XYDevice) : XYDeviceAction(de
         var result = super.statusChanged(status, gatt, characteristic, success)
         when (status) {
             XYDeviceAction.STATUS_CHARACTERISTIC_READ -> {
-                if (characteristic !== null) {
-                    val versionBytes = characteristic!!.value
-                    if (versionBytes.size > 0) {
-                        value = ""
-                        for (b in versionBytes) {
-                            value += String.format("%02x:", b)
-                        }
+                val versionBytes = characteristic!!.value
+                if (versionBytes.size > 0) {
+                    value = ""
+                    for (b in versionBytes) {
+                        value += String.format("%02x:", b)
                     }
                 }
             }
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
-                if (gatt !== null) {
-                    if (!gatt.readCharacteristic(characteristic)) {
-                        logError(TAG, "connTest-Characteristic Read Failed", false)
-                        result = true
-                    }
+                if (!gatt!!.readCharacteristic(characteristic)) {
+                    logError(TAG, "connTest-Characteristic Read Failed", false)
+                    result = true
                 }
             }
         }

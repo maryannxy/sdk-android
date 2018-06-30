@@ -34,9 +34,7 @@ abstract class XYDeviceActionOtaWrite(private val _device: XYDevice, var value: 
                 _device.otaMode(true)
                 logExtreme(TAG, "testOta-found: " + counter + " : " + success + ": length: " + value.size)
                 characteristic?.value = value[counter]
-                if (gatt !== null) {
-                    gatt!!.writeCharacteristic(characteristic)
-                }
+                gatt!!.writeCharacteristic(characteristic)
                 logExtreme(TAG, "testOta-value = " + bytesToHex(value[counter]))
             }
             XYDeviceAction.STATUS_CHARACTERISTIC_WRITE -> {
@@ -44,9 +42,7 @@ abstract class XYDeviceActionOtaWrite(private val _device: XYDevice, var value: 
                 if (counter < value.size) {
                     logExtreme(TAG, "testOta-write: $counter : $success")
                     characteristic?.value = value[counter]
-                    if (gatt !== null) {
-                        gatt!!.writeCharacteristic(characteristic)
-                    }
+                    gatt!!.writeCharacteristic(characteristic)
                     logExtreme(TAG, "testOta-value = " + bytesToHex(value[counter]))
                     result = false
                 } else {

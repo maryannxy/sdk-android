@@ -35,7 +35,7 @@ abstract class XYDeviceActionGetAccelerometerTimeout(device: XYDevice) : XYDevic
             }
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
                 if (gatt != null) {
-                    if (!gatt!!.readCharacteristic(characteristic)) {
+                    if (!gatt.readCharacteristic(characteristic)) {
                         logError(TAG, "connTest-Characteristic Read Failed", false)
                         result = true
                     }

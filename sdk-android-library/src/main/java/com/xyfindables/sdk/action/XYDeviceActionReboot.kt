@@ -31,10 +31,8 @@ abstract class XYDeviceActionReboot(device: XYDevice, var value: Int) : XYDevice
         when (status) {
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
                 characteristic?.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT8, 0)
-                if (gatt !== null) {
-                    if (!gatt!!.writeCharacteristic(characteristic)) {
-                        result = true
-                    }
+                if (!gatt!!.writeCharacteristic(characteristic)) {
+                    result = true
                 }
                 logExtreme(TAG, "testOta-rebootFound: $success")
             }

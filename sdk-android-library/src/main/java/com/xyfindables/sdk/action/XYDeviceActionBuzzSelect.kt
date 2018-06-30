@@ -32,7 +32,7 @@ abstract class XYDeviceActionBuzzSelect protected constructor(device: XYDevice, 
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
                 characteristic?.setValue(_index, BluetoothGattCharacteristic.FORMAT_UINT8, 0)
                 if (gatt !== null) {
-                    if (!gatt!!.writeCharacteristic(characteristic)) {
+                    if (!gatt.writeCharacteristic(characteristic)) {
                         result = true
                     }
                 }

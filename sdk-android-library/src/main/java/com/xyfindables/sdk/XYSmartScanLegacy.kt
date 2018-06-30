@@ -144,10 +144,10 @@ open class XYSmartScanLegacy internal constructor() : XYSmartScan() {
             override fun run() {
                 logExtreme(TAG, "stopTimerTask")
                 pumpTimer.cancel()
-                if (bluetoothAdapter != null) {
-                    bluetoothAdapter.stopLeScan(scanCallback)
-                    pumpScanResults()
-                }
+
+                bluetoothAdapter.stopLeScan(scanCallback)
+                pumpScanResults()
+
                 notifyDevicesOfScanComplete()
                 dump(context.applicationContext)
             }

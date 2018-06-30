@@ -34,11 +34,9 @@ abstract class XYDeviceActionGetAccelerometerMovementCount(device: XYDevice) : X
                 value = characteristic?.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0)!!
             }
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
-                if (gatt !== null) {
-                    if (!gatt!!.readCharacteristic(characteristic)) {
-                        logError(TAG, "connTest-Characteristic Read Failed", false)
-                        result = true
-                    }
+                if (!gatt!!.readCharacteristic(characteristic)) {
+                    logError(TAG, "connTest-Characteristic Read Failed", false)
+                    result = true
                 }
             }
         }

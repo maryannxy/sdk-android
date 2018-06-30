@@ -79,7 +79,8 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
             _missedPulsesForOutOfRange = value
         }
 
-    val currentDevice: XYDevice?
+    //the device we are running on
+    val hostDevice: XYDevice?
         get() {
             val id = XYDevice.buildId(XYDevice.Family.Mobile, (currentDeviceId and 0xffff0000L shr 16).toInt(), (currentDeviceId and 0xffff).toInt())
             return if (id == null) {
@@ -88,9 +89,6 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
                 deviceFromId(id)
             }
         }
-
-    val deviceCount: Int
-        get() = _devices.size
 
     val devices: List<XYDevice>?
         get() {
@@ -199,14 +197,13 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
         bluetoothAdapter.enable()
     }
 
-    fun deviceFromId(id: String?): XYDevice? {
-        var id = id
-        if (id == null || id.isEmpty()) {
+    fun deviceFromId(id: String): XYDevice? {
+        if (id.isEmpty()) {
             XYBase.logError(TAG, "Tried to get a null device", true)
             return null
         }
 
-        id = id.toLowerCase()
+        val lowerId = id.toLowerCase()
 
         var device: XYDevice?
         try {
@@ -223,10 +220,10 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
         }
 
         if (device == null) {
-            device = XYDevice(id)
+            device = XYDevice(lowerId)
             try {
                 if (_devicesLock.tryLock(defaultLockTimeout.toLong(), defaultLockTimeUnits)) {
-                    _devices[id] = device
+                    _devices[lowerId] = device
                     _devicesLock.unlock()
                 } else {
                     logError(TAG, "deviceFromId failed due to lock (put):" + _devicesLock.holdCount, true)
@@ -303,12 +300,10 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
     }
 
     fun areLocationServicesAvailable(context: Context): Boolean {
-        val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-        if (lm == null) {
-            logError(TAG, "connTest-lm = null!")
-            return false
-        }
+        var result = false
+
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         val gps_enabled: Boolean
         val network_enabled: Boolean
@@ -318,22 +313,13 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
         network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
 
         if (gps_enabled && network_enabled) {
-            logInfo(TAG, "returning 3")
             setStatus(Status.None)
-            return true
-        } else if (gps_enabled) {
-            logInfo(TAG, "returning 2")
-            setStatus(Status.LocationDisabled)
-            return false
-        } else if (network_enabled) {
-            logInfo(TAG, "returning 1")
-            setStatus(Status.LocationDisabled)
-            return false
+            result = true
         } else {
-            logInfo(TAG, "returning 0")
             setStatus(Status.LocationDisabled)
-            return false
         }
+        logInfo(TAG, "areLocationServicesAvailable: $result")
+        return result
     }
 
     fun getStatus(context: Context, refresh: Boolean): Status {
@@ -609,7 +595,6 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
 
         fun isLocationAvailable(context: Context): Boolean {
             val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                    ?: return false
 
             val gps_enabled: Boolean
             val network_enabled: Boolean

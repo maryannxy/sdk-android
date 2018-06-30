@@ -32,10 +32,8 @@ abstract class XYDeviceActionSetColor(device: XYDevice, var value: ByteArray) : 
         when (status) {
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
                 characteristic?.value = value
-                if (gatt !== null) {
-                    if (!gatt!!.writeCharacteristic(characteristic)) {
-                        result = true
-                    }
+                if (!gatt!!.writeCharacteristic(characteristic)) {
+                    result = true
                 }
             }
         }

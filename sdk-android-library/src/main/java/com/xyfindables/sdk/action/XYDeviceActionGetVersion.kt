@@ -31,24 +31,20 @@ abstract class XYDeviceActionGetVersion(device: XYDevice) : XYDeviceAction(devic
         var result = super.statusChanged(status, gatt, characteristic, success)
         when (status) {
             XYDeviceAction.STATUS_CHARACTERISTIC_READ -> {
-                if (characteristic !== null) {
-                    val versionBytes = characteristic!!.value
-                    if (versionBytes.size > 0) {
-                        value = ""
-                        for (b in versionBytes) {
-                            value += String.format("%x", b)
-                        }
-                        val intValue = java.lang.Long.parseLong(value, 16)
-                        value = intValue.toString()
+                val versionBytes = characteristic!!.value
+                if (versionBytes.size > 0) {
+                    value = ""
+                    for (b in versionBytes) {
+                        value += String.format("%x", b)
                     }
+                    val intValue = java.lang.Long.parseLong(value, 16)
+                    value = intValue.toString()
                 }
             }
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
-                if (gatt !== null) {
-                    if (!gatt!!.readCharacteristic(characteristic)) {
-                        logError(TAG, "connTest-Characteristic Read Failed", false)
-                        result = true
-                    }
+                if (!gatt!!.readCharacteristic(characteristic)) {
+                    logError(TAG, "connTest-Characteristic Read Failed", false)
+                    result = true
                 }
             }
         }

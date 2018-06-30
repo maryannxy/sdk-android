@@ -35,10 +35,8 @@ abstract class XYDeviceActionGetRegistrationModern(device: XYDevice) : XYDeviceA
                 value = characteristic?.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0) != 0
             }
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
-                if (gatt !== null) {
-                    if (!gatt!!.readCharacteristic(characteristic)) {
-                        result = true
-                    }
+                if (!gatt!!.readCharacteristic(characteristic)) {
+                    result = true
                 }
             }
         }

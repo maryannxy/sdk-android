@@ -31,10 +31,8 @@ abstract class XYDeviceActionSetAdvertisingConfig(device: XYDevice, var value: B
         when (status) {
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
                 characteristic?.value = value
-                if (gatt !== null) {
-                    if (!gatt!!.writeCharacteristic(characteristic)) {
-                        result = true
-                    }
+                if (!gatt!!.writeCharacteristic(characteristic)) {
+                    result = true
                 }
             }
         }

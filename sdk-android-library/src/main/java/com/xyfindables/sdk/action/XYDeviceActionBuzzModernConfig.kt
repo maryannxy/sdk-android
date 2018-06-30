@@ -33,38 +33,35 @@ open class XYDeviceActionBuzzModernConfig protected constructor(device: XYDevice
         when (status) {
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
                 logExtreme(TAG, "testSoundConfig: found: $success")
-                var slotPlusOffset = byteArrayOf(value[0], 0.toByte())
-                var slice = Arrays.copyOfRange(value, 1, 19)
-                var packet = ByteArray(slotPlusOffset.size + slice.size)
+                val slotPlusOffset = byteArrayOf(value[0], 0.toByte())
+                val slice = Arrays.copyOfRange(value, 1, 19)
+                val packet = ByteArray(slotPlusOffset.size + slice.size)
                 System.arraycopy(slotPlusOffset, 0, packet, 0, slotPlusOffset.size)
                 System.arraycopy(slice, 0, packet, slotPlusOffset.size, slice.size)
                 characteristic?.value = packet
-                if (gatt != null) {
-                    if (!gatt!!.writeCharacteristic(characteristic)) {
-                        result = true
-                    }
+
+                if (!gatt!!.writeCharacteristic(characteristic)) {
+                    result = true
                 }
             }
             XYDeviceAction.STATUS_CHARACTERISTIC_WRITE -> {
                 counter++
                 logExtreme(TAG, "testSoundConfig: write: " + success + "counter: " + counter)
-                var slotPlusOffset = byteArrayOf(value[0], (counter * 9).toByte())
+                val slotPlusOffset = byteArrayOf(value[0], (counter * 9).toByte())
                 var slice = Arrays.copyOfRange(value, counter * 18 + 1, counter * 18 + 19)
                 if (counter == 14) {
                     slice = Arrays.copyOfRange(value, 256, 257)
                 }
-                var packet = ByteArray(slotPlusOffset.size + slice.size)
+                val packet = ByteArray(slotPlusOffset.size + slice.size)
                 System.arraycopy(slotPlusOffset, 0, packet, 0, slotPlusOffset.size)
                 System.arraycopy(slice, 0, packet, slotPlusOffset.size, slice.size)
                 characteristic?.setValue(packet)
 
                 result = counter == 14
 
-                if (gatt !== null) {
-                    if (!gatt!!.writeCharacteristic(characteristic)) {
-                        logError(TAG, "testSoundConfig-writeCharacteristic failed", false)
-                        result = true
-                    }
+                if (!gatt!!.writeCharacteristic(characteristic)) {
+                    logError(TAG, "testSoundConfig-writeCharacteristic failed", false)
+                    result = true
                 }
             }
         }

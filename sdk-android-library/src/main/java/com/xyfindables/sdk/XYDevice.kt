@@ -174,13 +174,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
     // this could cause ui "searching" because rssi = 0 when no values returning
     val distance: Double
         get() {
-            var tx = txPowerLevel
-
-            if (family == Family.XY4) {
-                tx = -60
-            } else {
-                tx = -60
-            }
+            val tx = -60
 
             val rssi = rssi.toDouble()
 
@@ -188,15 +182,11 @@ class XYDevice internal constructor(id: String) : XYBase() {
                 return -2.0
             }
 
-            if (tx == 0 || rssi == 0.0) {
-                return -1.0
+            val ratio = rssi * 1.0 / tx
+            return if (ratio < 1.0) {
+                Math.pow(ratio, 10.0)
             } else {
-                val ratio = rssi * 1.0 / tx
-                return if (ratio < 1.0) {
-                    Math.pow(ratio, 10.0)
-                } else {
-                    0.89976 * Math.pow(ratio, 7.7095) + 0.111
-                }
+                0.89976 * Math.pow(ratio, 7.7095) + 0.111
             }
         }
 
@@ -527,7 +517,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
         return null
     }
 
-    fun queueAction(context: Context, action: XYDeviceAction, timeout: Int): AsyncTask<*, *, *> {
+    fun queueAction(context: Context, action: XYDeviceAction, timeout: Int) {
 
         if (BuildConfig.DEBUG) {
             logExtreme(TAG, "connTest-queueAction-action = " + action.javaClass.superclass.simpleName)
@@ -539,316 +529,311 @@ class XYDevice internal constructor(id: String) : XYBase() {
 
         actionQueueCount++
 
-        val asyncTask = object : AsyncTask<Void, Void, Void>() {
+        async(CommonPool) {
 
-            override fun doInBackground(vararg params: Void): Void? {
+            if (bluetoothDevice == null) {
+                logError(TAG, "connTest-getBluetoothDevice() == null", false)
+                // need to complete action here
+                action.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, false)
+                return@async
+            }
 
-                if (bluetoothDevice == null) {
-                    logError(TAG, "connTest-getBluetoothDevice() == null", false)
-                    // need to complete action here
-                    action.statusChanged(XYDeviceAction.STATUS_COMPLETED, null, null, false)
-                    return null
+            XYBase.logInfo(TAG, "connTest-connect[$id]:$_connectionCount")
+            val actionLock = startActionFrame(action)
+            if (actionLock == 0) {
+                val currentAction = _currentAction
+                closeGatt()
+                XYBase.logExtreme(TAG, "connTest-closeGatt2")
+                if (currentAction != null) {
+                    logError(TAG, "connTest-statusChanged:failed to get actionLock", false)
+                    endActionFrame(currentAction, false)
                 }
+                return@async
+            }
 
-                XYBase.logInfo(TAG, "connTest-connect[$id]:$_connectionCount")
-                val actionLock = startActionFrame(action)
-                if (actionLock == 0) {
-                    val currentAction = _currentAction
-                    closeGatt()
-                    XYBase.logExtreme(TAG, "connTest-closeGatt2")
-                    if (currentAction != null) {
-                        logError(TAG, "connTest-statusChanged:failed to get actionLock", false)
-                        endActionFrame(currentAction, false)
-                    }
-                    return null
-                }
+            val callback = object : BluetoothGattCallback() {
+                override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+                    super.onConnectionStateChange(gatt, status, newState)
 
-                val callback = object : BluetoothGattCallback() {
-                    override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-                        super.onConnectionStateChange(gatt, status, newState)
-
-                        XYBase.logInfo(TAG, "connTest-onConnectionStateChange:$status:$newState:$id")
-                        when (newState) {
-                            BluetoothGatt.STATE_CONNECTED -> {
-                                isConnected = true
-                                logExtreme(TAG, "connTest-STATE_CONNECTED status is $status")
-                                logExtreme(TAG, "connTest-_connectIntent = $_connectIntent")
-                                //                                _connectIntent = false;
-                                logInfo(TAG, "onConnectionStateChange:Connected: " + id!!)
-                                reportConnectionStateChanged(STATE_CONNECTED)
-                                // call gatt.discoverServices() in ui thread?
-                                gatt.discoverServices()
-                                logExtreme(TAG, "connTest-discoverServices called in STATE_CONNECTED")
-                            }
-                            BluetoothGatt.STATE_DISCONNECTED -> {
-                                logInfo(TAG, "connTest-onConnectionStateChange:Disconnected: " + id!!)
-                                if (status == 133) {
-                                    if (!_connectIntent) {
-                                        isConnected = false
-                                    }
-                                    // 133 may disconnect device -> in this case stayConnected can leave us with surplus connectionCount and no way to re-subscribe to button
-                                    //                                    stayConnected(null, false); // hacky?
-                                    /* Ignoring the 133 seems to keep the connection alive.
-                                    No idea why, but it does on Android 5.1 */
-                                    logError(TAG, "connTest-Disconnect with 133", false)
-                                    if (!_isInOtaMode && !_connectIntent /*&& (_connectionCount <= 1)*/) {
-                                        reportConnectionStateChanged(STATE_DISCONNECTED)
-                                        //popConnection();  //hacky?
-                                        logError(TAG, "connTest-disconnect inside 133", false)
-                                        val currentAction = _currentAction
-                                        if (currentAction != null) {
-                                            endActionFrame(currentAction, false)
-                                        } else {
-                                            logError(TAG, "connTest-trying to disconnect inside 133 with null currentAction", false)
-                                        }
-                                        gatt.close() // need to close gatt on device we no longer see, this will cause gatt to be null when pop connection is called since it is delayed 6 seconds
-                                    }
-                                    //XYSmartScan.instance.refresh(gatt);
-                                } else {
+                    XYBase.logInfo(TAG, "connTest-onConnectionStateChange:$status:$newState:$id")
+                    when (newState) {
+                        BluetoothGatt.STATE_CONNECTED -> {
+                            isConnected = true
+                            logExtreme(TAG, "connTest-STATE_CONNECTED status is $status")
+                            logExtreme(TAG, "connTest-_connectIntent = $_connectIntent")
+                            //                                _connectIntent = false;
+                            logInfo(TAG, "onConnectionStateChange:Connected: " + id!!)
+                            reportConnectionStateChanged(STATE_CONNECTED)
+                            // call gatt.discoverServices() in ui thread?
+                            gatt.discoverServices()
+                            logExtreme(TAG, "connTest-discoverServices called in STATE_CONNECTED")
+                        }
+                        BluetoothGatt.STATE_DISCONNECTED -> {
+                            logInfo(TAG, "connTest-onConnectionStateChange:Disconnected: " + id!!)
+                            if (status == 133) {
+                                if (!_connectIntent) {
                                     isConnected = false
-                                    reportConnectionStateChanged(STATE_DISCONNECTED)  // redundant bc called inside closeGatt inside endActionFrame as well? Just add inside gatt!=null ?
+                                }
+                                // 133 may disconnect device -> in this case stayConnected can leave us with surplus connectionCount and no way to re-subscribe to button
+                                //                                    stayConnected(null, false); // hacky?
+                                /* Ignoring the 133 seems to keep the connection alive.
+                                No idea why, but it does on Android 5.1 */
+                                logError(TAG, "connTest-Disconnect with 133", false)
+                                if (!_isInOtaMode && !_connectIntent /*&& (_connectionCount <= 1)*/) {
+                                    reportConnectionStateChanged(STATE_DISCONNECTED)
+                                    //popConnection();  //hacky?
+                                    logError(TAG, "connTest-disconnect inside 133", false)
                                     val currentAction = _currentAction
                                     if (currentAction != null) {
                                         endActionFrame(currentAction, false)
                                     } else {
-                                        logError(TAG, "connTest-trying to disconnect with null currentAction", false)
+                                        logError(TAG, "connTest-trying to disconnect inside 133 with null currentAction", false)
                                     }
                                     gatt.close() // need to close gatt on device we no longer see, this will cause gatt to be null when pop connection is called since it is delayed 6 seconds
-
                                 }
-                            }
-                            BluetoothGatt.STATE_DISCONNECTING -> {
-                                logInfo(TAG, "onConnectionStateChange:Disconnecting: " + id!!)
-                                reportConnectionStateChanged(STATE_DISCONNECTING)
-                            }
-                            else -> {
-                                logError(TAG, "onConnectionStateChange:Unknown State: $newState:$id", false)
+                                //XYSmartScan.instance.refresh(gatt);
+                            } else {
+                                isConnected = false
+                                reportConnectionStateChanged(STATE_DISCONNECTED)  // redundant bc called inside closeGatt inside endActionFrame as well? Just add inside gatt!=null ?
                                 val currentAction = _currentAction
-                                closeGatt()
-                                logExtreme(TAG, "connTest-closeGatt4")
                                 if (currentAction != null) {
-                                    logError(TAG, "statusChanged:unknown", false)
                                     endActionFrame(currentAction, false)
+                                } else {
+                                    logError(TAG, "connTest-trying to disconnect with null currentAction", false)
                                 }
+                                gatt.close() // need to close gatt on device we no longer see, this will cause gatt to be null when pop connection is called since it is delayed 6 seconds
+
                             }
                         }
-                        if (status != BluetoothGatt.GATT_SUCCESS) {
-                            logError(TAG, "connTest-Bad Status: $status", false)
-                            XYSmartScan.instance.setStatus(XYSmartScan.Status.BluetoothUnstable)
-                            /*XYDeviceAction currentAction = _currentAction;
+                        BluetoothGatt.STATE_DISCONNECTING -> {
+                            logInfo(TAG, "onConnectionStateChange:Disconnecting: " + id!!)
+                            reportConnectionStateChanged(STATE_DISCONNECTING)
+                        }
+                        else -> {
+                            logError(TAG, "onConnectionStateChange:Unknown State: $newState:$id", false)
+                            val currentAction = _currentAction
+                            closeGatt()
+                            logExtreme(TAG, "connTest-closeGatt4")
                             if (currentAction != null) {
-                                logError(TAG, "statusChanged:badstatus:" + status, false);
-                                endActionFrame(currentAction, false);
-                            }*/
+                                logError(TAG, "statusChanged:unknown", false)
+                                endActionFrame(currentAction, false)
+                            }
                         }
                     }
-
-                    override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-
-                        super.onServicesDiscovered(gatt, status)
-
-                        val currentAction = _currentAction
-                        XYBase.logExtreme(TAG, "connTest-onServicesDiscovered")
+                    if (status != BluetoothGatt.GATT_SUCCESS) {
+                        logError(TAG, "connTest-Bad Status: $status", false)
+                        XYSmartScan.instance.setStatus(XYSmartScan.Status.BluetoothUnstable)
+                        /*XYDeviceAction currentAction = _currentAction;
                         if (currentAction != null) {
-                            if (status == BluetoothGatt.GATT_SUCCESS) {
-                                logInfo(TAG, "connTest-onServicesDiscovered:$status")
-                                currentAction.statusChanged(XYDeviceAction.STATUS_SERVICE_FOUND, gatt, null, true)
-                                // concurrent mod ex on many devices with below line
-                                val service = gatt.getService(currentAction.serviceId)
-                                if (service != null) {
-                                    val characteristic = service.getCharacteristic(currentAction.characteristicId)
-                                    logExtreme(TAG, "connTest-onServicesDiscovered-service not null")
-                                    if (characteristic != null) {
-                                        if (currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_FOUND, gatt, characteristic, true)) {
-                                            logExtreme(TAG, "connTest-onServicesDiscovered-characteristic not null")
-                                            endActionFrame(currentAction, false)
-                                        } else {
-                                            logExtreme(TAG, "connTest-do nothing") // herein lies the issue- something in endActionFrame is triggering 133-timing? executing actions too close together?
-                                        }
-                                    } else {
-                                        logError(TAG, "connTest-statusChanged:characteristic null", false) // this happens a decent amount. What is causing this?
+                            logError(TAG, "statusChanged:badstatus:" + status, false);
+                            endActionFrame(currentAction, false);
+                        }*/
+                    }
+                }
+
+                override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+
+                    super.onServicesDiscovered(gatt, status)
+
+                    val currentAction = _currentAction
+                    XYBase.logExtreme(TAG, "connTest-onServicesDiscovered")
+                    if (currentAction != null) {
+                        if (status == BluetoothGatt.GATT_SUCCESS) {
+                            logInfo(TAG, "connTest-onServicesDiscovered:$status")
+                            currentAction.statusChanged(XYDeviceAction.STATUS_SERVICE_FOUND, gatt, null, true)
+                            // concurrent mod ex on many devices with below line
+                            val service = gatt.getService(currentAction.serviceId)
+                            if (service != null) {
+                                val characteristic = service.getCharacteristic(currentAction.characteristicId)
+                                logExtreme(TAG, "connTest-onServicesDiscovered-service not null")
+                                if (characteristic != null) {
+                                    if (currentAction.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_FOUND, gatt, characteristic, true)) {
+                                        logExtreme(TAG, "connTest-onServicesDiscovered-characteristic not null")
                                         endActionFrame(currentAction, false)
+                                    } else {
+                                        logExtreme(TAG, "connTest-do nothing") // herein lies the issue- something in endActionFrame is triggering 133-timing? executing actions too close together?
                                     }
                                 } else {
-                                    logError(TAG, "connTest-statusChanged:service null, gatt = $gatt currentAction = $currentAction", false) // this happens a decent amount. What is causing this?
+                                    logError(TAG, "connTest-statusChanged:characteristic null", false) // this happens a decent amount. What is causing this?
                                     endActionFrame(currentAction, false)
                                 }
                             } else {
-                                logError(TAG, "connTest-statusChanged:onServicesDiscovered Failed: $status", true)
+                                logError(TAG, "connTest-statusChanged:service null, gatt = $gatt currentAction = $currentAction", false) // this happens a decent amount. What is causing this?
                                 endActionFrame(currentAction, false)
                             }
                         } else {
-                            logError(TAG, "connTest-null _currentAction", true)
+                            logError(TAG, "connTest-statusChanged:onServicesDiscovered Failed: $status", true)
+                            endActionFrame(currentAction, false)
                         }
+                    } else {
+                        logError(TAG, "connTest-null _currentAction", true)
                     }
-
-                    override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
-                        super.onCharacteristicRead(gatt, characteristic, status)
-
-                        if (status == BluetoothGatt.GATT_SUCCESS) {
-                            logInfo(TAG, "onCharacteristicRead:$status")
-                            if (_currentAction != null && _currentAction!!.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_READ, gatt, characteristic, true)) {
-                                endActionFrame(_currentAction, true)
-                            }
-                        } else {
-                            logError(TAG, "onCharacteristicRead Failed: $status", false)
-                            endActionFrame(_currentAction, false)
-                        }
-                    }
-
-                    override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
-                        super.onCharacteristicWrite(gatt, characteristic, status)
-
-                        if (status == BluetoothGatt.GATT_SUCCESS) {
-                            logInfo(TAG, "onCharacteristicWrite:$status")
-                            if (_currentAction != null && _currentAction!!.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, characteristic, true)) {
-                                endActionFrame(_currentAction, true)
-                            }
-                        } else {
-                            logError(TAG, "onCharacteristicWrite Failed: $status", false)
-                            endActionFrame(_currentAction, false)
-                        }
-                    }
-
-                    override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
-                        super.onCharacteristicChanged(gatt, characteristic)
-
-                        logInfo(TAG, "onCharacteristicChanged")
-                        if (_subscribeButton != null && !_isInOtaMode) {
-                            _subscribeButton!!.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED, gatt, characteristic, true)
-                        }
-                        if (_subscribeButtonModern != null && !_isInOtaMode) {
-                            _subscribeButtonModern!!.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED, gatt, characteristic, true)
-                        }
-                        if (spotaNotifications != null && _isInOtaMode) {
-                            spotaNotifications!!.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED, gatt, characteristic, true)
-                        }
-                    }
-
-                    override fun onDescriptorRead(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
-                        super.onDescriptorRead(gatt, descriptor, status)
-
-                        logInfo(TAG, "onDescriptorRead:$status")
-                    }
-
-                    override fun onDescriptorWrite(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
-                        super.onDescriptorWrite(gatt, descriptor, status)
-
-                        if (status == BluetoothGatt.GATT_SUCCESS) {
-                            logInfo(TAG, "onDescriptorWrite:$status")
-                            if (_currentAction != null && _currentAction!!.statusChanged(descriptor, XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, true)) {
-                                endActionFrame(_currentAction, true)
-                            }
-                        } else {
-                            logError(TAG, "onDescriptorWrite Failed: $status", false)
-                            endActionFrame(_currentAction, false)
-                        }
-                        logInfo(TAG, "onDescriptorWrite: $descriptor : status = $status")
-                    }
-
-                    override fun onReliableWriteCompleted(gatt: BluetoothGatt, status: Int) {
-                        super.onReliableWriteCompleted(gatt, status)
-
-                        logInfo(TAG, "onReliableWriteCompleted:$status")
-                    }
-
-                    override fun onReadRemoteRssi(gatt: BluetoothGatt, rssi: Int, status: Int) {
-                        super.onReadRemoteRssi(gatt, rssi, status)
-
-                        logExtreme(TAG, "testRssi-onReadRemoteRssi rssi = $rssi")
-                        _rssi = rssi
-                        reportReadRemoteRssi(rssi)
-                    }
-
-                    override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
-                        super.onMtuChanged(gatt, mtu, status)
-
-                        logInfo(TAG, "onMtuChanged:$status")
-                    }
-
                 }
-                if (gatt == null) {
-                    //stopping the scan and running the connect in ui thread required for 4.x
-                    XYSmartScan.instance.pauseAutoScan(true)
-                    logExtreme(TAG, "connTest-pauseAutoScan(true)")
 
-                    try {
-                        XYBase.logInfo(TAG, "connTest-_bleAccess acquiring[" + id + "]:" + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + id)
-                        if (_bleAccess.tryAcquire(10, TimeUnit.SECONDS)) {
-                            XYBase.logInfo(TAG, "connTest_bleAccess acquired[" + id + "]: " + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + id)
-                            // below is commented out to prevent release being called in UI
-                            //stopping the scan and running the connect in ui thread required for 4.x - also required for Samsung Galaxy s7 7.0- and likely other phones as well
+                override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+                    super.onCharacteristicRead(gatt, characteristic, status)
 
-                            val handler = Handler(context.applicationContext.mainLooper)
-                            handler.post {
-                                val bluetoothDevice = bluetoothDevice
-                                if (bluetoothDevice == null) {
-                                    logError(TAG, "connTest-No Bluetooth Adapter!", false)
+                    if (status == BluetoothGatt.GATT_SUCCESS) {
+                        logInfo(TAG, "onCharacteristicRead:$status")
+                        if (_currentAction != null && _currentAction!!.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_READ, gatt, characteristic, true)) {
+                            endActionFrame(_currentAction, true)
+                        }
+                    } else {
+                        logError(TAG, "onCharacteristicRead Failed: $status", false)
+                        endActionFrame(_currentAction, false)
+                    }
+                }
+
+                override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+                    super.onCharacteristicWrite(gatt, characteristic, status)
+
+                    if (status == BluetoothGatt.GATT_SUCCESS) {
+                        logInfo(TAG, "onCharacteristicWrite:$status")
+                        if (_currentAction != null && _currentAction!!.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, characteristic, true)) {
+                            endActionFrame(_currentAction, true)
+                        }
+                    } else {
+                        logError(TAG, "onCharacteristicWrite Failed: $status", false)
+                        endActionFrame(_currentAction, false)
+                    }
+                }
+
+                override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+                    super.onCharacteristicChanged(gatt, characteristic)
+
+                    logInfo(TAG, "onCharacteristicChanged")
+                    if (_subscribeButton != null && !_isInOtaMode) {
+                        _subscribeButton!!.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED, gatt, characteristic, true)
+                    }
+                    if (_subscribeButtonModern != null && !_isInOtaMode) {
+                        _subscribeButtonModern!!.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED, gatt, characteristic, true)
+                    }
+                    if (spotaNotifications != null && _isInOtaMode) {
+                        spotaNotifications!!.statusChanged(XYDeviceAction.STATUS_CHARACTERISTIC_UPDATED, gatt, characteristic, true)
+                    }
+                }
+
+                override fun onDescriptorRead(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
+                    super.onDescriptorRead(gatt, descriptor, status)
+
+                    logInfo(TAG, "onDescriptorRead:$status")
+                }
+
+                override fun onDescriptorWrite(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
+                    super.onDescriptorWrite(gatt, descriptor, status)
+
+                    if (status == BluetoothGatt.GATT_SUCCESS) {
+                        logInfo(TAG, "onDescriptorWrite:$status")
+                        if (_currentAction != null && _currentAction!!.statusChanged(descriptor, XYDeviceAction.STATUS_CHARACTERISTIC_WRITE, gatt, true)) {
+                            endActionFrame(_currentAction, true)
+                        }
+                    } else {
+                        logError(TAG, "onDescriptorWrite Failed: $status", false)
+                        endActionFrame(_currentAction, false)
+                    }
+                    logInfo(TAG, "onDescriptorWrite: $descriptor : status = $status")
+                }
+
+                override fun onReliableWriteCompleted(gatt: BluetoothGatt, status: Int) {
+                    super.onReliableWriteCompleted(gatt, status)
+
+                    logInfo(TAG, "onReliableWriteCompleted:$status")
+                }
+
+                override fun onReadRemoteRssi(gatt: BluetoothGatt, rssi: Int, status: Int) {
+                    super.onReadRemoteRssi(gatt, rssi, status)
+
+                    logExtreme(TAG, "testRssi-onReadRemoteRssi rssi = $rssi")
+                    _rssi = rssi
+                    reportReadRemoteRssi(rssi)
+                }
+
+                override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+                    super.onMtuChanged(gatt, mtu, status)
+
+                    logInfo(TAG, "onMtuChanged:$status")
+                }
+
+            }
+
+            if (gatt == null) {
+                //stopping the scan and running the connect in ui thread required for 4.x
+                XYSmartScan.instance.pauseAutoScan(true)
+                logExtreme(TAG, "connTest-pauseAutoScan(true)")
+
+                try {
+                    XYBase.logInfo(TAG, "connTest-_bleAccess acquiring[" + id + "]:" + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + id)
+                    if (_bleAccess.tryAcquire(10, TimeUnit.SECONDS)) {
+                        XYBase.logInfo(TAG, "connTest_bleAccess acquired[" + id + "]: " + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + id)
+                        // below is commented out to prevent release being called in UI
+                        //stopping the scan and running the connect in ui thread required for 4.x - also required for Samsung Galaxy s7 7.0- and likely other phones as well
+
+                        val handler = Handler(context.applicationContext.mainLooper)
+                        handler.post {
+                            val bluetoothDevice = bluetoothDevice
+                            if (bluetoothDevice == null) {
+                                logError(TAG, "connTest-No Bluetooth Adapter!", false)
+                                endActionFrame(_currentAction, false)
+                                releaseBleLock()
+                                logExtreme(TAG, "connTest-release3")
+                            } else {
+                                var gatt: BluetoothGatt?
+                                if (android.os.Build.VERSION.SDK_INT >= 23) {
+                                    gatt = bluetoothDevice.connectGatt(context.applicationContext, false, callback, android.bluetooth.BluetoothDevice.TRANSPORT_LE)
+                                } else {
+                                    gatt = bluetoothDevice.connectGatt(context.applicationContext, false, callback)
+                                }
+                                gatt = gatt
+                                if (gatt == null) {
+                                    logExtreme(TAG, "gatt is null")
                                     endActionFrame(_currentAction, false)
                                     releaseBleLock()
-                                    logExtreme(TAG, "connTest-release3")
+                                    logExtreme(TAG, "connTest-release4")
                                 } else {
-                                    var gatt: BluetoothGatt?
-                                    if (android.os.Build.VERSION.SDK_INT >= 23) {
-                                        gatt = bluetoothDevice.connectGatt(context.applicationContext, false, callback, android.bluetooth.BluetoothDevice.TRANSPORT_LE)
-                                    } else {
-                                        gatt = bluetoothDevice.connectGatt(context.applicationContext, false, callback)
-                                    }
-                                    gatt = gatt
-                                    if (gatt == null) {
-                                        logExtreme(TAG, "gatt is null")
-                                        endActionFrame(_currentAction, false)
-                                        releaseBleLock()
-                                        logExtreme(TAG, "connTest-release4")
-                                    } else {
-                                        val connected = gatt!!.connect()
-                                        logExtreme(TAG, "connTest-Connect:$connected")
-                                        // some sources say must wait 600 ms after connect before discoverServices
-                                        // other sources say call gatt.discoverServices in UI thread
-                                        // 133s seem to start after gatt.connect is called
-                                        //                                        gatt.discoverServices();
-                                    }
+                                    val connected = gatt.connect()
+                                    logExtreme(TAG, "connTest-Connect:$connected")
+                                    // some sources say must wait 600 ms after connect before discoverServices
+                                    // other sources say call gatt.discoverServices in UI thread
+                                    // 133s seem to start after gatt.connect is called
+                                    //                                        gatt.discoverServices();
                                 }
                             }
-                        } else {
-                            logError(TAG, "connTest-_bleAccess not acquired", false)
-                            endActionFrame(_currentAction, false)
                         }
-                    } catch (ex: InterruptedException) {
-                        logError(TAG, "connTest-not acquired: interrupted", true)
+                    } else {
+                        logError(TAG, "connTest-_bleAccess not acquired", false)
                         endActionFrame(_currentAction, false)
                     }
+                } catch (ex: InterruptedException) {
+                    logError(TAG, "connTest-not acquired: interrupted", true)
+                    endActionFrame(_currentAction, false)
+                }
 
+            } else {
+                logExtreme(TAG, "connTest-already have Gatt")
+                val gatt = gatt
+                if (gatt == null) {
+                    logExtreme(TAG, "gatt is null")
+                    endActionFrame(_currentAction, false)
+                    releaseBleLock()
+                    logExtreme(TAG, "connTest-release5")
                 } else {
-                    logExtreme(TAG, "connTest-already have Gatt")
-                    val gatt = gatt
-                    if (gatt == null) {
-                        logExtreme(TAG, "gatt is null")
-                        endActionFrame(_currentAction, false)
-                        releaseBleLock()
-                        logExtreme(TAG, "connTest-release5")
+                    // should already be connected but just in case -> is now commented out because cause issues calling this when already connected on some phones
+                    //                            boolean connected = gatt.connect();
+                    // null pointer exception here, somehow gatt is null?
+                    val services = gatt.services
+                    if (services.size > 0) {
+                        callback.onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS)
                     } else {
-                        // should already be connected but just in case -> is now commented out because cause issues calling this when already connected on some phones
-                        //                            boolean connected = gatt.connect();
-                        // null pointer exception here, somehow gatt is null?
-                        val services = gatt.services
-                        if (services.size > 0) {
-                            callback.onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS)
+                        if (!gatt.discoverServices()) {
+                            logExtreme(TAG, "connTest-FAIL discoverServices")
+                            endActionFrame(_currentAction, false)
                         } else {
-                            if (!gatt.discoverServices()) {
-                                logExtreme(TAG, "connTest-FAIL discoverServices")
-                                endActionFrame(_currentAction, false)
-                            } else {
-                                logExtreme(TAG, "connTest-discoverServices called inside callback if gatt not null")
-                            }
+                            logExtreme(TAG, "connTest-discoverServices called inside callback if gatt not null")
                         }
                     }
                 }
-                return null
             }
         }
-        asyncTask.executeOnExecutor(_threadPool)
-        return asyncTask
     }
 
     fun getDistanceWithCustomTx(tx: Int): Double {
@@ -868,29 +853,19 @@ class XYDevice internal constructor(id: String) : XYBase() {
     }
 
     private fun getDistance(rssi: Int): Double {
-
-        var tx = txPowerLevel
-
-        if (family == Family.XY4) {
-            tx = -60
-        } else {
-            tx = -60
-        }
+        val tx = -60
 
         if (rssi == outOfRangeRssi) {
             return -2.0
         }
 
-        if (tx == 0 || rssi == 0) {
-            return -1.0
+        val ratio = rssi * 1.0 / tx
+        return if (ratio < 1.0) {
+            Math.pow(ratio, 10.0)
         } else {
-            val ratio = rssi * 1.0 / tx
-            return if (ratio < 1.0) {
-                Math.pow(ratio, 10.0)
-            } else {
-                0.89976 * Math.pow(ratio, 7.7095) + 0.111 // made for tx of -59 I believe so works with most our devices, but does not work with xy4 of tx -75
-            }
+            0.89976 * Math.pow(ratio, 7.7095) + 0.111 // made for tx of -59 I believe so works with most our devices, but does not work with xy4 of tx -75
         }
+
     }
 
     fun addTemporaryConnection() {

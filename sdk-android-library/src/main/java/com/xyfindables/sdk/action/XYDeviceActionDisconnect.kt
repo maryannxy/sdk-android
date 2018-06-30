@@ -31,10 +31,8 @@ abstract class XYDeviceActionDisconnect(device: XYDevice) : XYDeviceAction(devic
         when (status) {
             XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
                 characteristic?.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0)
-                if (gatt !== null) {
-                    if (!gatt!!.writeCharacteristic(characteristic)) {
-                        result = true
-                    }
+                if (!gatt!!.writeCharacteristic(characteristic)) {
+                    result = true
                 }
             }
         }
