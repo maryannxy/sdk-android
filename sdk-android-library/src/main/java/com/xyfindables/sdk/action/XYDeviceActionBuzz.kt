@@ -21,18 +21,14 @@ abstract class XYDeviceActionBuzz(device: XYDevice) : XYDeviceAction(device) {
     override val characteristicId: UUID
         get() = XYDeviceCharacteristic.ControlBuzzer
 
-    init {
-        logAction(TAG, TAG)
-    }
-
     override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
-        logExtreme(TAG, "statusChanged:$status:$success")
+        logExtreme("statusChanged:$status:$success")
         var result = super.statusChanged(status, gatt, characteristic, success)
         if (gatt !== null) {
             when (status) {
                 XYDeviceAction.STATUS_CHARACTERISTIC_FOUND -> {
                     characteristic?.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0)
-                    if (!(gatt!!.writeCharacteristic(characteristic))) {
+                    if (!(gatt.writeCharacteristic(characteristic))) {
                         result = true
                     }
                 }
