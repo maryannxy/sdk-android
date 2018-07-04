@@ -59,15 +59,14 @@ class XYBLEStatsView(context: Context, attrs: AttributeSet) : LinearLayout(conte
 
     fun update() {
         post {
-            val pulseCountView = findViewById<TextView>(R.id.pulses)
-            if (pulseCountView != null) {
-                pulseCountView.text = XYSmartScan.instance.pulseCount.toString()
-            }
+            val pulseCountView = findViewById<TextView>(R.id.pulses)!!
+            pulseCountView.text = XYSmartScan.instance.pulseCount.toString()
 
-            val pulsePerSecView = findViewById<TextView>(R.id.pulsesPerSecond)
-            if (pulsePerSecView != null) {
-                pulsePerSecView.text = XYSmartScan.instance.pulsesPerSecond.toString()
-            }
+            val pulsePerSecView = findViewById<TextView>(R.id.pulsesPerSecond)!!
+            pulsePerSecView.text = XYSmartScan.instance.pulsesPerSecond.toString()
+
+            val devices = findViewById<TextView>(R.id.devices)
+            devices.text = XYSmartScan.instance.deviceCount.toString()
         }
     }
 

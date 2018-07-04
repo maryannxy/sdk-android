@@ -4,6 +4,7 @@ import android.app.Activity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import com.xyfindables.core.XYBase
 
 import com.xyfindables.sdk.XYDevice
 import com.xyfindables.sdk.XYSmartScan
@@ -11,26 +12,32 @@ import com.xyfindables.sdk.XYSmartScan
 import java.util.ArrayList
 
 class XYDeviceAdapter(private val _activity: Activity) : BaseAdapter() {
-    private val _devices: ArrayList<XYDevice>
+    private var _devices: List<XYDevice>
+
+    val scanner : XYSmartScan
+        get() {
+            return XYSmartScan.instance
+        }
 
     init {
         _devices = ArrayList()
         XYSmartScan.instance.addListener(TAG, object : XYDevice.Listener {
             override fun entered(device: XYDevice) {
                 _activity.runOnUiThread(Thread(Runnable {
-                    _devices.add(device)
+                    _devices = scanner.devices!!
                     notifyDataSetChanged()
                 }))
             }
 
             override fun exited(device: XYDevice) {
                 _activity.runOnUiThread(Thread(Runnable {
-                    _devices.remove(device)
+                    _devices = scanner.devices!!
                     notifyDataSetChanged()
                 }))
             }
 
-            override fun detected(device: XYDevice) {}
+            override fun detected(device: XYDevice) {
+            }
 
             override fun buttonPressed(device: XYDevice, buttonType: XYDevice.ButtonType) {}
 

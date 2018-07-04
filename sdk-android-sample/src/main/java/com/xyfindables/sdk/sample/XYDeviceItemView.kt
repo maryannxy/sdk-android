@@ -8,6 +8,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.RelativeLayout
 import android.widget.TextView
+import com.xyfindables.core.XYBase
 
 import com.xyfindables.sdk.XYDevice
 import com.xyfindables.sdk.XYSmartScan
@@ -18,13 +19,13 @@ import com.xyfindables.sdk.XYSmartScan
 
 class XYDeviceItemView(context: Context, attrs: AttributeSet) : RelativeLayout(context, attrs) {
 
-    private var _device: XYDevice? = null
+    private var device: XYDevice? = null
 
     init {
         setOnClickListener {
-            if (_device != null) {
+            if (device != null) {
                 val intent = Intent(context, XYDeviceActivity::class.java)
-                intent.putExtra(XYDeviceActivity.EXTRA_DEVICEID, _device!!.id)
+                intent.putExtra(XYDeviceActivity.EXTRA_DEVICEID, device!!.id)
                 context.startActivity(intent)
             }
         }
@@ -33,68 +34,69 @@ class XYDeviceItemView(context: Context, attrs: AttributeSet) : RelativeLayout(c
     fun update() {
         post {
             val nameView = findViewById<TextView>(R.id.name)
-            nameView.text = _device!!.family.name
+            nameView.text = device!!.family.name
 
             val rssiView = findViewById<TextView>(R.id.rssi)
-            rssiView.text = _device!!.rssi.toString()
+            rssiView.text = device!!.rssi.toString()
 
             val majorView = findViewById<TextView>(R.id.major)
-            majorView.text = _device!!.major.toString()
+            majorView.text = device!!.major.toString()
 
             val minorView = findViewById<TextView>(R.id.minor)
-            minorView.text = _device!!.minor.toString()
+            minorView.text = device!!.minor.toString()
 
             val pulsesView = findViewById<TextView>(R.id.pulses)
-            pulsesView.text = _device!!.detectCount.toString()
+            pulsesView.text = device!!.detectCount.toString()
         }
     }
 
     fun setDevice(device: XYDevice?) {
-        if (_device != null) {
-            _device!!.removeListener(TAG)
-            _device = null
-        }
         if (device != null) {
-            _device = device
-            _device!!.addListener(TAG, object : XYDevice.Listener {
-                override fun entered(device: XYDevice) {
-
-                }
-
-                override fun exited(device: XYDevice) {
-
-                }
-
-                override fun detected(device: XYDevice) {
-                    update()
-                }
-
-                override fun buttonPressed(device: XYDevice, buttonType: XYDevice.ButtonType) {
-
-                }
-
-                override fun buttonRecentlyPressed(device: XYDevice, buttonType: XYDevice.ButtonType) {
-
-                }
-
-                override fun connectionStateChanged(device: XYDevice, newState: Int) {
-
-                }
-
-                override fun readRemoteRssi(device: XYDevice, rssi: Int) {
-                    update()
-                }
-
-                override fun updated(device: XYDevice) {
-
-                }
-
-                override fun statusChanged(status: XYSmartScan.Status) {
-
-                }
-            })
-            update()
+            device.removeListener(TAG)
+        } else {
+            XYBase.logError(TAG, "Setting NULL device")
         }
+
+        this.device = device
+
+        device!!.addListener(TAG, object : XYDevice.Listener {
+            override fun entered(device: XYDevice) {
+
+            }
+
+            override fun exited(device: XYDevice) {
+
+            }
+
+            override fun detected(device: XYDevice) {
+                update()
+            }
+
+            override fun buttonPressed(device: XYDevice, buttonType: XYDevice.ButtonType) {
+
+            }
+
+            override fun buttonRecentlyPressed(device: XYDevice, buttonType: XYDevice.ButtonType) {
+
+            }
+
+            override fun connectionStateChanged(device: XYDevice, newState: Int) {
+
+            }
+
+            override fun readRemoteRssi(device: XYDevice, rssi: Int) {
+                update()
+            }
+
+            override fun updated(device: XYDevice) {
+
+            }
+
+            override fun statusChanged(status: XYSmartScan.Status) {
+
+            }
+        })
+        update()
     }
 
     companion object {

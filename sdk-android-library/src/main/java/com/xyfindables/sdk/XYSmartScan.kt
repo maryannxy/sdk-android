@@ -9,11 +9,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.location.LocationManager
+import android.net.wifi.ScanResult
 import android.os.AsyncTask
 import android.os.Build
 import android.os.Looper
 
 import com.xyfindables.core.XYBase
+import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.async
 
 import java.lang.reflect.InvocationTargetException
@@ -38,6 +40,11 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
 
     private val _devicesLock = ReentrantLock()
 
+    val deviceCount : Int
+        get() {
+            return _devices.size
+        }
+
     var period = 0
         private set
     var interval = 0
@@ -55,7 +62,6 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
     var pulseCount = 0
 
     internal var _processedPulseCount = 0
-    internal var _scansWithoutPulses = 0
 
     internal var receiver: BroadcastReceiver? = null
 
@@ -69,9 +75,6 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
     private var _receiverRegistered = false
 
     var legacy = true
-
-    val outOfRangePulsesMissed: Int
-        get() = _missedPulsesForOutOfRange
 
     var missedPulsesForOutOfRange: Int
         get() = _missedPulsesForOutOfRange
@@ -184,7 +187,7 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
             context.applicationContext.unregisterReceiver(receiver)
             _receiverRegistered = false
         }
-        stopAutoScan()
+        stopScan()
     }
 
     fun enableBluetooth(context: Context) {
@@ -239,7 +242,7 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
         return device
     }
 
-    fun startAutoScan(context: Context, interval: Int, period: Int) {
+    /*fun startAutoScan(context: Context, interval: Int, period: Int) {
         logExtreme(TAG, "startAutoScan:$interval:$period")
         if (_autoScanTimer != null) {
             //XYData.logError(TAG, "startAutoScan already Started (_autoScanTimer != null)");
@@ -275,9 +278,9 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
         } else {
             XYBase.logError(TAG, "stopAutoScan already Stopped (_autoScanTimerTask == null)", false)
         }
-    }
+    }*/
 
-    fun pauseAutoScan(pause: Boolean) {
+    /*fun pauseAutoScan(pause: Boolean) {
         logExtreme(TAG, "pauseAutoScan:$pause")
         if (pause == this.paused) {
             return
@@ -290,7 +293,7 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
             //_scanningControl.release();
             this.paused = false
         }
-    }
+    }*/
 
     fun setStatus(status: Status) {
         if (_status != status) {
@@ -430,10 +433,11 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
 
     // region ============= Listeners =============
 
-    protected abstract fun scan(context: Context, period: Int)
+    abstract fun startScan(context: Context)
+    abstract fun stopScan()
 
     fun addListener(key: String, listener: XYDevice.Listener) {
-        async {
+        async (CommonPool){
             synchronized(XYSmartScan.instance._listeners) {
                 XYSmartScan.instance._listeners.put(key, listener)
             }
@@ -441,7 +445,7 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
     }
 
     fun removeListener(key: String) {
-        async {
+        async (CommonPool){
             synchronized(XYSmartScan.instance._listeners) {
                 XYSmartScan.instance._listeners.remove(key)
             }
@@ -449,7 +453,7 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
     }
 
     private fun reportEntered(device: XYDevice) {
-        async {
+        async (CommonPool){
             synchronized(XYSmartScan.instance._listeners) {
                 for ((_, value) in XYSmartScan.instance._listeners) {
                     value.entered(device)
@@ -459,7 +463,7 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
     }
 
     private fun reportExited(device: XYDevice) {
-        async {
+        async (CommonPool){
             synchronized(XYSmartScan.instance._listeners) {
                 for ((_, value) in XYSmartScan.instance._listeners) {
                     value.exited(device)
@@ -469,7 +473,7 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
     }
 
     private fun reportDetected(device: XYDevice) {
-        async {
+        async (CommonPool){
             synchronized(XYSmartScan.instance._listeners) {
                 for ((_, value) in XYSmartScan.instance._listeners) {
                     value.detected(device)
@@ -478,8 +482,14 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
         }
     }
 
+    fun reportUnknownDevice(bytes: ByteArray) {
+        async (CommonPool){
+            logInfo("UnknownDevice: $bytes")
+        }
+    }
+
     private fun reportButtonPressed(device: XYDevice, buttonType: XYDevice.ButtonType) {
-        async {
+        async (CommonPool){
             synchronized(XYSmartScan.instance._listeners) {
                 for ((_, value) in XYSmartScan.instance._listeners) {
                     value.buttonPressed(device, buttonType)
@@ -489,7 +499,7 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
     }
 
     private fun reportButtonRecentlyPressed(device: XYDevice, buttonType: XYDevice.ButtonType) {
-        async {
+        async (CommonPool){
             synchronized(XYSmartScan.instance._listeners) {
                 for ((_, value) in XYSmartScan.instance._listeners) {
                     value.buttonRecentlyPressed(device, buttonType)

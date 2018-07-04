@@ -374,7 +374,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
         if (value == _isInOtaMode) {
             return
         }
-        XYSmartScan.instance.pauseAutoScan(value)
+        XYSmartScan.instance.stopScan()
         _isInOtaMode = value
     }
 
@@ -502,7 +502,6 @@ class XYDevice internal constructor(id: String) : XYBase() {
         _currentAction = null
         //        _connectIntent = false;
         releaseActionLock()
-        XYSmartScan.instance.pauseAutoScan(false)
         logExtreme(TAG, "connTest-popConnection1-pauseAutoScan set back to false")
     }
 
@@ -757,10 +756,6 @@ class XYDevice internal constructor(id: String) : XYBase() {
             }
 
             if (gatt == null) {
-                //stopping the scan and running the connect in ui thread required for 4.x
-                XYSmartScan.instance.pauseAutoScan(true)
-                logExtreme(TAG, "connTest-pauseAutoScan(true)")
-
                 try {
                     XYBase.logInfo(TAG, "connTest-_bleAccess acquiring[" + id + "]:" + _bleAccess.availablePermits() + "/" + MAX_BLECONNECTIONS + ":" + id)
                     if (_bleAccess.tryAcquire(10, TimeUnit.SECONDS)) {
@@ -1133,7 +1128,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
         //        Log.v(TAG, "pulseOutOfRange21: " + _id);
         val scanResult = _currentScanResult21
         if (scanResult != null) {
-            val newScanResult = ScanResult(scanResult.device, scanResult.scanRecord, outOfRangeRssi, scanResult.timestampNanos)
+            val newScanResult = @Suppress("DEPRECATION")ScanResult(scanResult.device, scanResult.scanRecord, outOfRangeRssi, scanResult.timestampNanos)
             pulse21(newScanResult)
         }
     }

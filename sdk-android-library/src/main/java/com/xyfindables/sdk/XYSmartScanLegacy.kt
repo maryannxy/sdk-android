@@ -116,11 +116,15 @@ open class XYSmartScanLegacy internal constructor() : XYSmartScan() {
         }
     }
 
-    override fun scan(context: Context, period: Int) {
+    var context : Context? = null
+
+    override fun startScan(context: Context) {
         logExtreme(TAG, "scan:start:$period")
         if (!_scanningControl.tryAcquire()) {
             return
         }
+
+        this.context = context
 
         scanCount++
 
@@ -145,6 +149,7 @@ open class XYSmartScanLegacy internal constructor() : XYSmartScan() {
                 logExtreme(TAG, "stopTimerTask")
                 pumpTimer.cancel()
 
+                @Suppress("DEPRECATION")
                 bluetoothAdapter.stopLeScan(scanCallback)
                 pumpScanResults()
 
@@ -156,9 +161,22 @@ open class XYSmartScanLegacy internal constructor() : XYSmartScan() {
         val stopTimer = Timer()
         stopTimer.schedule(stopTimerTask, period.toLong())
 
+        @Suppress("DEPRECATION")
         bluetoothAdapter.startLeScan(scanCallback)
         _scanningControl.release()
         logExtreme(TAG, "scan:finish")
+    }
+
+    override fun stopScan() {
+        val bluetoothAdapter = getBluetoothManager(context!!.applicationContext).adapter
+
+        if (bluetoothAdapter == null) {
+            logInfo(TAG, "Bluetooth Disabled")
+            return
+        }
+
+        @Suppress("DEPRECATION")
+        bluetoothAdapter.stopLeScan(scanCallback)
     }
 
     override fun statusChanged(status: Status) {

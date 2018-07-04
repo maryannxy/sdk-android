@@ -11,6 +11,8 @@ import android.content.Intent
 import android.os.Build
 
 import com.xyfindables.core.XYBase
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.async
 
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
@@ -27,21 +29,17 @@ import java.util.concurrent.ConcurrentLinkedQueue
 @TargetApi(21)
 open class XYSmartScanModern : XYSmartScan() {
 
-    private var _pendingBleRestart21 = false
-    private var _pendingBleRestart21Plus = false
-
-    private var _pumpScanResults21Active = false
-
     private var _pulseCountForScan = 0
 
-    private val _scanResults21: ConcurrentLinkedQueue<android.bluetooth.le.ScanResult>
+    var reportUnknownDevices = false
+
+    private var pendingBleRestart21 = false
+    private var pendingBleRestart21Plus = false
 
     init {
         logExtreme(TAG, "XYSmartScanModern")
 
         legacy = false
-
-        _scanResults21 = ConcurrentLinkedQueue()
 
         receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
@@ -53,7 +51,7 @@ open class XYSmartScanModern : XYSmartScan() {
                     when (state) {
                         BluetoothAdapter.STATE_OFF -> {
                             logInfo(TAG, "BluetoothAdapter.ACTION_STATE_CHANGED:STATE_OFF")
-                            if (_pendingBleRestart21) {
+                            if (pendingBleRestart21) {
                                 val bluetoothAdapter = getBluetoothManager(context).adapter
 
                                 if (bluetoothAdapter == null) {
@@ -61,8 +59,8 @@ open class XYSmartScanModern : XYSmartScan() {
                                     return
                                 }
                                 bluetoothAdapter.enable()
-                                _pendingBleRestart21 = false
-                            } else if (_pendingBleRestart21Plus) {
+                                pendingBleRestart21 = false
+                            } else if (pendingBleRestart21Plus) {
                                 val bluetoothAdapter = getBluetoothManager(context).adapter
 
                                 if (bluetoothAdapter == null) {
@@ -70,7 +68,7 @@ open class XYSmartScanModern : XYSmartScan() {
                                     return
                                 }
                                 bluetoothAdapter.enable()
-                                _pendingBleRestart21Plus = false
+                                pendingBleRestart21Plus = false
                             } else {
                                 setStatus(XYSmartScan.Status.BluetoothDisabled)
                             }
@@ -97,9 +95,48 @@ open class XYSmartScanModern : XYSmartScan() {
         return builder.build()
     }
 
+    val context : Context? = null
+
+    val scanCallback = object : ScanCallback() {
+
+        override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
+            async (CommonPool) {
+                processScanResult21(result)
+                pulseCount++
+                _pulseCountForScan++
+            }
+        }
+
+        override fun onBatchScanResults(results: List<ScanResult>) {
+            for (result in results) {
+                async (CommonPool) {
+                    processScanResult21(result)
+                    pulseCount++
+                    _pulseCountForScan++
+                }
+            }
+        }
+
+        override fun onScanFailed(errorCode: Int) {
+            when (errorCode) {
+                ScanCallback.SCAN_FAILED_ALREADY_STARTED -> XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_ALREADY_STARTED", true)
+                ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED -> {
+                    XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_APPLICATION_REGISTRATION_FAILED", false)
+                    reset(context!!)
+                }
+                ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED -> XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_FEATURE_UNSUPPORTED", true)
+                ScanCallback.SCAN_FAILED_INTERNAL_ERROR -> {
+                    XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_INTERNAL_ERROR", false)
+                    reset(context!!)
+                }
+                else -> XYBase.logError(TAG, "scan21:onScanFailed:Unknown:$errorCode", true)
+            }
+        }
+    }
+
     @TargetApi(21)
-    override fun scan(context: Context, period: Int) {
-        logExtreme(TAG, "scan21:start:$period")
+    override fun startScan(context: Context) {
+        logExtreme(TAG, "scan21:start")
 
         val settings: Any
 
@@ -109,7 +146,6 @@ open class XYSmartScanModern : XYSmartScan() {
 
         if (bluetoothAdapter == null) {
             logInfo(TAG, "Bluetooth Disabled")
-            _scanningControl.release()
             return
         }
 
@@ -119,120 +155,35 @@ open class XYSmartScanModern : XYSmartScan() {
             settings = getSettings21()
         }
 
-        val scanCallback = object : android.bluetooth.le.ScanCallback() {
-
-            override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
-
-                val scanRecord = result.scanRecord
-                if (scanRecord != null) {
-                    val manufacturerData = scanRecord.getManufacturerSpecificData(0x004c)
-                    if (manufacturerData != null) {
-                        if (manufacturerData[0].toInt() == 0x02 && manufacturerData[1].toInt() == 0x15) {
-                            val xyId = xyIdFromAppleBytes(manufacturerData)
-                            if (xyId != null) {
-                                //logExtreme(TAG, "scan21:onScanResult: " + xyId);
-                            }
-                        }
-                    }
-                    if (_scanResults21.contains(result)) {
-                        logExtreme(TAG, "connTest-getting same scan result !!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    }
-                    _scanResults21.add(result)
-                    pulseCount++
-                    _pulseCountForScan++
-                }
-            }
-
-            override fun onBatchScanResults(results: List<ScanResult>) {
-                logExtreme(TAG, "scan21:onBatchScanResults:" + results.size)
-                for (result in results) {
-                    _scanResults21.add(result)
-                    pulseCount++
-                    _pulseCountForScan++
-                }
-            }
-
-            override fun onScanFailed(errorCode: Int) {
-                when (errorCode) {
-                    ScanCallback.SCAN_FAILED_ALREADY_STARTED -> XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_ALREADY_STARTED", true)
-                    ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED -> {
-                        XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_APPLICATION_REGISTRATION_FAILED", true)
-                        reset(context) //Seems to happen when stopped in debugger several times?
-                    }
-                    ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED -> XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_FEATURE_UNSUPPORTED", true)
-                    ScanCallback.SCAN_FAILED_INTERNAL_ERROR -> {
-                        XYBase.logError(TAG, "scan21:onScanFailed:SCAN_FAILED_INTERNAL_ERROR", true)
-                        reset(context)
-                    }
-                    else -> XYBase.logError(TAG, "scan21:onScanFailed:Unknown:$errorCode", true)
-                }
-            }
-        }
-
-        try {
-            _scanningControl.acquire()
-        } catch (ex: InterruptedException) {
-            return
-        }
-
         val scanner = bluetoothAdapter.bluetoothLeScanner
         if (scanner == null) {
-            logInfo(TAG, "Failed to get Bluetooth Scanner. Disabled?")
-            _scanningControl.release()
+            logInfo(TAG, "startScan:Failed to get Bluetooth Scanner. Disabled?")
             return
         }
 
         _pulseCountForScan = 0
 
-        val pumpTimerTask = object : TimerTask() {
-            override fun run() {
-                pumpScanResults21()
-            }
-        }
-
-        val pumpTimer = Timer()
-        pumpTimer.schedule(pumpTimerTask, 0, 250)
-
-        val stopTimerTask = object : TimerTask() {
-            override fun run() {
-                logInfo(TAG, "stopTimerTask")
-                pumpTimer.cancel()
-                try {
-                    scanner.stopScan(scanCallback)
-                    scanner.flushPendingScanResults(scanCallback)
-                } catch (ex: IllegalStateException) {
-                    //this happens if the bt adapter was turned off after previous check
-                    //effectivly, we treat it as no scan results found
-                    logError(ex.toString(), false)
-                } catch (ex: NullPointerException) {
-                    logError(ex.toString(), false)
-                } catch (ex: ConcurrentModificationException) {
-                    logError(ex.toString(), false)
-                }
-
-                pumpScanResults21()
-                if (Build.VERSION.SDK_INT < 25) {
-                    if (_pulseCountForScan == 0) {
-                        _scansWithoutPulses++
-                        if (_scansWithoutPulses >= XYSmartScan.scansWithOutPulsesBeforeRestart) {
-                            reset(context)
-                            _scansWithoutPulses = 0
-                        }
-                    } else {
-                        _scansWithoutPulses = 0
-                    }
-                }
-                notifyDevicesOfScanComplete()
-            }
-        }
-
-        val stopTimer = Timer()
-        stopTimer.schedule(stopTimerTask, period.toLong())
-
         scanner.startScan(ArrayList(), settings as android.bluetooth.le.ScanSettings, scanCallback)
         dump(context)
-        _scanningControl.release()
         logExtreme(TAG, "scan21:finish")
+    }
+
+    @TargetApi(21)
+    override fun stopScan() {
+        val bluetoothAdapter = getBluetoothManager(context!!).adapter
+
+        if (bluetoothAdapter == null) {
+            logInfo(TAG, "stopScan: Bluetooth Disabled")
+            return
+        }
+
+        val scanner = bluetoothAdapter.bluetoothLeScanner
+        if (scanner == null) {
+            logInfo(TAG, "stopScan:Failed to get Bluetooth Scanner. Disabled?")
+            return
+        }
+
+        scanner.stopScan(scanCallback)
     }
 
     override fun statusChanged(status: Status) {
@@ -249,68 +200,41 @@ open class XYSmartScanModern : XYSmartScan() {
         device.pulse21(scanResult)
     }
 
+    private fun processAppleResult(manufacturerData: ByteArray,  scanResult: android.bluetooth.le.ScanResult) {
+        if (manufacturerData[0].toInt() == 0x02 && manufacturerData[1].toInt() == 0x15) {
+            processIbeaconResult(manufacturerData, scanResult)
+        } else {
+            if (reportUnknownDevices) {
+                reportUnknownDevice(scanResult.scanRecord.bytes)
+            }
+        }
+    }
+
+    private fun processIbeaconResult(manufacturerData: ByteArray, scanResult: android.bluetooth.le.ScanResult) {
+        val xyId = xyIdFromAppleBytes(manufacturerData)
+        if (xyId != null) {
+            processScanResult21(xyId, scanResult)
+        } else {
+            if (reportUnknownDevices) {
+                reportUnknownDevice(scanResult.scanRecord.bytes)
+            }
+        }
+    }
+
     private fun processScanResult21(scanResult: android.bluetooth.le.ScanResult) {
-        //Log.v(TAG, "processScanResult21");
         _processedPulseCount++
         val scanRecord = scanResult.scanRecord
         if (scanRecord != null) {
             val manufacturerData = scanRecord.getManufacturerSpecificData(0x004c)
             if (manufacturerData != null) {
-                if (manufacturerData[0].toInt() == 0x02 && manufacturerData[1].toInt() == 0x15) {
-                    val xyId = xyIdFromAppleBytes(manufacturerData)
-                    if (xyId != null) {
-                        processScanResult21(xyId, scanResult)
-                    }
+                processAppleResult(manufacturerData, scanResult)
+            } else {
+                if (reportUnknownDevices) {
+                    reportUnknownDevice(scanResult.scanRecord.bytes)
                 }
             }
-        }
-    }
-
-    private fun pumpScanResults21() {
-        if (_pumpScanResults21Active) {
-            return
-        }
-        _pumpScanResults21Active = true
-        var result: android.bluetooth.le.ScanResult? = _scanResults21.poll()
-        while (result != null) {
-            processScanResult21(result)
-            result = _scanResults21.poll()
-        }
-        _pumpScanResults21Active = false
-        /*_scanner.flushPendingScanResults(new ScanCallback() {
-            @Override
-            public void onScanResult(int callbackType, ScanResult result) {
-                super.onScanResult(callbackType, result);
-                processScanResult21(result);
-                _pulseCount++;
-            }
-
-            @Override
-            public void onBatchScanResults(List<ScanResult> results) {
-                super.onBatchScanResults(results);
-                for (android.bluetooth.le.ScanResult result : results) {
-                    processScanResult21(result);
-                    _pulseCount++;
-                }
-            }
-
-            @Override
-            public void onScanFailed(int errorCode) {
-                super.onScanFailed(errorCode);
-            }
-        });*/
-    }
-
-    private fun reset(context: Context) {
-        logInfo(TAG, "reset")
-        if (Build.VERSION.SDK_INT == 21) {
-            if (!_pendingBleRestart21) {
-                restartBle21(context)
-            }
-        } else if (Build.VERSION.SDK_INT > 21) {
-            if (!_pendingBleRestart21Plus) {
-                restartBle21Plus(context)
-            }
+        } else {
+            logError("No ScanResult", true)
         }
     }
 
@@ -323,7 +247,7 @@ open class XYSmartScanModern : XYSmartScan() {
                 logError(TAG, "Bluetooth Disallowed or Non-Existant", false)
                 return
             }
-            _pendingBleRestart21 = true
+            pendingBleRestart21 = true
             val shutdown = bluetoothAdapter.javaClass.getMethod("shutdown")
             shutdown.invoke(bluetoothAdapter)
         } catch (ex: NoSuchMethodException) {
@@ -333,7 +257,6 @@ open class XYSmartScanModern : XYSmartScan() {
         } catch (ex: IllegalAccessException) {
             XYBase.logException(TAG, ex, true)
         }
-
     }
 
     private fun restartBle21Plus(context: Context) {
@@ -344,13 +267,26 @@ open class XYSmartScanModern : XYSmartScan() {
             logError(TAG, "Bluetooth Disallowed or Non-Existant", false)
             return
         }
-        _pendingBleRestart21Plus = true
+        pendingBleRestart21Plus = true
         bluetoothAdapter.disable()
         bluetoothAdapter.enable()
     }
 
-    companion object {
+    private fun reset(context: Context) {
+        logInfo(TAG, "reset")
+        if (Build.VERSION.SDK_INT == 21) {
+            if (!pendingBleRestart21) {
+                restartBle21(context)
+            }
+        } else if (Build.VERSION.SDK_INT > 21) {
+            if (!pendingBleRestart21Plus) {
+                restartBle21Plus(context)
+            }
+        }
+    }
 
+
+    companion object {
         private val TAG = XYSmartScanModern::class.java.simpleName
     }
 }
