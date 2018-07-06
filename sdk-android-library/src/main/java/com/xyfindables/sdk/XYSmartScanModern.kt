@@ -95,8 +95,6 @@ open class XYSmartScanModern : XYSmartScan() {
         return builder.build()
     }
 
-    val context : Context? = null
-
     val scanCallback = object : ScanCallback() {
 
         override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
@@ -134,11 +132,15 @@ open class XYSmartScanModern : XYSmartScan() {
         }
     }
 
+    var context: Context? = null
+
     @TargetApi(21)
     override fun startScan(context: Context) {
         logExtreme(TAG, "scan21:start")
 
         val settings: Any
+
+        this.context = context
 
         scanCount++
 
@@ -184,6 +186,7 @@ open class XYSmartScanModern : XYSmartScan() {
         }
 
         scanner.stopScan(scanCallback)
+        this.context = null
     }
 
     override fun statusChanged(status: Status) {

@@ -33,6 +33,11 @@ class XYFindablesSdkSampleActivity : XYBaseActivity() {
         super.onResume()
         val permissions = XYPermissions(this)
         permissions.requestPermission(android.Manifest.permission.ACCESS_FINE_LOCATION, "Location services are needed to access and track your finders.", XYPermissions.LOCATION_PERMISSIONS_REQ_CODE)
-        XYSmartScan.instance.startAutoScan(this, 0, 30000)
+        XYSmartScan.instance.startScan(this)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        XYSmartScan.instance.stopScan()
     }
 }

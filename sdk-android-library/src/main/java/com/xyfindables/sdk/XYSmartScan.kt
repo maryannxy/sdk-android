@@ -47,14 +47,6 @@ abstract class XYSmartScan internal constructor() : XYBase(), XYDevice.Listener 
 
     var period = 0
         private set
-    var interval = 0
-        private set
-    //private GoogleApiClient _googleApiClient;
-
-    private var _autoScanTimerTask: TimerTask? = null
-
-    private var _autoScanTimer: Timer? = null
-    private var paused = false
 
     private val _devices: HashMap<String, XYDevice>
     var scanCount = 0

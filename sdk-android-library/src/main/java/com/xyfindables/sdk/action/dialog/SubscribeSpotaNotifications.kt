@@ -2,7 +2,6 @@ package com.xyfindables.sdk.action.dialog
 
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattDescriptor
 import com.xyfindables.sdk.XYDevice
 import com.xyfindables.sdk.XYDeviceCharacteristic
 import com.xyfindables.sdk.XYDeviceService

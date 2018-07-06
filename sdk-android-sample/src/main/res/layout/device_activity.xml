@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:theme="@style/XYTheme"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <include
         android:id="@+id/toolbar"
@@ -16,203 +17,238 @@
         app:layout_constraintBottom_toTopOf="parent"/>
 
     <ScrollView
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-        <android.support.constraint.ConstraintLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:id="@+id/nameLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="19dp"
-                android:layout_marginTop="4dp"
-                android:text="Family:"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/name"
-                android:layout_width="wrap_content"
-                android:layout_height="19dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginTop="4dp"
-                app:layout_constraintLeft_toRightOf="@+id/nameLabel"
-                app:layout_constraintStart_toEndOf="@+id/nameLabel"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="Name" />
-
-            <TextView
-                android:id="@+id/majorLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Major:"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/nameLabel" />
-
-            <TextView
-                android:id="@+id/major"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintLeft_toRightOf="@+id/majorLabel"
-                app:layout_constraintTop_toBottomOf="@+id/nameLabel"
-                tools:text="11111" />
-
-            <TextView
-                android:id="@+id/minorLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Minor:"
-                app:layout_constraintLeft_toRightOf="@+id/major"
-                app:layout_constraintTop_toBottomOf="@+id/nameLabel" />
-
-            <TextView
-                android:id="@+id/minor"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintLeft_toRightOf="@+id/minorLabel"
-                app:layout_constraintTop_toBottomOf="@+id/nameLabel"
-                tools:text="00000" />
-
-            <TextView
-                android:id="@+id/rssiLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="RSSI:"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/majorLabel" />
-
-            <TextView
-                android:id="@+id/rssi"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintLeft_toRightOf="@+id/rssiLabel"
-                app:layout_constraintTop_toBottomOf="@+id/majorLabel"
-                tools:text="-999" />
-
-            <TextView
-                android:id="@+id/pulsesLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Pulses:"
-                app:layout_constraintLeft_toRightOf="@+id/rssi"
-                app:layout_constraintTop_toBottomOf="@+id/majorLabel" />
-
-            <TextView
-                android:id="@+id/pulseCount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintLeft_toRightOf="@+id/pulsesLabel"
-                app:layout_constraintTop_toBottomOf="@+id/majorLabel"
-                tools:text="99" />
-
-            <TextView
-                android:id="@+id/enterLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Enter:"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/rssiLabel" />
-
-            <TextView
-                android:id="@+id/enterCount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintLeft_toRightOf="@+id/enterLabel"
-                app:layout_constraintTop_toBottomOf="@+id/rssiLabel"
-                tools:text="2" />
-
-            <TextView
-                android:id="@+id/exitLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Exit:"
-                app:layout_constraintLeft_toRightOf="@+id/enterCount"
-                app:layout_constraintTop_toBottomOf="@+id/rssiLabel" />
-
-            <TextView
-                android:id="@+id/exitCount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintLeft_toRightOf="@+id/exitLabel"
-                app:layout_constraintTop_toBottomOf="@+id/rssiLabel"
-                tools:text="1" />
-
-            <TextView
-                android:id="@+id/actionSuccessLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Action Success:"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/enterLabel" />
-
-            <TextView
-                android:id="@+id/actionSuccessCount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintLeft_toRightOf="@+id/actionSuccessLabel"
-                app:layout_constraintTop_toBottomOf="@+id/enterLabel"
-                tools:text="5" />
-
-            <TextView
-                android:id="@+id/actionFailLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Action Fail:"
-                app:layout_constraintLeft_toRightOf="@+id/actionSuccessCount"
-                app:layout_constraintTop_toBottomOf="@+id/exitLabel" />
-
-            <TextView
-                android:id="@+id/actionFailCount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintLeft_toRightOf="@+id/actionFailLabel"
-                app:layout_constraintTop_toBottomOf="@+id/exitLabel"
-                tools:text="2" />
-
-            <TextView
-                android:id="@+id/actionQueueLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Action Queue:"
-                app:layout_constraintLeft_toRightOf="@+id/actionFailCount"
-                app:layout_constraintTop_toBottomOf="@+id/exitLabel" />
-
-            <TextView
-                android:id="@+id/actionQueueCount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintLeft_toRightOf="@+id/actionQueueLabel"
-                app:layout_constraintTop_toBottomOf="@+id/exitLabel"
-                tools:text="14" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_margin="6dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="vertical"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/actionQueueLabel">
-                <com.xyfindables.ui.views.XYButton
+                android:orientation="horizontal"
+                android:layout_margin="8dp">
+                <TextView
+                    android:id="@+id/familyLabel"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Connect"
-                    android:id="@+id/connect"/>
-                <com.xyfindables.ui.views.XYButton
+                    android:layout_height="19dp"
+                    android:layout_marginTop="4dp"
+                    android:text="Family:" />
+
+                <TextView
+                    android:id="@+id/family"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Disconnect"
-                    android:id="@+id/disconnect"/>
+                    android:layout_height="19dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="4dp"
+                    tools:text="Name" />
             </LinearLayout>
 
-        </android.support.constraint.ConstraintLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_margin="8dp">
+
+                <TextView
+                    android:id="@+id/majorLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Major:" />
+
+                <TextView
+                    android:id="@+id/major"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="11111" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_margin="8dp">
+                <TextView
+                    android:id="@+id/minorLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Minor:" />
+
+                <TextView
+                    android:id="@+id/minor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="00000" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_margin="8dp">
+                <TextView
+                    android:id="@+id/rssiLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="RSSI:" />
+
+                <TextView
+                    android:id="@+id/rssi"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="-999" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_margin="8dp">
+                <TextView
+                    android:id="@+id/pulsesLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pulses:" />
+
+                <TextView
+                    android:id="@+id/pulseCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="99" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_margin="8dp">
+                <TextView
+                    android:id="@+id/enterLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Enter:" />
+
+                <TextView
+                    android:id="@+id/enterCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="2" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp">
+                <TextView
+                    android:id="@+id/exitLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Exit:" />
+
+                <TextView
+                    android:id="@+id/exitCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="1" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_margin="8dp">
+                <TextView
+                    android:id="@+id/actionSuccessLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Action Success:" />
+
+                <TextView
+                    android:id="@+id/actionSuccessCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="5" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_margin="8dp">
+
+                <TextView
+                    android:id="@+id/actionFailLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Action Fail:" />
+
+                <TextView
+                    android:id="@+id/actionFailCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="2" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_margin="8dp">
+                <TextView
+                    android:id="@+id/actionQueueLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Action Queue:" />
+
+                <TextView
+                    android:id="@+id/actionQueueCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="14" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:gravity="center"
+                android:orientation="vertical">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <com.xyfindables.ui.views.XYButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="PrimaryBuzzer"
+                        android:id="@+id/primaryBuzzer"/>
+
+                    <com.xyfindables.ui.views.XYEditText
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:background="@color/cardview_light_background"
+                        android:layout_marginLeft="16dp"
+                        android:text="1"
+                        android:id="@+id/primaryBuzzerIndex"/>
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp"
+                    android:orientation="horizontal">
+                    <com.xyfindables.ui.views.XYButton
+                        android:id="@+id/disconnect"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Disconnect" />
+                </LinearLayout>
+            </LinearLayout>
+
+        </LinearLayout>
 
     </ScrollView>
 
-</android.support.constraint.ConstraintLayout>
+</LinearLayout>

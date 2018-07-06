@@ -177,6 +177,7 @@ open class XYSmartScanLegacy internal constructor() : XYSmartScan() {
 
         @Suppress("DEPRECATION")
         bluetoothAdapter.stopLeScan(scanCallback)
+        context = null
     }
 
     override fun statusChanged(status: Status) {

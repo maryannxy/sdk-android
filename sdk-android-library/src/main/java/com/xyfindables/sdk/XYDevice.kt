@@ -24,7 +24,9 @@ import com.xyfindables.sdk.actionHelper.XYBattery
 import com.xyfindables.sdk.actionHelper.XYFirmware
 import com.xyfindables.sdk.bluetooth.ScanResultLegacy
 import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 
 import java.util.Comparator
 import java.util.Date
@@ -55,6 +57,24 @@ class XYDevice internal constructor(id: String) : XYBase() {
     private var _stayConnected = false
     private var _stayConnectedActive = false
     private var _isInOtaMode = false
+
+    private val actionPool = newFixedThreadPoolContext(1, hashCode().toString())
+
+    fun queueAction2(context: Context, action: XYDeviceAction) : Deferred<XYDeviceAction> {
+        return async(actionPool) {
+            val connected = connect().await()
+            if (connected) {
+                action.start(context)
+            }
+            return@async action
+        }
+    }
+
+    fun connect() : Deferred<Boolean> {
+        return async {
+            return@async true
+        }
+    }
 
     // if _gatt is not closed, and we set new _gatt, then we keep reference to old _gatt connection which still exists in ble stack
     // we could set a timer here to null the scanResult if new scanResult is not seen in x seconds
@@ -190,7 +210,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
             }
         }
 
-    private val bluetoothDevice: BluetoothDevice?
+    val bluetoothDevice: BluetoothDevice?
         get() {
             var bluetoothDevice: BluetoothDevice?
             bluetoothDevice = bluetoothDevice21
@@ -374,7 +394,6 @@ class XYDevice internal constructor(id: String) : XYBase() {
         if (value == _isInOtaMode) {
             return
         }
-        XYSmartScan.instance.stopScan()
         _isInOtaMode = value
     }
 

@@ -1,17 +1,20 @@
 package com.xyfindables.sdk.sample
 
+import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothGattCallback
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.TextView
+import com.xyfindables.sdk.*
 
-import com.xyfindables.sdk.XYDevice
-import com.xyfindables.sdk.XYSmartScan
 import com.xyfindables.ui.XYBaseActivity
 import com.xyfindables.ui.views.XYButton
 import com.xyfindables.ui.views.XYEditText
 import com.xyfindables.ui.views.XYTextView
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
 
 /**
  * Created by arietrouw on 12/28/17.
@@ -20,6 +23,7 @@ import com.xyfindables.ui.views.XYTextView
 class XYDeviceActivity : XYBaseActivity() {
 
     private var device: XYDevice? = null
+    private var bluetoothDevice : XYBluetoothDevice? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,16 +89,29 @@ class XYDeviceActivity : XYBaseActivity() {
             update()
         }
 
-        val connectButton : XYButton = findViewById(R.id.connect)
-        connectButton.setOnClickListener(View.OnClickListener {
-            connectButton.setEnabled(false)
-            device!!.stayConnected(this@XYDeviceActivity, true)
+        val primaryBuzzerButton : XYButton = findViewById(R.id.primaryBuzzer)
+        primaryBuzzerButton.setOnClickListener(View.OnClickListener {
+            logInfo("connectButton: onClick")
+            primaryBuzzerButton.setEnabled(false)
+            bluetoothDevice = XYBluetoothDevice(this, device!!.bluetoothDevice!!)
+            logInfo("connectButton: got xyDevice")
+            bluetoothDevice!!.access(this) {
+                gatt: XYBluetoothGatt? ->
+                if (gatt != null) {
+                    val xy4 = gatt as XY4Gatt
+                    for (i in 0..8) {
+                        xy4.primaryBuzzer(i).await()
+                    }
+                    launch(UIThread) {
+                        primaryBuzzerButton.setEnabled(true)
+                    }
+                }
+            }
         })
 
         val disconnectButton : XYButton = findViewById(R.id.disconnect)
         disconnectButton.setOnClickListener(View.OnClickListener {
-            connectButton.setEnabled(true)
-            device!!.stayConnected(this@XYDeviceActivity, false)
+            primaryBuzzerButton.setEnabled(true)
         })
     }
 
@@ -105,7 +122,7 @@ class XYDeviceActivity : XYBaseActivity() {
     fun update() {
         runOnUiThread(Runnable {
             if (device != null) {
-                val nameView : TextView = findViewById(R.id.name)
+                val nameView : TextView = findViewById(R.id.family)
                 nameView.setText(device!!.family.name)
 
                 val rssiView : TextView = findViewById(R.id.rssi)
@@ -134,12 +151,6 @@ class XYDeviceActivity : XYBaseActivity() {
 
                 val actionQueueCount : TextView = findViewById(R.id.actionQueueCount)
                 actionQueueCount.setText(device!!.actionQueueCount.toString())
-
-                val connectButton : TextView = findViewById(R.id.connect)
-                connectButton.setVisibility(if (device!!.isConnected) View.INVISIBLE else View.VISIBLE)
-
-                val disconnectButton : TextView = findViewById(R.id.disconnect)
-                disconnectButton.setVisibility(if (device!!.isConnected) View.VISIBLE else View.INVISIBLE)
             }
         })
     }
