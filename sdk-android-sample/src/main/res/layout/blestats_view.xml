@@ -5,6 +5,8 @@
     >
     <LinearLayout
         android:orientation="horizontal"
+        android:padding="8dp"
+        android:background="@color/xy_background_light"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
             <TextView

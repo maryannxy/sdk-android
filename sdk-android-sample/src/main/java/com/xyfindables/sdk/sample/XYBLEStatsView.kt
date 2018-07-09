@@ -1,14 +1,12 @@
 package com.xyfindables.sdk.sample
 
 import android.content.Context
-import android.content.Intent
 import android.util.AttributeSet
-import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.xyfindables.sdk.XYBluetoothDevice
 
-import com.xyfindables.sdk.XYDevice
-import com.xyfindables.sdk.XYSmartScan
+import com.xyfindables.sdk.scanner.XYFilteredSmartScan
 
 /**
  * Created by arietrouw on 12/28/17.
@@ -16,57 +14,43 @@ import com.xyfindables.sdk.XYSmartScan
 
 class XYBLEStatsView(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
 
+    private val scanner : XYFilteredSmartScan
+
     init {
-        XYSmartScan.instance.addListener(TAG, object : XYDevice.Listener {
-            override fun entered(device: XYDevice) {
+        scanner = (context.applicationContext as XYApplication).scanner
+        scanner.addListener(TAG, object : XYFilteredSmartScan.Listener {
+            override fun entered(device: XYBluetoothDevice) {
                 update()
             }
 
-            override fun exited(device: XYDevice) {
+            override fun exited(device: XYBluetoothDevice) {
                 update()
             }
 
-            override fun detected(device: XYDevice) {
+            override fun detected(device: XYBluetoothDevice) {
                 update()
             }
 
-            override fun buttonPressed(device: XYDevice, buttonType: XYDevice.ButtonType) {
+            override fun connectionStateChanged(device: XYBluetoothDevice, newState: Int) {
 
             }
 
-            override fun buttonRecentlyPressed(device: XYDevice, buttonType: XYDevice.ButtonType) {
-
+            override fun statusChanged(status: XYFilteredSmartScan.BluetoothStatus) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
-
-            override fun statusChanged(status: XYSmartScan.Status) {
-
-            }
-
-            override fun updated(device: XYDevice) {
-                update()
-            }
-
-            override fun connectionStateChanged(device: XYDevice, newState: Int) {
-
-            }
-
-            override fun readRemoteRssi(device: XYDevice, rssi: Int) {
-
-            }
-
         })
     }
 
     fun update() {
         post {
             val pulseCountView = findViewById<TextView>(R.id.pulses)!!
-            pulseCountView.text = XYSmartScan.instance.pulseCount.toString()
+            pulseCountView.text = scanner.scanResultCount.toString()
 
             val pulsePerSecView = findViewById<TextView>(R.id.pulsesPerSecond)!!
-            pulsePerSecView.text = XYSmartScan.instance.pulsesPerSecond.toString()
+            pulsePerSecView.text = scanner.resultsPerSecond.toString()
 
             val devices = findViewById<TextView>(R.id.devices)
-            devices.text = XYSmartScan.instance.deviceCount.toString()
+            devices.text = scanner.devices.size.toString()
         }
     }
 

@@ -33,10 +33,12 @@ open class XYBluetoothGatt protected constructor(
 
     private val bluetoothManager = getBluetoothManager(context)
 
-    private val connectionState : Int
+    val connectionState: Int
         get() {
-            return bluetoothManager.getConnectionState(device, BluetoothProfile.GATT)
+            return _connectionState
         }
+
+    private var _connectionState = bluetoothManager.getConnectionState(device, BluetoothProfile.GATT)
 
     val closed: Boolean
         get() {
@@ -63,6 +65,7 @@ open class XYBluetoothGatt protected constructor(
             asyncDisconnect().await()
             safeClose()
             XYBluetoothGatt.deviceToGattMap.remove(device.hashCode())
+            removeListener("default")
             _gatt = null
             return@async
         }
@@ -105,6 +108,13 @@ open class XYBluetoothGatt protected constructor(
         }
     }
 
+    //it is recommended that all gatt calls are done in the same thread, and in the uithread for 4.4
+    private fun safeReadCharacteristic(characteristic: BluetoothGattCharacteristic) : Deferred<Boolean> {
+        return async(GattThread) {
+            return@async gatt.readCharacteristic(characteristic)
+        }
+    }
+
     fun asyncDiscover() : Deferred<Boolean>{
         logInfo("asyncDiscover")
         return async(CommonPool) {
@@ -113,7 +123,7 @@ open class XYBluetoothGatt protected constructor(
                 return@async true
             } else {
                 var discoverStatus = -1
-                addListener("discover", object:BluetoothGattCallback() {
+                addListener("asyncDiscover", object:BluetoothGattCallback() {
                     override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
                         super.onServicesDiscovered(gatt, status)
                         logInfo("onServicesDiscovered:$status")
@@ -131,7 +141,7 @@ open class XYBluetoothGatt protected constructor(
                     result = BluetoothGatt.GATT_SUCCESS == discoverStatus
                 }
 
-                removeListener("discover")
+                removeListener("asyncDiscover")
 
                 return@async result
 
@@ -143,7 +153,7 @@ open class XYBluetoothGatt protected constructor(
         logInfo("asyncWriteCharacteristic")
         return async(CommonPool) {
             var writeStatus = -1
-            addListener("writeCharacteristic", object:BluetoothGattCallback() {
+            addListener("asyncWriteCharacteristic", object:BluetoothGattCallback() {
                 override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
                     super.onCharacteristicWrite(gatt, characteristic, status)
                     //since it is always possible to have a rogue callback, make sure it is the one we are looking for
@@ -163,9 +173,118 @@ open class XYBluetoothGatt protected constructor(
                 result = BluetoothGatt.GATT_SUCCESS == writeStatus
             }
 
-            removeListener("writeCharacteristic")
-
+            removeListener("asyncWriteCharacteristic: $result")
             return@async result
+        }
+    }
+
+    fun asyncReadCharacteristicInt(characteristicToRead: BluetoothGattCharacteristic, formatType:Int, offset:Int) : Deferred<Int?>{
+        logInfo("asyncReadCharacteristic")
+        return async(CommonPool) {
+            var readStatus = -1
+            addListener("asyncReadCharacteristic", object:BluetoothGattCallback() {
+                override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+                    super.onCharacteristicRead(gatt, characteristic, status)
+                    //since it is always possible to have a rogue callback, make sure it is the one we are looking for
+                    if (characteristicToRead == characteristic) {
+                        readStatus = status
+                    }
+                }
+            })
+
+            var readTriggered = safeReadCharacteristic(characteristicToRead).await()
+
+            if (readTriggered) {
+                //this assumes that we will *always* get a call back from the call, even if it is a failure
+                while(readStatus == -1) {
+                    delay(WAIT_RESOLUTION)
+                }
+            }
+
+            removeListener("asyncReadCharacteristic: $readStatus")
+
+            if (readStatus == BluetoothGatt.GATT_SUCCESS) {
+                return@async characteristicToRead.getIntValue(formatType, offset)
+            } else {
+                return@async null
+            }
+        }
+    }
+
+    fun asyncReadCharacteristicBytes(characteristicToRead: BluetoothGattCharacteristic) : Deferred<ByteArray?>{
+        logInfo("asyncReadCharacteristicBytes")
+        return async(CommonPool) {
+            var readStatus = -1
+            addListener("asyncReadCharacteristicBytes", object:BluetoothGattCallback() {
+                override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+                    super.onCharacteristicRead(gatt, characteristic, status)
+                    //since it is always possible to have a rogue callback, make sure it is the one we are looking for
+                    if (characteristicToRead == characteristic) {
+                        readStatus = status
+                    }
+                }
+            })
+
+            var readTriggered = safeReadCharacteristic(characteristicToRead).await()
+
+            if (readTriggered) {
+                //this assumes that we will *always* get a call back from the call, even if it is a failure
+                while(readStatus == -1) {
+                    delay(WAIT_RESOLUTION)
+                }
+            }
+
+            removeListener("asyncReadCharacteristicBytes")
+
+            return@async characteristicToRead.value
+        }
+    }
+
+    fun asyncFindAndReadCharacteristicInt(service: UUID, characteristic: UUID, formatType:Int, offset:Int) : Deferred<Int?> {
+        return async {
+            var value: Int? = null
+            val characteristicToRead = asyncFindCharacteristic(service, characteristic).await()
+            if (characteristicToRead != null) {
+                value = asyncReadCharacteristicInt(characteristicToRead, formatType, offset).await()
+            }
+            return@async value
+        }
+    }
+
+    fun asyncFindAndReadCharacteristicBytes(service: UUID, characteristic: UUID) : Deferred<ByteArray?> {
+        return async {
+            var value: ByteArray? = null
+            val characteristicToRead = asyncFindCharacteristic(service, characteristic).await()
+            if (characteristicToRead != null) {
+                value = asyncReadCharacteristicBytes(characteristicToRead).await()
+            }
+            return@async value
+        }
+    }
+
+    fun asyncFindAndWriteCharacteristic(service: UUID, characteristic: UUID, value:Int, formatType:Int, offset:Int) : Deferred<Boolean> {
+        return async {
+            var success = false
+            val characteristicToWrite = asyncFindCharacteristic(service, characteristic).await()
+            if (characteristicToWrite != null) {
+                if (characteristicToWrite.setValue(value, formatType, offset)) {
+                    success = asyncWriteCharacteristic(characteristicToWrite).await()
+                }
+            }
+            return@async success
+        }
+    }
+
+    fun asyncFindAndWriteCharacteristic(service: UUID, characteristic: UUID, bytes:ByteArray) : Deferred<Boolean> {
+        return async {
+            var success = false
+            val characteristicToWrite = asyncFindCharacteristic(service, characteristic).await()
+            if (characteristicToWrite != null) {
+                if (characteristicToWrite.setValue(bytes)) {
+                    success = asyncWriteCharacteristic(characteristicToWrite).await()
+                }
+            }
+            return@async success
         }
     }
 
@@ -194,13 +313,13 @@ open class XYBluetoothGatt protected constructor(
                 delay(WAIT_RESOLUTION)
                 remainingTimeout -= WAIT_RESOLUTION
                 if (remainingTimeout <= 0) {
-                    removeListener("connect")
+                    removeListener("asyncConnect")
                     asyncDisconnect().await()
                     return@async false
                 }
             }
 
-            removeListener("connect")
+            removeListener("asyncConnect")
             return@async true
         }
     }
@@ -286,12 +405,14 @@ open class XYBluetoothGatt protected constructor(
             super.onConnectionStateChange(gatt, status, newState)
             logInfo("onConnectionStateChange: $newState : $status")
             if (status != BluetoothGatt.GATT_SUCCESS) {
-                logError("onConnectionStateChange Failed", true)
-            }
-            synchronized(listeners) {
-                for(listener in listeners) {
-                    launch(CommonPool) {
-                        listener.value.onConnectionStateChange(gatt, status, newState)
+                logError("onConnectionStateChange Failed", false)
+            } else {
+                _connectionState = newState
+                synchronized(listeners) {
+                    for (listener in listeners) {
+                        launch(CommonPool) {
+                            listener.value.onConnectionStateChange(gatt, status, newState)
+                        }
                     }
                 }
             }

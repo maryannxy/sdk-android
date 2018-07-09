@@ -4,68 +4,53 @@ import android.app.Activity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import com.xyfindables.core.XYBase
+import com.xyfindables.sdk.XYBluetoothDevice
 
 import com.xyfindables.sdk.XYDevice
-import com.xyfindables.sdk.XYSmartScan
+import com.xyfindables.sdk.scanner.XYFilteredSmartScan
 
 import java.util.ArrayList
 
-class XYDeviceAdapter(private val _activity: Activity) : BaseAdapter() {
-    private var _devices: List<XYDevice>
+class XYDeviceAdapter(private val activity: Activity) : BaseAdapter() {
+    private var devices: List<Pair<Long, XYBluetoothDevice>>
 
-    val scanner : XYSmartScan
+    val scanner : XYFilteredSmartScan
         get() {
-            return XYSmartScan.instance
+            return (activity.applicationContext as XYApplication).scanner
         }
 
     init {
-        _devices = ArrayList()
-        XYSmartScan.instance.addListener(TAG, object : XYDevice.Listener {
-            override fun entered(device: XYDevice) {
-                _activity.runOnUiThread(Thread(Runnable {
-                    _devices = scanner.devices!!
+        devices = ArrayList()
+        scanner.addListener(TAG, object : XYFilteredSmartScan.Listener {
+            override fun entered(device: XYBluetoothDevice) {
+                activity.runOnUiThread(Thread(Runnable {
+                    devices = scanner.devices.toList()
                     notifyDataSetChanged()
                 }))
             }
 
-            override fun exited(device: XYDevice) {
-                _activity.runOnUiThread(Thread(Runnable {
-                    _devices = scanner.devices!!
+            override fun exited(device: XYBluetoothDevice) {
+                activity.runOnUiThread(Thread(Runnable {
+                    devices = scanner.devices.toList()
                     notifyDataSetChanged()
                 }))
             }
 
-            override fun detected(device: XYDevice) {
-            }
+            override fun detected(device: XYBluetoothDevice) {}
 
-            override fun buttonPressed(device: XYDevice, buttonType: XYDevice.ButtonType) {}
+            override fun statusChanged(status: XYFilteredSmartScan.BluetoothStatus) {}
 
-            override fun buttonRecentlyPressed(device: XYDevice, buttonType: XYDevice.ButtonType) {}
-
-            override fun statusChanged(status: XYSmartScan.Status) {}
-
-            override fun updated(device: XYDevice) {
-
-            }
-
-            override fun connectionStateChanged(device: XYDevice, newState: Int) {
-
-            }
-
-            override fun readRemoteRssi(device: XYDevice, rssi: Int) {
-
-            }
+            override fun connectionStateChanged(device: XYBluetoothDevice, newState: Int) {}
 
         })
     }
 
     override fun getCount(): Int {
-        return _devices.size
+        return devices.size
     }
 
     override fun getItem(position: Int): Any {
-        return _devices[position]
+        return devices[position].second
     }
 
     override fun getItemId(position: Int): Long {
@@ -75,7 +60,7 @@ class XYDeviceAdapter(private val _activity: Activity) : BaseAdapter() {
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         var view = convertView
         if (view == null) {
-            view = _activity.layoutInflater.inflate(R.layout.device_item, parent, false)
+            view = activity.layoutInflater.inflate(R.layout.device_item, parent, false)
         }
         (view as XYDeviceItemView).setDevice(getItem(position) as XYDevice)
 

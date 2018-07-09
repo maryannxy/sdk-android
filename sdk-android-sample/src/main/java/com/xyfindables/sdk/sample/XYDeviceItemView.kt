@@ -2,16 +2,12 @@ package com.xyfindables.sdk.sample
 
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
 import android.util.AttributeSet
-import android.view.MotionEvent
-import android.view.View
 import android.widget.RelativeLayout
 import android.widget.TextView
 import com.xyfindables.core.XYBase
 
 import com.xyfindables.sdk.XYDevice
-import com.xyfindables.sdk.XYSmartScan
 
 /**
  * Created by arietrouw on 12/27/17.
@@ -24,8 +20,8 @@ class XYDeviceItemView(context: Context, attrs: AttributeSet) : RelativeLayout(c
     init {
         setOnClickListener {
             if (device != null) {
-                val intent = Intent(context, XYDeviceActivity::class.java)
-                intent.putExtra(XYDeviceActivity.EXTRA_DEVICEID, device!!.id)
+                val intent = Intent(context, XYFinderDeviceActivity::class.java)
+                intent.putExtra(XYFinderDeviceActivity.EXTRA_DEVICEID, device!!.id)
                 context.startActivity(intent)
             }
         }
@@ -92,7 +88,7 @@ class XYDeviceItemView(context: Context, attrs: AttributeSet) : RelativeLayout(c
 
             }
 
-            override fun statusChanged(status: XYSmartScan.Status) {
+            override fun statusChanged(status: XYDevice.BluetoothStatus) {
 
             }
         })

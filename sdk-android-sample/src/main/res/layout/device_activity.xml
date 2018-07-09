@@ -161,54 +161,16 @@
                 android:orientation="horizontal"
                 android:layout_margin="8dp">
                 <TextView
-                    android:id="@+id/actionSuccessLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Action Success:" />
+                    android:text="Lock:" />
 
-                <TextView
-                    android:id="@+id/actionSuccessCount"
+                <com.xyfindables.ui.views.XYEditText
+                    android:id="@+id/lock_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    tools:text="5" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_margin="8dp">
-
-                <TextView
-                    android:id="@+id/actionFailLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Action Fail:" />
-
-                <TextView
-                    android:id="@+id/actionFailCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    tools:text="2" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_margin="8dp">
-                <TextView
-                    android:id="@+id/actionQueueLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Action Queue:" />
-
-                <TextView
-                    android:id="@+id/actionQueueCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    tools:text="14" />
+                    android:width="120dp"
+                    tools:text="1234567890" />
             </LinearLayout>
 
             <LinearLayout
@@ -219,7 +181,8 @@
                 android:orientation="vertical">
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp">
                     <com.xyfindables.ui.views.XYButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -240,10 +203,35 @@
                     android:layout_margin="8dp"
                     android:orientation="horizontal">
                     <com.xyfindables.ui.views.XYButton
-                        android:id="@+id/disconnect"
+                        android:id="@+id/stay_awake"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Disconnect" />
+                        android:enabled="false"
+                        android:text="Stay Awake" />
+                    <com.xyfindables.ui.views.XYButton
+                        android:id="@+id/fall_asleep"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:enabled="false"
+                        android:layout_marginLeft="16dp"
+                        android:text="Fall Asleep" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp"
+                    android:orientation="horizontal">
+                    <com.xyfindables.ui.views.XYButton
+                        android:id="@+id/lock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Lock" />
+                    <com.xyfindables.ui.views.XYButton
+                        android:id="@+id/unlock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="16dp"
+                        android:text="Unlock" />
                 </LinearLayout>
             </LinearLayout>
 

@@ -7,12 +7,100 @@ import android.content.Context
 import com.xyfindables.core.XYBase
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.channels.produce
+import java.util.HashMap
 import java.util.concurrent.TimeoutException
 
-class XYBluetoothDevice (val context: Context, val device:BluetoothDevice) : XYBase() {
+open class XYBluetoothDevice (val context: Context, val device:BluetoothDevice) : XYBase() {
 
     private val CLEANUP_DELAY = 10000
     private var references = 0
+
+    private val listeners = HashMap<String, Listener>()
+
+    var rssi = 0
+
+    var detectCount = 0
+    var enterCount = 0
+    var exitCount = 0
+
+    val address : String
+        get() {
+            return device.address
+        }
+
+    val id : Long
+        get() {
+            return hashCode().toLong()
+        }
+
+    fun onEnter() {
+        enterCount++
+        synchronized(listeners) {
+            for ((_, listener) in listeners) {
+                launch (CommonPool) {
+                    listener.entered(this@XYBluetoothDevice)
+                }
+            }
+        }
+    }
+
+    fun onExit() {
+        exitCount++
+        synchronized(listeners) {
+            for ((_, listener) in listeners) {
+                launch (CommonPool) {
+                    listener.exited(this@XYBluetoothDevice)
+                }
+            }
+        }
+    }
+
+    fun onDetect() {
+        detectCount++
+        synchronized(listeners) {
+            for ((_, listener) in listeners) {
+                launch (CommonPool) {
+                    listener.detected(this@XYBluetoothDevice)
+                }
+            }
+        }
+    }
+
+    fun onConnectionStateChange(newState: Int) {
+        synchronized(listeners) {
+            for ((_, listener) in listeners) {
+                launch (CommonPool) {
+                    listener.connectionStateChanged(this@XYBluetoothDevice, newState)
+                }
+            }
+        }
+    }
+
+    interface Listener {
+        fun entered(device: XYBluetoothDevice)
+
+        fun exited(device: XYBluetoothDevice)
+
+        fun detected(device: XYBluetoothDevice)
+
+        fun connectionStateChanged(device: XYBluetoothDevice, newState: Int)
+    }
+
+    fun addListener(key: String, listener: Listener) {
+        launch(CommonPool){
+            synchronized(listeners) {
+                listeners.put(key, listener)
+            }
+        }
+    }
+
+    fun removeListener(key: String) {
+        launch(CommonPool){
+            synchronized(listeners) {
+                listeners.remove(key)
+            }
+        }
+    }
 
     private fun getConnectedGatt(context: Context, timeout:Int = 100000) : Deferred<XYBluetoothGatt?> {
         logInfo("getConnectedGatt")

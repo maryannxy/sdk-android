@@ -48,7 +48,7 @@ buildscript {
 }
 
 dependencies {
-    api 'com.google.firebase:firebase-core:16.0.0'
+    api 'com.google.firebase:firebase-core:16.0.1'
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     api project(path: ':sdk-android-library')
     api project(path: ':xycore')

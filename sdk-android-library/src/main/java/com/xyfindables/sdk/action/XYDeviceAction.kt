@@ -34,7 +34,6 @@ abstract class XYDeviceAction(val device: XYDevice) : XYBase() {
         logInfo(TAG, this.javaClass.superclass.simpleName + ":starting...")
         async (CommonPool) {
             logInfo(TAG, "running...")
-            device.queueAction(context.applicationContext, this@XYDeviceAction)
         }
     }
 

@@ -7,12 +7,10 @@ import android.widget.ListView
 import com.crashlytics.android.Crashlytics
 import com.xyfindables.core.XYBase
 import com.xyfindables.core.XYPermissions
-import com.xyfindables.sdk.XYSmartScan
-import com.xyfindables.ui.XYBaseActivity
 
 import io.fabric.sdk.android.Fabric
 
-class XYFindablesSdkSampleActivity : XYBaseActivity() {
+class XYFindablesSdkSampleActivity : XYAppBaseActivity() {
     private var _adapter: BaseAdapter? = null
     private var _listView: ListView? = null
 
@@ -33,11 +31,11 @@ class XYFindablesSdkSampleActivity : XYBaseActivity() {
         super.onResume()
         val permissions = XYPermissions(this)
         permissions.requestPermission(android.Manifest.permission.ACCESS_FINE_LOCATION, "Location services are needed to access and track your finders.", XYPermissions.LOCATION_PERMISSIONS_REQ_CODE)
-        XYSmartScan.instance.startScan(this)
+        scanner.start()
     }
 
     override fun onPause() {
         super.onPause()
-        XYSmartScan.instance.stopScan()
+        scanner.stop()
     }
 }
