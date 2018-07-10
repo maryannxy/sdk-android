@@ -29,7 +29,7 @@ class XYFilteredSmartScanModern(context: Context) : XYFilteredSmartScan(context)
 
         val filters = ArrayList<ScanFilter>()
 
-        filters.add(getXY4ScanFilter())
+        //filters.add(getXY4ScanFilter())
 
         scanner.startScan(filters, getSettings(), callback)
     }
@@ -37,6 +37,7 @@ class XYFilteredSmartScanModern(context: Context) : XYFilteredSmartScan(context)
     val callback = object : ScanCallback() {
         override fun onBatchScanResults(results: MutableList<ScanResult>?) {
             super.onBatchScanResults(results)
+            //logInfo("onBatchScanResults: $results")
             results.guard { return }
             val xyResults = ArrayList<XYScanResult>()
             for (result in results!!) {
@@ -47,26 +48,17 @@ class XYFilteredSmartScanModern(context: Context) : XYFilteredSmartScan(context)
 
         override fun onScanFailed(errorCode: Int) {
             super.onScanFailed(errorCode)
-            logError("onScanFailed: $errorCode", true)
+            logError("onScanFailed: $errorCode", false)
         }
 
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
             super.onScanResult(callbackType, result)
+            //logInfo("onBatchScanResults: $result")
             result.guard { return }
             val xyResults = ArrayList<XYScanResult>()
             xyResults.add(XYScanResultModern(result!!))
             onScanResult(xyResults)
         }
-    }
-
-    val APPLE_CORPORATION_ID = 0x004c
-    val APPLE_IBEACON_ID = 0x02.toByte()
-    val APPLE_IBEACON_LEN = 0x15.toByte()
-
-    private fun getXY4ScanFilter() : ScanFilter {
-        val data = byteArrayOf(APPLE_IBEACON_ID, APPLE_IBEACON_LEN)
-        val mask = byteArrayOf(0xf0.toByte())
-        return ScanFilter.Builder().setManufacturerData(APPLE_CORPORATION_ID, data, mask).build()
     }
 
     private fun getSettings(): ScanSettings {

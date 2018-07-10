@@ -165,11 +165,12 @@
                     android:layout_height="wrap_content"
                     android:text="Lock:" />
 
-                <com.xyfindables.ui.views.XYEditText
+                <EditText
                     android:id="@+id/lock_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:width="120dp"
+                    android:focusable="false"
                     tools:text="1234567890" />
             </LinearLayout>
 
@@ -189,12 +190,13 @@
                         android:text="PrimaryBuzzer"
                         android:id="@+id/primaryBuzzer"/>
 
-                    <com.xyfindables.ui.views.XYEditText
+                    <EditText
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
                         android:background="@color/cardview_light_background"
                         android:layout_marginLeft="16dp"
                         android:text="1"
+                        android:focusable="false"
                         android:id="@+id/primaryBuzzerIndex"/>
                 </LinearLayout>
                 <LinearLayout
@@ -234,6 +236,12 @@
                         android:text="Unlock" />
                 </LinearLayout>
             </LinearLayout>
+
+            <ListView
+                android:id="@+id/adList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+            </ListView>
 
         </LinearLayout>
 

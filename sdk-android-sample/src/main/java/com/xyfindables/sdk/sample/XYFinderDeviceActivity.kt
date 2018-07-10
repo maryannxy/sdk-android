@@ -2,11 +2,13 @@ package com.xyfindables.sdk.sample
 
 import android.os.Bundle
 import android.view.View
+import android.widget.BaseAdapter
+import android.widget.EditText
+import android.widget.ListView
 import android.widget.TextView
 import com.xyfindables.sdk.*
 
 import com.xyfindables.ui.views.XYButton
-import com.xyfindables.ui.views.XYEditText
 import kotlinx.coroutines.experimental.launch
 import kotlin.experimental.and
 
@@ -16,14 +18,14 @@ import kotlin.experimental.and
 
 class XYFinderDeviceActivity : XYAppBaseActivity() {
 
-    private var device: XYFinderBluetoothDevice? = null
-    private var bluetoothDevice : XYBluetoothDevice? = null
+    private var device: XYBluetoothDevice? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val intent = getIntent()
-        val deviceId = intent.getLongExtra(XYFinderDeviceActivity.EXTRA_DEVICEID, 0)
-        device = scanner.devices[deviceId] as XYFinderBluetoothDevice
+        val deviceId = intent.getStringExtra(XYFinderDeviceActivity.EXTRA_DEVICEID)
+        logInfo("onCreate: $deviceId")
+        device = scanner.devices[deviceId] as XYBluetoothDevice
         if (device == null) {
             showToast("Failed to Find Device")
             finish()
@@ -31,6 +33,10 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         }
         setContentView(R.layout.device_activity)
         scanner.start()
+
+        val listView: ListView? = findViewById(R.id.adList)
+        val adapter: BaseAdapter? = XYDeviceAdapter(this)
+        listView!!.adapter = adapter
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
@@ -68,7 +74,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             logInfo("primaryBuzzerButton: onClick")
             primaryBuzzerButton.setEnabled(false)
             logInfo("primaryBuzzerButton: got xyDevice")
-            bluetoothDevice!!.access(this) {
+            device!!.access(this) {
                 gatt: XYBluetoothGatt? ->
                 if (gatt != null) {
                     val xy4 = gatt as XY4Gatt
@@ -88,7 +94,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         stayAwakeButton.setOnClickListener(View.OnClickListener {
             logInfo("stayAwakeButton: onClick")
             stayAwakeButton.setEnabled(false)
-            bluetoothDevice!!.access(this) {
+            device!!.access(this) {
                 gatt: XYBluetoothGatt? ->
                 if (gatt != null) {
                     val xy4 = gatt as XY4Gatt
@@ -104,7 +110,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         fallAsleepButton.setOnClickListener(View.OnClickListener {
             logInfo("fallAsleepButton: onClick")
             fallAsleepButton.setEnabled(false)
-            bluetoothDevice!!.access(this) {
+            device!!.access(this) {
                 gatt: XYBluetoothGatt? ->
                 if (gatt != null) {
                     val xy4 = gatt as XY4Gatt
@@ -119,7 +125,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         val lock : XYButton = findViewById(R.id.lock)
         lock.setOnClickListener(View.OnClickListener {
             logInfo("lock: onClick")
-            bluetoothDevice!!.access(this) {
+            device!!.access(this) {
                 gatt: XYBluetoothGatt? ->
                 if (gatt != null) {
                     val xy4 = gatt as XY4Gatt
@@ -134,7 +140,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         val unlock : XYButton = findViewById(R.id.unlock)
         unlock.setOnClickListener(View.OnClickListener {
             logInfo("unlock: onClick")
-            bluetoothDevice!!.access(this) {
+            device!!.access(this) {
                 gatt: XYBluetoothGatt? ->
                 if (gatt != null) {
                     val xy4 = gatt as XY4Gatt
@@ -148,7 +154,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
     }
 
     fun updateStayAwakeEnabledStates() {
-        bluetoothDevice!!.access(this) {
+        device!!.access(this) {
             gatt: XYBluetoothGatt? ->
             if (gatt != null) {
                 val xy4 = gatt as XY4Gatt
@@ -186,7 +192,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
     }
 
     fun updateLockValue() {
-        bluetoothDevice!!.access(this) {
+        device!!.access(this) {
             gatt: XYBluetoothGatt? ->
             if (gatt != null) {
                 val xy4 = gatt as XY4Gatt
@@ -206,7 +212,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
 
                 logInfo("updateLock: ${lock.size}")
                 launch(UIThread) {
-                    val lockEdit : XYEditText = findViewById(R.id.lock_value)
+                    val lockEdit : EditText = findViewById(R.id.lock_value)
                     launch(UIThread) {
                         lockEdit.setText(bytesToHex(lock))
                     }
@@ -219,16 +225,16 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         launch(UIThread) {
             if (device != null) {
                 val nameView : TextView = findViewById(R.id.family)
-                nameView.setText(device!!.family.name)
+                //nameView.setText(device!!.family.name)
 
                 val rssiView : TextView = findViewById(R.id.rssi)
                 rssiView.setText(device!!.rssi.toString())
 
                 val majorView : TextView = findViewById(R.id.major)
-                majorView.setText(device!!.major.toString())
+                //majorView.setText(device!!.major.toString())
 
                 val minorView : TextView = findViewById(R.id.minor)
-                minorView.setText(device!!.minor.toString())
+                //minorView.setText(device!!.minor.toString())
 
                 val pulsesView : TextView = findViewById(R.id.pulseCount)
                 pulsesView.setText(device!!.detectCount.toString())

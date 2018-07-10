@@ -12,7 +12,7 @@ import com.xyfindables.sdk.scanner.XYFilteredSmartScan
 import java.util.ArrayList
 
 class XYDeviceAdapter(private val activity: Activity) : BaseAdapter() {
-    private var devices: List<Pair<Long, XYBluetoothDevice>>
+    private var devices: List<Pair<String, XYBluetoothDevice>>
 
     val scanner : XYFilteredSmartScan
         get() {
@@ -62,7 +62,7 @@ class XYDeviceAdapter(private val activity: Activity) : BaseAdapter() {
         if (view == null) {
             view = activity.layoutInflater.inflate(R.layout.device_item, parent, false)
         }
-        (view as XYDeviceItemView).setDevice(getItem(position) as XYDevice)
+        (view as XYDeviceItemView).setDevice(getItem(position) as XYBluetoothDevice)
 
         return view
     }

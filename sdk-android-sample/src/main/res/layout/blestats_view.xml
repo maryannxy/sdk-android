@@ -4,34 +4,62 @@
     android:theme="@style/XYTheme"
     >
     <LinearLayout
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:background="@color/xy_background_light"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Pulses: "/>
-            <TextView
-                android:id="@+id/pulses"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Pulses/Second: "/>
-            <TextView
-                android:id="@+id/pulsesPerSecond"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Devices: "/>
-            <TextView
-                android:id="@+id/devices"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <LinearLayout
+            android:orientation="horizontal"
+            android:padding="8dp"
+            android:background="@color/xy_background_light"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"
+                    android:text="Uptime: "/>
+                <TextView
+                    android:id="@+id/uptime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"
+                    android:text="Pulses: "/>
+                <TextView
+                    android:id="@+id/pulses"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"/>
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:padding="8dp"
+            android:background="@color/xy_background_light"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"
+                    android:text="Pulses/Second: "/>
+                <TextView
+                    android:id="@+id/pulsesPerSecond"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"
+                    android:text="Devices: "/>
+                <TextView
+                    android:id="@+id/devices"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"/>
+        </LinearLayout>
     </LinearLayout>
 </com.xyfindables.sdk.sample.XYBLEStatsView>

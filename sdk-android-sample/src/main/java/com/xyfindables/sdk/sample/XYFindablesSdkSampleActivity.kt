@@ -11,8 +11,8 @@ import com.xyfindables.core.XYPermissions
 import io.fabric.sdk.android.Fabric
 
 class XYFindablesSdkSampleActivity : XYAppBaseActivity() {
-    private var _adapter: BaseAdapter? = null
-    private var _listView: ListView? = null
+    private var adapter: BaseAdapter? = null
+    private var listView: ListView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         logInfo("onCreate")
@@ -21,9 +21,9 @@ class XYFindablesSdkSampleActivity : XYAppBaseActivity() {
         Fabric.with(this, crashlytics, Crashlytics())
         XYBase.init(this)
         setContentView(R.layout.activity_xyfindables_sdk_sample)
-        _listView = findViewById(R.id.listview)
-        _adapter = XYDeviceAdapter(this)
-        _listView!!.adapter = _adapter
+        listView = findViewById(R.id.listview)
+        adapter = XYDeviceAdapter(this)
+        listView!!.adapter = adapter
     }
 
     override fun onResume() {
@@ -31,11 +31,9 @@ class XYFindablesSdkSampleActivity : XYAppBaseActivity() {
         super.onResume()
         val permissions = XYPermissions(this)
         permissions.requestPermission(android.Manifest.permission.ACCESS_FINE_LOCATION, "Location services are needed to access and track your finders.", XYPermissions.LOCATION_PERMISSIONS_REQ_CODE)
-        scanner.start()
     }
 
     override fun onPause() {
         super.onPause()
-        scanner.stop()
     }
 }

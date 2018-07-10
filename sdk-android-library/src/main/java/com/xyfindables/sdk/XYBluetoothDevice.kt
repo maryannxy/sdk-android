@@ -5,19 +5,22 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.content.Context
 import com.xyfindables.core.XYBase
+import com.xyfindables.sdk.scanner.XYScanResult
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.channels.produce
-import java.util.HashMap
+import java.util.*
 import java.util.concurrent.TimeoutException
 
 open class XYBluetoothDevice (val context: Context, val device:BluetoothDevice) : XYBase() {
 
-    private val CLEANUP_DELAY = 10000
+    private val CLEANUP_DELAY = 1000
+    val OUTOFRANGE_RSSI = -999
+
     private var references = 0
 
     private val listeners = HashMap<String, Listener>()
 
-    var rssi = 0
+    var rssi = -999
 
     var detectCount = 0
     var enterCount = 0
@@ -28,9 +31,14 @@ open class XYBluetoothDevice (val context: Context, val device:BluetoothDevice) 
             return device.address
         }
 
-    val id : Long
+    val id : String
         get() {
-            return hashCode().toLong()
+            return device.address
+        }
+
+    val name: String?
+        get() {
+            return device.name
         }
 
     fun onEnter() {
@@ -145,6 +153,23 @@ open class XYBluetoothDevice (val context: Context, val device:BluetoothDevice) 
             if (!gatt.closed && references == 0) {
                 gatt.asyncClose().await()
             }
+        }
+    }
+
+    companion object {
+
+        val manufacturerToCreator = HashMap<Int, (context:Context, scanResult: XYScanResult) -> XYBluetoothDevice?>()
+        fun fromScanResult(context:Context, scanResult: XYScanResult) : XYBluetoothDevice {
+            for ((manufacturerId, creator) in manufacturerToCreator) {
+                val bytes = scanResult.scanRecord?.getManufacturerSpecificData(manufacturerId)
+                if (bytes != null) {
+                    val device = creator(context, scanResult)
+                    if (device !=null) {
+                        return device
+                    }
+                }
+            }
+            return XYBluetoothDevice(context, scanResult.device)
         }
     }
 

@@ -20,10 +20,44 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
 
     val resultsPerSecond: Float
         get() {
-            return scanResultCount / (startTime/1000F)
+            if (startTime == 0L) {
+                return 0F
+            }
+            return scanResultCount / (uptimeSeconds)
         }
 
-    val devices = HashMap<Long, XYBluetoothDevice>()
+    val now: Long
+        get() {
+            return SystemClock.uptimeMillis()
+        }
+
+    val uptime: Long
+        get() {
+            if (startTime == 0L) {
+                return 0
+            } else {
+                return now - startTime
+            }
+        }
+
+    val uptimeSeconds: Float
+        get() {
+            return uptime/1000F
+        }
+
+    val devices = HashMap<String, XYBluetoothDevice>()
+
+    fun deviceFromScanResult(scanResult: XYScanResult) : XYBluetoothDevice {
+        var device : XYBluetoothDevice? = null
+        synchronized(devices) {
+            device = devices[scanResult.deviceId]
+            if (device == null) {
+                device = XYBluetoothDevice.fromScanResult(context, scanResult)
+                devices.set(device!!.id, device!!)
+            }
+        }
+        return device!!
+    }
 
     private val listeners = HashMap<String, Listener>()
 
@@ -50,15 +84,18 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
         }
 
     open fun start() {
-        startTime = SystemClock.currentThreadTimeMillis()
+        logInfo("start")
+        startTime = now
     }
 
     open fun stop() {
+        logInfo("stop")
         startTime = 0
         scanResultCount = 0
     }
 
     fun addListener(key: String, listener: Listener) {
+        logInfo("addListener")
         launch(CommonPool){
             synchronized(listeners) {
                 listeners.put(key, listener)
@@ -67,6 +104,7 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
     }
 
     fun removeListener(key: String) {
+        logInfo("removeListener")
         launch(CommonPool){
             synchronized(listeners) {
                 listeners.remove(key)
@@ -77,12 +115,20 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
     protected fun onScanResult(scanResults: List<XYScanResult>): List<XYScanResult> {
         scanResultCount++
         for (scanResult in scanResults) {
-            devices[scanResult.deviceId]!!.rssi = scanResult.rssi
+            val device = deviceFromScanResult(scanResult)
+            if (device.rssi == -999) {
+                reportEntered(device)
+                device.onEnter()
+            }
+            device.rssi = scanResult.rssi
+            reportDetected(device)
+            device.onDetect()
         }
         return scanResults
     }
 
     protected fun reportEntered(device: XYBluetoothDevice) {
+        logInfo("reportEntered")
         synchronized(listeners) {
             for ((_, listener) in listeners) {
                 launch (CommonPool) {
@@ -93,6 +139,7 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
     }
 
     protected fun reportExited(device: XYBluetoothDevice) {
+        logInfo("reportExited")
         synchronized(listeners) {
             for ((_, listener) in listeners) {
                 launch (CommonPool) {
@@ -103,6 +150,7 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
     }
 
     protected fun reportDetected(device: XYBluetoothDevice) {
+        //logInfo("reportDetected")
         synchronized(listeners) {
             for ((_, listener) in listeners) {
                 launch (CommonPool) {
