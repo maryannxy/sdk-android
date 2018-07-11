@@ -599,9 +599,8 @@ open class XYBluetoothGatt protected constructor(
 
         val TAG = XYBluetoothGatt.javaClass.simpleName
 
-        //this is the thread that all calls should happen on for gatt calls.  Using UIThread
-        //for now since that is needed for 4.4, but should allow non-ui thread for later
-        //versions
+        //this is the thread that all calls should happen on for gatt calls.  Using a single thread
+        //it is documented that for 4.4, we should consider using the UIThread
         val GattThread = XYFilteredSmartScan.BluetoothThread
 
         private val WAIT_RESOLUTION = 100
