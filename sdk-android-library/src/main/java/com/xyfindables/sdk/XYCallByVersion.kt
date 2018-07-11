@@ -1,8 +1,9 @@
 package com.xyfindables.sdk
 
 import android.os.Build
+import com.xyfindables.core.XYBase
 
-class XYCallByVersion {
+class XYCallByVersion : XYBase() {
 
     class Call(
             val version: Int,
@@ -22,11 +23,11 @@ class XYCallByVersion {
 
     fun call() {
         for (i in 0..calls.lastIndex) {
-            if (Build.VERSION.SDK_INT <= calls[i].version) {
+            if (Build.VERSION.SDK_INT >= calls[i].version) {
                 calls[i].call()
                 return
             }
         }
-        throw UnsupportedOperationException()
+        logError("No Call for OS Version Found", true)
     }
 }

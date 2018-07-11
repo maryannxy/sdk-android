@@ -1,11 +1,9 @@
-package com.xyfindables.sdk
+package com.xyfindables.sdk.devices
 
-import android.bluetooth.BluetoothDevice
 import android.content.Context
 import com.xyfindables.sdk.scanner.XYScanResult
 import java.nio.ByteBuffer
 import java.util.*
-import kotlin.experimental.and
 
 open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult) : XYBluetoothDevice(context, scanResult.device) {
 
@@ -51,13 +49,16 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult) 
     companion object {
         val APPLE_IBEACON_ID = 0x02.toByte()
 
+        var canCreate = false
+
         fun enable(enable: Boolean) {
             if (enable) {
                 XYAppleBluetoothDevice.enable(true)
                 XYAppleBluetoothDevice.typeToCreator[APPLE_IBEACON_ID] = {
                     context: Context,
                     scanResult: XYScanResult
-                    -> fromScanResult(context, scanResult)
+                    ->
+                    fromScanResult(context, scanResult)
                 }
             } else {
                 XYAppleBluetoothDevice.typeToCreator.remove(APPLE_IBEACON_ID)
@@ -81,7 +82,10 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult) 
                     }
                 }
             }
-            return XYIBeaconBluetoothDevice(context, scanResult)
+            if (canCreate)
+                return XYIBeaconBluetoothDevice(context, scanResult)
+            else
+                return null
         }
     }
 }

@@ -4,9 +4,8 @@ import android.app.Activity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import com.xyfindables.sdk.XYBluetoothDevice
+import com.xyfindables.sdk.devices.XYBluetoothDevice
 
-import com.xyfindables.sdk.XYDevice
 import com.xyfindables.sdk.scanner.XYFilteredSmartScan
 
 import java.util.ArrayList

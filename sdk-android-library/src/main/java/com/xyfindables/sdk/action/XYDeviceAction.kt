@@ -32,9 +32,6 @@ abstract class XYDeviceAction(val device: XYDevice) : XYBase() {
 
     fun start(context: Context) {
         logInfo(TAG, this.javaClass.superclass.simpleName + ":starting...")
-        async (CommonPool) {
-            logInfo(TAG, "running...")
-        }
     }
 
     open fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {

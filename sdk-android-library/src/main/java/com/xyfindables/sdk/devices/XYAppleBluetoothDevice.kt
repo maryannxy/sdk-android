@@ -1,4 +1,4 @@
-package com.xyfindables.sdk
+package com.xyfindables.sdk.devices
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
@@ -10,16 +10,18 @@ open class XYAppleBluetoothDevice(context: Context, device: BluetoothDevice) : X
     companion object {
         val MANUFACTURER_ID = 0x004c
 
+        var canCreate = false
+
         fun enable(enable: Boolean) {
             if (enable) {
-                XYBluetoothDevice.manufacturerToCreator[MANUFACTURER_ID] = {
+                manufacturerToCreator[MANUFACTURER_ID] = {
                     context: Context,
                     scanResult: XYScanResult
                     ->
                     fromScanResult(context, scanResult)
                 }
             } else {
-                XYBluetoothDevice.manufacturerToCreator.remove(MANUFACTURER_ID)
+                manufacturerToCreator.remove(MANUFACTURER_ID)
             }
         }
 
@@ -33,7 +35,10 @@ open class XYAppleBluetoothDevice(context: Context, device: BluetoothDevice) : X
                     }
                 }
             }
-            return XYAppleBluetoothDevice(context, scanResult.device)
+            if (canCreate)
+                return XYAppleBluetoothDevice(context, scanResult.device)
+            else
+                return null
         }
     }
 }

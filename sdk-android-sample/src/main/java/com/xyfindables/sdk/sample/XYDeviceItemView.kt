@@ -7,10 +7,9 @@ import android.view.View
 import android.widget.RelativeLayout
 import android.widget.TextView
 import com.xyfindables.core.XYBase
-import com.xyfindables.sdk.XYBluetoothDevice
+import com.xyfindables.sdk.devices.XYBluetoothDevice
 
-import com.xyfindables.sdk.XYDevice
-import com.xyfindables.sdk.XYIBeaconBluetoothDevice
+import com.xyfindables.sdk.devices.XYIBeaconBluetoothDevice
 
 /**
  * Created by arietrouw on 12/27/17.

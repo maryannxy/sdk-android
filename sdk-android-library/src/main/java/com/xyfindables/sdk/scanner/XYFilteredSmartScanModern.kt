@@ -7,6 +7,7 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
 import com.xyfindables.core.guard
+import kotlinx.coroutines.experimental.launch
 import java.util.ArrayList
 
 @TargetApi(21)
@@ -15,23 +16,25 @@ class XYFilteredSmartScanModern(context: Context) : XYFilteredSmartScan(context)
         logInfo("start")
         super.start()
 
-        val bluetoothAdapter = getBluetoothManager(context).adapter
-        bluetoothAdapter.guard {
-            logInfo("Bluetooth Disabled")
-            return
+        launch (BluetoothThread){
+
+            val bluetoothAdapter = getBluetoothManager(this@XYFilteredSmartScanModern.context).adapter
+            bluetoothAdapter.guard {
+                logInfo("Bluetooth Disabled")
+                return@launch
+            }
+
+            val scanner = bluetoothAdapter.bluetoothLeScanner
+            scanner.guard {
+                logInfo("startScan:Failed to get Bluetooth Scanner. Disabled?")
+                return@launch
+            }
+
+            val filters = ArrayList<ScanFilter>()
+
+            //filters.add(getXY4ScanFilter())
+            scanner.startScan(filters, getSettings(), callback)
         }
-
-        val scanner = bluetoothAdapter.bluetoothLeScanner
-        scanner.guard {
-            logInfo("startScan:Failed to get Bluetooth Scanner. Disabled?")
-            return
-        }
-
-        val filters = ArrayList<ScanFilter>()
-
-        //filters.add(getXY4ScanFilter())
-
-        scanner.startScan(filters, getSettings(), callback)
     }
 
     val callback = object : ScanCallback() {
@@ -68,19 +71,21 @@ class XYFilteredSmartScanModern(context: Context) : XYFilteredSmartScan(context)
     override fun stop() {
         logInfo("stop")
         super.stop()
-        val bluetoothAdapter = getBluetoothManager(context!!).adapter
+        launch (BluetoothThread) {
+            val bluetoothAdapter = getBluetoothManager(this@XYFilteredSmartScanModern.context!!).adapter
 
-        if (bluetoothAdapter == null) {
-            logInfo("stop: Bluetooth Disabled")
-            return
+            if (bluetoothAdapter == null) {
+                logInfo("stop: Bluetooth Disabled")
+                return@launch
+            }
+
+            val scanner = bluetoothAdapter.bluetoothLeScanner
+            if (scanner == null) {
+                logInfo("stop:Failed to get Bluetooth Scanner. Disabled?")
+                return@launch
+            }
+
+            scanner.stopScan(callback)
         }
-
-        val scanner = bluetoothAdapter.bluetoothLeScanner
-        if (scanner == null) {
-            logInfo("stop:Failed to get Bluetooth Scanner. Disabled?")
-            return
-        }
-
-        scanner.stopScan(callback)
     }
 }

@@ -1,19 +1,16 @@
-package com.xyfindables.sdk
+package com.xyfindables.sdk.devices
 
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
 import android.content.Context
 import com.xyfindables.core.XYBase
+import com.xyfindables.sdk.gatt.clients.XYBluetoothGatt
 import com.xyfindables.sdk.scanner.XYScanResult
 import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.channels.produce
 import java.util.*
-import java.util.concurrent.TimeoutException
 
-open class XYBluetoothDevice (val context: Context, val device:BluetoothDevice) : XYBase() {
+open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBluetoothGatt(context, device, false, null, null, null, null) {
 
-    private val CLEANUP_DELAY = 1000
+    private val CLEANUP_DELAY = 5000
     val OUTOFRANGE_RSSI = -999
 
     private var references = 0
@@ -96,6 +93,7 @@ open class XYBluetoothDevice (val context: Context, val device:BluetoothDevice) 
 
     fun addListener(key: String, listener: Listener) {
         launch(CommonPool){
+            logInfo("addListener")
             synchronized(listeners) {
                 listeners.put(key, listener)
             }
@@ -104,17 +102,18 @@ open class XYBluetoothDevice (val context: Context, val device:BluetoothDevice) 
 
     fun removeListener(key: String) {
         launch(CommonPool){
+            logInfo("removeListener")
             synchronized(listeners) {
                 listeners.remove(key)
             }
         }
     }
 
-    private fun getConnectedGatt(context: Context, timeout:Int = 100000) : Deferred<XYBluetoothGatt?> {
-        logInfo("getConnectedGatt")
+    fun getConnectedGatt(context: Context, timeout:Int?) : Deferred<XYBluetoothGatt?> {
         return async(CommonPool) {
-            logInfo("getConnectedGatt: async")
+            logInfo("getConnectedGatt")
             val gatt = XYBluetoothGatt.from(context, device, null).await()
+            delay(100) //this is to prevent a 133 on some devices
             if (gatt.asyncConnect(timeout).await()) {
                 return@async gatt
             } else {
@@ -125,41 +124,40 @@ open class XYBluetoothDevice (val context: Context, val device:BluetoothDevice) 
 
     //make a safe session to interact with the device
     //if null is passed back, the sdk was unable to create the safe session
-    fun access(context: Context, closure:suspend (gatt: XYBluetoothGatt?)->Unit) {
-        logInfo("access")
-        launch(CommonPool) {
-            logInfo("access:async")
+    fun access(closure: suspend ()->Deferred<Boolean>) : Deferred<Boolean> {
+        return async(CommonPool) {
+            logInfo("access")
+            var result = false
             references++
-            val connectedGatt = getConnectedGatt(context).await()
-            if (connectedGatt != null) {
-                if (!connectedGatt.asyncDiscover().await()) {
-                    closure(null)
-                } else {
-                    closure(connectedGatt)
+            if (connectGatt().await()) {
+                if (asyncDiscover().await()) {
+                    result = closure().await()
                 }
-                cleanUpIfNeeded(connectedGatt)
-            } else {
-                closure(null)
+                cleanUpIfNeeded()
             }
             references--
+            return@async result
         }
     }
 
     //the goal is to leave connections hanging for a little bit in the case
     //that they need to be reestablished in short notice
-    private fun cleanUpIfNeeded(gatt: XYBluetoothGatt) {
+    private fun cleanUpIfNeeded() {
         launch(CommonPool) {
+            logInfo("cleanUpIfNeeded")
             delay(CLEANUP_DELAY)
-            if (!gatt.closed && references == 0) {
-                gatt.asyncClose().await()
+            if (!closed && references == 0) {
+                asyncClose().await()
             }
         }
     }
 
     companion object {
 
+        var canCreate = false
+
         val manufacturerToCreator = HashMap<Int, (context:Context, scanResult: XYScanResult) -> XYBluetoothDevice?>()
-        fun fromScanResult(context:Context, scanResult: XYScanResult) : XYBluetoothDevice {
+        fun fromScanResult(context:Context, scanResult: XYScanResult) : XYBluetoothDevice? {
             for ((manufacturerId, creator) in manufacturerToCreator) {
                 val bytes = scanResult.scanRecord?.getManufacturerSpecificData(manufacturerId)
                 if (bytes != null) {
@@ -169,7 +167,10 @@ open class XYBluetoothDevice (val context: Context, val device:BluetoothDevice) 
                     }
                 }
             }
-            return XYBluetoothDevice(context, scanResult.device)
+            if (canCreate)
+                return XYBluetoothDevice(context, scanResult.device)
+            else
+                return null
         }
     }
 

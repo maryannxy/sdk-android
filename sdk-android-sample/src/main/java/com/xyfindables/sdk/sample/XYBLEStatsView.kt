@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.xyfindables.sdk.XYBluetoothDevice
+import com.xyfindables.sdk.devices.XYBluetoothDevice
 
 import com.xyfindables.sdk.scanner.XYFilteredSmartScan
 

@@ -3,11 +3,12 @@ package com.xyfindables.sdk.scanner
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.os.SystemClock
-import android.util.LongSparseArray
 import com.xyfindables.core.XYBase
-import com.xyfindables.sdk.XYBluetoothDevice
+import com.xyfindables.sdk.UIThread
+import com.xyfindables.sdk.devices.XYBluetoothDevice
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import java.util.HashMap
 
 abstract class XYFilteredSmartScan(context: Context): XYBase() {
@@ -47,16 +48,20 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
 
     val devices = HashMap<String, XYBluetoothDevice>()
 
-    fun deviceFromScanResult(scanResult: XYScanResult) : XYBluetoothDevice {
+    fun deviceFromScanResult(scanResult: XYScanResult) : XYBluetoothDevice? {
         var device : XYBluetoothDevice? = null
         synchronized(devices) {
             device = devices[scanResult.deviceId]
             if (device == null) {
                 device = XYBluetoothDevice.fromScanResult(context, scanResult)
-                devices.set(device!!.id, device!!)
+                //the device will come back null if the device parser for that type of device
+                //is disabled
+                if (device != null) {
+                    devices.set(device!!.id, device!!)
+                }
             }
         }
-        return device!!
+        return device
     }
 
     private val listeners = HashMap<String, Listener>()
@@ -116,13 +121,15 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
         scanResultCount++
         for (scanResult in scanResults) {
             val device = deviceFromScanResult(scanResult)
-            if (device.rssi == -999) {
-                reportEntered(device)
-                device.onEnter()
+            if (device != null) {
+                if (device.rssi == -999) {
+                    reportEntered(device)
+                    device.onEnter()
+                }
+                device.rssi = scanResult.rssi
+                reportDetected(device)
+                device.onDetect()
             }
-            device.rssi = scanResult.rssi
-            reportDetected(device)
-            device.onDetect()
         }
         return scanResults
     }
@@ -162,6 +169,13 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
 
     protected fun getBluetoothManager(context: Context): BluetoothManager {
         return context.applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+    }
+
+    companion object {
+        //this is the thread that all calls should happen on for gatt calls.  Using UIThread
+        //for now since that is needed for 4.4, but should allow non-ui thread for later
+        //versions
+        val BluetoothThread = newFixedThreadPoolContext(1, "BluetoothThread") //UIThread
     }
 
 }

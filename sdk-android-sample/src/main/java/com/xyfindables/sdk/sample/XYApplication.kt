@@ -2,12 +2,9 @@ package com.xyfindables.sdk.sample
 
 import android.app.Application
 import android.os.Build
-import com.xyfindables.sdk.XYAppleBluetoothDevice
-import com.xyfindables.sdk.XYFinderBluetoothDevice
-import com.xyfindables.sdk.XYIBeaconBluetoothDevice
-import com.xyfindables.sdk.scanner.XYFilteredSmartScan
-import com.xyfindables.sdk.scanner.XYFilteredSmartScanLegacy
-import com.xyfindables.sdk.scanner.XYFilteredSmartScanModern
+import com.xyfindables.core.XYBase
+import com.xyfindables.sdk.devices.*
+import com.xyfindables.sdk.scanner.*
 
 class XYApplication : Application() {
     private var _scanner: XYFilteredSmartScan? = null
@@ -24,10 +21,18 @@ class XYApplication : Application() {
         }
 
     override fun onCreate() {
+        XYBase.logInfo("XYApplication", "onCreate")
         super.onCreate()
         XYAppleBluetoothDevice.enable(true)
         XYIBeaconBluetoothDevice.enable(true)
         XYFinderBluetoothDevice.enable(true)
+        XY4BluetoothDevice.enable(true)
         scanner.start()
+    }
+
+    override fun onTerminate() {
+        XYBase.logInfo("XYApplication", "onTerminate")
+        scanner.stop()
+        super.onTerminate()
     }
 }
