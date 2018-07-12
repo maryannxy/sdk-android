@@ -9,6 +9,7 @@ import android.widget.TextView
 import com.xyfindables.sdk.*
 import com.xyfindables.sdk.devices.XYBluetoothDevice
 import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
+import com.xyfindables.sdk.devices.XYIBeaconBluetoothDevice
 import com.xyfindables.sdk.gatt.clients.XYBluetoothGatt
 
 import com.xyfindables.ui.views.XYButton
@@ -113,6 +114,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         val lock : XYButton = findViewById(R.id.lock)
         lock.setOnClickListener(View.OnClickListener {
             logInfo("lock: onClick")
+
             //device!!.access {
                 /*val xy4 = gatt as XY4Gatt
                 if (!xy4.writePrimaryLock(xy4.defaultUnlockCode).await()) {
@@ -201,16 +203,19 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         launch(UIThread) {
             if (device != null) {
                 val nameView : TextView = findViewById(R.id.family)
-                //nameView.setText(device!!.family.name)
+                nameView.setText(device!!.name)
 
                 val rssiView : TextView = findViewById(R.id.rssi)
                 rssiView.setText(device!!.rssi.toString())
 
-                val majorView : TextView = findViewById(R.id.major)
-                //majorView.setText(device!!.major.toString())
+                val iBeaconDevice = device as XYIBeaconBluetoothDevice?
+                if (iBeaconDevice != null) {
+                    val majorView: TextView = findViewById(R.id.major)
+                    majorView.setText(iBeaconDevice.major.toString())
 
-                val minorView : TextView = findViewById(R.id.minor)
-                //minorView.setText(device!!.minor.toString())
+                    val minorView: TextView = findViewById(R.id.minor)
+                    minorView.setText(iBeaconDevice.minor.toString())
+                }
 
                 val pulsesView : TextView = findViewById(R.id.pulseCount)
                 pulsesView.setText(device!!.detectCount.toString())
