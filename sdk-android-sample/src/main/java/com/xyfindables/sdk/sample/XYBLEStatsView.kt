@@ -16,29 +16,31 @@ class XYBLEStatsView(context: Context, attrs: AttributeSet) : LinearLayout(conte
 
     private val scanner : XYFilteredSmartScan
 
+    val smartScanListener = object : XYFilteredSmartScan.Listener {
+        override fun entered(device: XYBluetoothDevice) {
+            update()
+        }
+
+        override fun exited(device: XYBluetoothDevice) {
+            update()
+        }
+
+        override fun detected(device: XYBluetoothDevice) {
+            update()
+        }
+
+        override fun connectionStateChanged(device: XYBluetoothDevice, newState: Int) {
+
+        }
+
+        override fun statusChanged(status: XYFilteredSmartScan.BluetoothStatus) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+    }
+
     init {
         scanner = (context.applicationContext as XYApplication).scanner
-        scanner.addListener(TAG, object : XYFilteredSmartScan.Listener {
-            override fun entered(device: XYBluetoothDevice) {
-                update()
-            }
-
-            override fun exited(device: XYBluetoothDevice) {
-                update()
-            }
-
-            override fun detected(device: XYBluetoothDevice) {
-                update()
-            }
-
-            override fun connectionStateChanged(device: XYBluetoothDevice, newState: Int) {
-
-            }
-
-            override fun statusChanged(status: XYFilteredSmartScan.BluetoothStatus) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-        })
+        scanner.addListener(TAG, smartScanListener)
     }
 
     fun update() {

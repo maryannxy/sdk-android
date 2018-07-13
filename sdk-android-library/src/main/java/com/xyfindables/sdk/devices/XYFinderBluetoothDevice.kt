@@ -15,7 +15,7 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult) :
         }
 
     //signal the user to where it is, usually make it beep
-    open fun find() : Deferred<Boolean> {
+    open fun find() : Deferred<Boolean?> {
         logException(UnsupportedOperationException(), true)
         return async {
             return@async false
@@ -23,14 +23,14 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult) :
     }
 
     //requires device to be unlocked
-    open fun lock(bytes: ByteArray) : Deferred<Boolean> {
+    open fun lock(bytes: ByteArray) : Deferred<Boolean?> {
         logException(UnsupportedOperationException(), true)
         return async {
             return@async false
         }
     }
 
-    open fun unlock(bytes: ByteArray) : Deferred<Boolean> {
+    open fun unlock(bytes: ByteArray) : Deferred<Boolean?> {
         logException(UnsupportedOperationException(), true)
         return async {
             return@async false
@@ -44,7 +44,7 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult) :
         }
     }
 
-    open fun setStayAwake(stayAwake: Boolean) : Deferred<Boolean> {
+    open fun setStayAwake(stayAwake: Boolean) : Deferred<Boolean?> {
         logException(UnsupportedOperationException(), true)
         return async {
             return@async false

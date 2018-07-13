@@ -237,11 +237,11 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <ListView
+            <com.xyfindables.ui.views.XYTextView
                 android:id="@+id/adList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-            </ListView>
+            </com.xyfindables.ui.views.XYTextView>
 
         </LinearLayout>
 

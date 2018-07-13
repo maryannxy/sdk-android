@@ -4,8 +4,8 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 
 import com.xyfindables.sdk.XYDevice
-import com.xyfindables.sdk.XYDeviceCharacteristic
-import com.xyfindables.sdk.XYDeviceService
+import com.xyfindables.sdk.gatt.XYDeviceCharacteristic
+import com.xyfindables.sdk.gatt.XYDeviceService
 
 import java.util.Arrays
 import java.util.UUID

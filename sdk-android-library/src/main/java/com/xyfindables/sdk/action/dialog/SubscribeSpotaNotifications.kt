@@ -3,8 +3,8 @@ package com.xyfindables.sdk.action.dialog
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import com.xyfindables.sdk.XYDevice
-import com.xyfindables.sdk.XYDeviceCharacteristic
-import com.xyfindables.sdk.XYDeviceService
+import com.xyfindables.sdk.gatt.XYDeviceCharacteristic
+import com.xyfindables.sdk.gatt.XYDeviceService
 import com.xyfindables.sdk.action.XYDeviceAction
 
 import java.util.UUID

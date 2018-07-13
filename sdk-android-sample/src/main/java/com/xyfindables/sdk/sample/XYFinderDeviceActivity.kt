@@ -2,17 +2,14 @@ package com.xyfindables.sdk.sample
 
 import android.os.Bundle
 import android.view.View
-import android.widget.BaseAdapter
-import android.widget.EditText
-import android.widget.ListView
 import android.widget.TextView
 import com.xyfindables.sdk.*
 import com.xyfindables.sdk.devices.XYBluetoothDevice
 import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
 import com.xyfindables.sdk.devices.XYIBeaconBluetoothDevice
-import com.xyfindables.sdk.gatt.clients.XYBluetoothGatt
 
 import com.xyfindables.ui.views.XYButton
+import com.xyfindables.ui.views.XYTextView
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
 import kotlin.experimental.and
@@ -37,41 +34,52 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         }
         setContentView(R.layout.device_activity)
         scanner.start()
+    }
 
-        val listView: ListView? = findViewById(R.id.adList)
-        val adapter: BaseAdapter? = XYDeviceAdapter(this)
-        listView!!.adapter = adapter
+    fun updateAdList() {
+        launch(UIThread) {
+            val adList: XYTextView? = findViewById(R.id.adList)
+            var txt = ""
+            for ((_, ad) in device!!.ads) {
+                txt = txt + ad.toString() + "\r\n"
+            }
+            adList?.text = txt
+        }
+    }
+
+    val deviceListener = object : XYBluetoothDevice.Listener {
+        override fun entered(device: XYBluetoothDevice) {
+            update()
+            showToast("Entered")
+        }
+
+        override fun exited(device: XYBluetoothDevice) {
+            update()
+            showToast("Exited")
+        }
+
+        override fun detected(device: XYBluetoothDevice) {
+            update()
+        }
+
+        override fun connectionStateChanged(device: XYBluetoothDevice, newState: Int) {
+            update()
+            if (newState == 0) {
+                showToast("Connected")
+            } else {
+                showToast("Disconnected")
+            }
+        }
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
         super.onPostCreate(savedInstanceState)
         if (device != null) {
-            device!!.addListener(TAG, object : XYBluetoothDevice.Listener {
-                override fun entered(device: XYBluetoothDevice) {
-                    update()
-                    showToast("Entered")
-                }
-
-                override fun exited(device: XYBluetoothDevice) {
-                    update()
-                    showToast("Exited")
-                }
-
-                override fun detected(device: XYBluetoothDevice) {
-                    update()
-                }
-
-                override fun connectionStateChanged(device: XYBluetoothDevice, newState: Int) {
-                    update()
-                    if (newState == 0) {
-                        showToast("Connected")
-                    } else {
-                        showToast("Disconnected")
-                    }
-                }
-            })
+            device!!.addListener(TAG, deviceListener)
             update()
         }
+
+        updateAdList()
 
         val primaryBuzzerButton : XYButton = findViewById(R.id.primaryBuzzer)
         primaryBuzzerButton.setOnClickListener(View.OnClickListener {

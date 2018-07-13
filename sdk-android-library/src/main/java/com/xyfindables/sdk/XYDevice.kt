@@ -20,6 +20,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
+import java.lang.ref.WeakReference
 
 import java.util.Comparator
 import java.util.Date
@@ -33,8 +34,8 @@ import java.util.UUID
  * Created by arietrouw on 12/20/16.
  */
 
+@Deprecated("Use XYBluetoothDevice and XYFilteredSmartScan instead")
 class XYDevice internal constructor(id: String) : XYBase() {
-    private val _actionLock = XYSemaphore(MAX_ACTIONS, true)
 
     private var _connectIntent = false
 
@@ -517,10 +518,6 @@ class XYDevice internal constructor(id: String) : XYBase() {
         if (_connectedContext == null) {
             return
         }
-        if (_bleAccess.availablePermits() <= 1) {
-            _stayConnected = false
-            return
-        }
         _stayConnectedActive = true
         logExtreme(TAG, "connTest-startSubscribeButton[" + _connectionCount + "->" + (_connectionCount + 1) + "]:" + id)
         _connectionCount++ // do not use pushConnection here because then this action will be null inside pushConnection and throw error
@@ -840,7 +837,6 @@ class XYDevice internal constructor(id: String) : XYBase() {
         val family2prefix: HashMap<XYDevice.Family, String>
 
         private val MAX_BLECONNECTIONS = 4
-        private val _bleAccess = XYSemaphore(MAX_BLECONNECTIONS, true)
 
         private val MAX_ACTIONS = 1
 

@@ -73,6 +73,24 @@ class XYDeviceItemView(context: Context, attrs: AttributeSet) : RelativeLayout(c
         }
     }
 
+    val deviceListener = object : XYBluetoothDevice.Listener {
+        override fun entered(device: XYBluetoothDevice) {
+
+        }
+
+        override fun exited(device: XYBluetoothDevice) {
+
+        }
+
+        override fun detected(device: XYBluetoothDevice) {
+            update()
+        }
+
+        override fun connectionStateChanged(device: XYBluetoothDevice, newState: Int) {
+
+        }
+    }
+
     fun setDevice(device: XYBluetoothDevice?) {
         if (device != null) {
             device.removeListener(TAG)
@@ -82,23 +100,7 @@ class XYDeviceItemView(context: Context, attrs: AttributeSet) : RelativeLayout(c
 
         this.device = device
 
-        device!!.addListener(TAG, object : XYBluetoothDevice.Listener {
-            override fun entered(device: XYBluetoothDevice) {
-
-            }
-
-            override fun exited(device: XYBluetoothDevice) {
-
-            }
-
-            override fun detected(device: XYBluetoothDevice) {
-                update()
-            }
-
-            override fun connectionStateChanged(device: XYBluetoothDevice, newState: Int) {
-
-            }
-        })
+        device!!.addListener(TAG, deviceListener)
         update()
     }
 

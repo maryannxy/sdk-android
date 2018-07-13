@@ -2,10 +2,13 @@ package com.xyfindables.sdk.devices
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
-import com.xyfindables.core.XYBase
-import com.xyfindables.sdk.gatt.clients.XYBluetoothGatt
+import com.xyfindables.sdk.ads.XYBleAd
+import com.xyfindables.sdk.gatt.XYBluetoothGatt
+import com.xyfindables.sdk.scanner.XYScanRecord
 import com.xyfindables.sdk.scanner.XYScanResult
 import kotlinx.coroutines.experimental.*
+import java.lang.ref.WeakReference
+import java.nio.ByteBuffer
 import java.util.*
 
 open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBluetoothGatt(context, device, false, null, null, null, null) {
@@ -15,7 +18,8 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
 
     private var references = 0
 
-    private val listeners = HashMap<String, Listener>()
+    private val listeners = HashMap<String, WeakReference<Listener>>()
+    val ads = HashMap<Int, XYBleAd>()
 
     var rssi = -999
 
@@ -42,8 +46,11 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
         enterCount++
         synchronized(listeners) {
             for ((_, listener) in listeners) {
-                launch (CommonPool) {
-                    listener.entered(this@XYBluetoothDevice)
+                val innerListener = listener.get()
+                if (innerListener != null) {
+                    launch (CommonPool) {
+                        innerListener.entered(this@XYBluetoothDevice)
+                    }
                 }
             }
         }
@@ -53,8 +60,11 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
         exitCount++
         synchronized(listeners) {
             for ((_, listener) in listeners) {
-                launch (CommonPool) {
-                    listener.exited(this@XYBluetoothDevice)
+                val innerListener = listener.get()
+                if (innerListener != null) {
+                    launch(CommonPool) {
+                        innerListener.exited(this@XYBluetoothDevice)
+                    }
                 }
             }
         }
@@ -64,8 +74,11 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
         detectCount++
         synchronized(listeners) {
             for ((_, listener) in listeners) {
-                launch (CommonPool) {
-                    listener.detected(this@XYBluetoothDevice)
+                val innerListener = listener.get()
+                if (innerListener != null) {
+                    launch(CommonPool) {
+                        innerListener.detected(this@XYBluetoothDevice)
+                    }
                 }
             }
         }
@@ -74,28 +87,29 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
     fun onConnectionStateChange(newState: Int) {
         synchronized(listeners) {
             for ((_, listener) in listeners) {
-                launch (CommonPool) {
-                    listener.connectionStateChanged(this@XYBluetoothDevice, newState)
+                val innerListener = listener.get()
+                if (innerListener != null) {
+                    launch(CommonPool) {
+                        innerListener.connectionStateChanged(this@XYBluetoothDevice, newState)
+                    }
                 }
             }
         }
     }
 
-    interface Listener {
-        fun entered(device: XYBluetoothDevice)
-
-        fun exited(device: XYBluetoothDevice)
-
-        fun detected(device: XYBluetoothDevice)
-
-        fun connectionStateChanged(device: XYBluetoothDevice, newState: Int)
+    fun updateAds(record: XYScanRecord) {
+        val buffer = ByteBuffer.wrap(record.bytes)
+        while (buffer.hasRemaining()) {
+            val ad = XYBleAd(buffer)
+            ads[ad.hashCode()] = ad
+        }
     }
 
     fun addListener(key: String, listener: Listener) {
         launch(CommonPool){
             logInfo("addListener")
             synchronized(listeners) {
-                listeners.put(key, listener)
+                listeners.put(key, WeakReference(listener))
             }
         }
     }
@@ -124,10 +138,10 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
 
     //make a safe session to interact with the device
     //if null is passed back, the sdk was unable to create the safe session
-    fun access(closure: suspend ()->Deferred<Boolean>) : Deferred<Boolean> {
-        return async(CommonPool) {
+    fun <T> access(closure: suspend ()->Deferred<T?>) : Deferred<T?> {
+        return async<T?>(CommonPool) {
             logInfo("access")
-            var result = false
+            var result: T? = null
             references++
             if (connectGatt().await()) {
                 if (asyncDiscover().await()) {
@@ -150,6 +164,16 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
                 asyncClose().await()
             }
         }
+    }
+
+    interface Listener {
+        fun entered(device: XYBluetoothDevice)
+
+        fun exited(device: XYBluetoothDevice)
+
+        fun detected(device: XYBluetoothDevice)
+
+        fun connectionStateChanged(device: XYBluetoothDevice, newState: Int)
     }
 
     companion object {

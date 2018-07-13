@@ -1,4 +1,4 @@
-package com.xyfindables.sdk
+package com.xyfindables.sdk.gatt
 
 import java.util.UUID
 
