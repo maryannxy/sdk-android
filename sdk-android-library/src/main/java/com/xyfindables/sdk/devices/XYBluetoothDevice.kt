@@ -151,6 +151,14 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
             launch(CommonPool) {
                 rssi = OUTOFRANGE_RSSI
                 onExit()
+                
+                //make it thread safe
+                val localNotifyExit = notifyExit
+                if (localNotifyExit != null) {
+                    launch(CommonPool) {
+                        localNotifyExit(this@XYBluetoothDevice)
+                    }
+                }
             }
         }
     }

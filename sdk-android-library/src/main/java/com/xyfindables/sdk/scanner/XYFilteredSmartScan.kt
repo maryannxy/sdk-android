@@ -114,6 +114,7 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
     }
 
     private var handleDeviceNotifyExit = fun(device: XYBluetoothDevice) {
+        devices.remove(device.id)
         reportExited(device)
     }
 
