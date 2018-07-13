@@ -5,6 +5,8 @@ import android.content.Context
 import com.xyfindables.sdk.ads.XYBleAd
 import com.xyfindables.sdk.gatt.XYBluetoothGatt
 import com.xyfindables.sdk.scanner.XYScanRecord
+import com.xyfindables.sdk.devices.router.Router
+import com.xyfindables.sdk.devices.router.RouterInterface
 import com.xyfindables.sdk.scanner.XYScanResult
 import kotlinx.coroutines.experimental.*
 import java.lang.ref.WeakReference
@@ -177,25 +179,40 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
     }
 
     companion object {
-
+        val router = Router()
         var canCreate = false
-
         val manufacturerToCreator = HashMap<Int, (context:Context, scanResult: XYScanResult) -> XYBluetoothDevice?>()
-        fun fromScanResult(context:Context, scanResult: XYScanResult) : XYBluetoothDevice? {
-            for ((manufacturerId, creator) in manufacturerToCreator) {
-                val bytes = scanResult.scanRecord?.getManufacturerSpecificData(manufacturerId)
-                if (bytes != null) {
-                    val device = creator(context, scanResult)
-                    if (device !=null) {
-                        return device
+
+        private val manufacturerRouter : RouterInterface = object : RouterInterface {
+            override fun run(context: Context, scanResult: XYScanResult): XYBluetoothDevice? {
+                for ((manufacturerId, creator) in manufacturerToCreator) {
+                    val bytes = scanResult.scanRecord?.getManufacturerSpecificData(manufacturerId)
+                    if (bytes != null) {
+                        val device = creator(context, scanResult)
+                        if (device !=null) {
+                            return device
+                        }
                     }
                 }
+                return null
             }
+        }
+
+        fun fromScanResult(context:Context, scanResult: XYScanResult) : XYBluetoothDevice? {
+            val device = router.run(context, scanResult)
+
+            if (device != null) {
+                return device
+            }
+
             if (canCreate)
                 return XYBluetoothDevice(context, scanResult.device)
             else
                 return null
         }
-    }
 
+        init {
+            router.routers.add(manufacturerRouter)
+        }
+    }
 }
