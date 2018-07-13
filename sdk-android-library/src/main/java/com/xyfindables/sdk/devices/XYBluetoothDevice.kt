@@ -15,19 +15,27 @@ import java.util.*
 
 open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBluetoothGatt(context, device, false, null, null, null, null) {
 
-    private val CLEANUP_DELAY = 5000
-    val OUTOFRANGE_RSSI = -999
-
     private var references = 0
 
     private val listeners = HashMap<String, WeakReference<Listener>>()
     val ads = HashMap<Int, XYBleAd>()
 
-    var rssi = -999
+    var rssi = OUTOFRANGE_RSSI
 
     var detectCount = 0
     var enterCount = 0
     var exitCount = 0
+
+    //set this to true if the device should report that it is out of
+    //range right after discconnect.  Generally used for devices
+    //with rotating MAC addresses
+    var exitAfterDisconnect = false
+
+    //last time this device was accessed (connected to)
+    var lastAccessTime = 0L
+
+    //last time we heard a ad from this device
+    var lastAdTime = 0L
 
     val address : String
         get() {
@@ -44,8 +52,45 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
             return device.name
         }
 
+    var outOfRangeDelay = OUTOFRANGE_DELAY
+
+    var notifyExit : ((device: XYBluetoothDevice)->(Unit))? = null
+
+    //this should only be called from the onEnter function so that
+    //there is one onExit for every onEnter
+    private fun checkForExit() {
+        launch(CommonPool) {
+            logInfo("checkForExit: $id")
+            delay(outOfRangeDelay)
+
+            //check if something else has already marked it as exited
+            //this should only happen if another system (exit on connection drop for example)
+            //marks this as out of range
+            if (rssi == OUTOFRANGE_RSSI) {
+                return@launch
+            }
+
+            if ((now - lastAdTime) > outOfRangeDelay && (now - lastAccessTime) > outOfRangeDelay) {
+                rssi = OUTOFRANGE_RSSI
+                onExit()
+
+                //make it thread safe
+                val localNotifyExit = notifyExit
+                if (localNotifyExit != null) {
+                    launch(CommonPool) {
+                        localNotifyExit(this@XYBluetoothDevice)
+                    }
+                }
+            } else {
+                checkForExit()
+            }
+        }
+    }
+
     fun onEnter() {
+        logInfo("onEnter: $id")
         enterCount++
+        lastAdTime = now
         synchronized(listeners) {
             for ((_, listener) in listeners) {
                 val innerListener = listener.get()
@@ -56,9 +101,11 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
                 }
             }
         }
+        checkForExit()
     }
 
     fun onExit() {
+        logInfo("onExit: $id")
         exitCount++
         synchronized(listeners) {
             for ((_, listener) in listeners) {
@@ -74,6 +121,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
 
     fun onDetect() {
         detectCount++
+        lastAdTime = now
         synchronized(listeners) {
             for ((_, listener) in listeners) {
                 val innerListener = listener.get()
@@ -87,6 +135,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
     }
 
     fun onConnectionStateChange(newState: Int) {
+        logInfo("onConnectionStateChange: $id : $newState")
         synchronized(listeners) {
             for ((_, listener) in listeners) {
                 val innerListener = listener.get()
@@ -95,6 +144,13 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
                         innerListener.connectionStateChanged(this@XYBluetoothDevice, newState)
                     }
                 }
+            }
+        }
+        //if a connection drop means we should mark it as out of range, then lets do it!
+        if (exitAfterDisconnect) {
+            launch(CommonPool) {
+                rssi = OUTOFRANGE_RSSI
+                onExit()
             }
         }
     }
@@ -161,8 +217,19 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
     private fun cleanUpIfNeeded() {
         launch(CommonPool) {
             logInfo("cleanUpIfNeeded")
+
+            //if the global and local last access times do not match
+            //after the delay, that means a newer access is now responsible for closing it
+            val localAccessTime = now
+            lastAccessTime = localAccessTime
+
             delay(CLEANUP_DELAY)
-            if (!closed && references == 0) {
+
+            //the goal is to close the connection if the ref count is
+            //down to zero.  We have to check the lastAccess to make sure the delay is after
+            //the last guy, not an earlier one
+
+            if (!closed && references == 0 && lastAccessTime == localAccessTime) {
                 asyncClose().await()
             }
         }
@@ -179,6 +246,16 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
     }
 
     companion object {
+        //gap after last access that we wait to close the connection
+        private const val CLEANUP_DELAY = 5000
+
+        //the value we set the rssi to when we go out of range
+        const val OUTOFRANGE_RSSI = -999
+
+        //the period of time to wait for marking something as out of range
+        //if we have not gotten any ads or been connected to it
+        const val OUTOFRANGE_DELAY = 15000
+
         val router = Router()
         var canCreate = false
         val manufacturerToCreator = HashMap<Int, (context:Context, scanResult: XYScanResult) -> XYBluetoothDevice?>()

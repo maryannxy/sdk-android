@@ -416,7 +416,6 @@ open class XYBluetoothGatt protected constructor(
 
             //this has to be on new thread to allow BT to process
             return@async async(CommonPool) {
-                logInfo("asyncConnect:start wait")
                 while (connectionState != BluetoothGatt.STATE_CONNECTED) {
                     delay(WAIT_RESOLUTION)
                     remainingTimeout -= WAIT_RESOLUTION
@@ -426,7 +425,6 @@ open class XYBluetoothGatt protected constructor(
                         asyncDisconnect().await()
                         return@async false
                     }
-                    logInfo("asyncConnect:waiting: $remainingTimeout")
                 }
                 removeGattListener("asyncConnect")
                 return@async true

@@ -28,11 +28,6 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
             return scanResultCount / (uptimeSeconds)
         }
 
-    val now: Long
-        get() {
-            return SystemClock.uptimeMillis()
-        }
-
     val uptime: Long
         get() {
             if (startTime == 0L) {
@@ -118,6 +113,10 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
         }
     }
 
+    private var handleDeviceNotifyExit = fun(device: XYBluetoothDevice) {
+        reportExited(device)
+    }
+
     protected fun onScanResult(scanResults: List<XYScanResult>): List<XYScanResult> {
         scanResultCount++
         for (scanResult in scanResults) {
@@ -129,6 +128,7 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
                 if (device.rssi == -999) {
                     reportEntered(device)
                     device.onEnter()
+                    device.notifyExit = handleDeviceNotifyExit
                 }
                 device.rssi = scanResult.rssi
                 reportDetected(device)
@@ -185,10 +185,8 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
     }
 
     companion object {
-        //this is the thread that all calls should happen on for gatt calls.  Using UIThread
-        //for now since that is needed for 4.4, but should allow non-ui thread for later
-        //versions
-        val BluetoothThread = newFixedThreadPoolContext(1, "BluetoothThread") //UIThread
+        //this is the thread that all calls should happen on for gatt calls.
+        val BluetoothThread = newFixedThreadPoolContext(1, "BluetoothThread")
     }
 
 }
