@@ -64,8 +64,10 @@ open class XYBluetoothGatt protected constructor(
         return async(GattThread) {
             logInfo("asyncClose")
             asyncDisconnect().await()
+            logInfo("asyncClose: Disconnected")
             safeClose()
-            deviceToGattMap.remove(device.hashCode())
+            logInfo("asyncClose: Closed")
+            //deviceToGattMap.remove(device.hashCode())
             removeGattListener("default")
             _gatt = null
             return@async
@@ -748,21 +750,6 @@ open class XYBluetoothGatt protected constructor(
 
         private val WAIT_RESOLUTION = 100
         private val CONNECT_TIMEOUT = 15000
-
-        private val deviceToGattMap = HashMap<Int, XYBluetoothGatt>()
-
-        fun from(context:Context, device: BluetoothDevice, callback: BluetoothGattCallback?) : Deferred<XYBluetoothGatt> {
-            return async(CommonPool) {
-                logInfo(TAG, "from")
-                var gatt = deviceToGattMap[device.hashCode()]
-                if (gatt == null) {
-                    gatt = safeCreateGatt(context.applicationContext, device, callback).await()
-                }
-                val resultingGatt: XYBluetoothGatt = gatt
-                deviceToGattMap[device.hashCode()] = resultingGatt
-                return@async resultingGatt
-            }
-        }
 
         private fun safeCreateGatt(context:Context, device: BluetoothDevice, callback: BluetoothGattCallback?) : Deferred<XYBluetoothGatt> {
             return async(GattThread) {

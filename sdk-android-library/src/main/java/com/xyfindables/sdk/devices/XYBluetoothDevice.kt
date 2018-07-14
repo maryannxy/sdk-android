@@ -1,6 +1,7 @@
 package com.xyfindables.sdk.devices
 
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGatt
 import android.content.Context
 import com.xyfindables.sdk.ads.XYBleAd
 import com.xyfindables.sdk.gatt.XYBluetoothGatt
@@ -117,6 +118,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
                 }
             }
         }
+        asyncClose()
     }
 
     fun onDetect() {
@@ -151,7 +153,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
             launch(CommonPool) {
                 rssi = OUTOFRANGE_RSSI
                 onExit()
-                
+
                 //make it thread safe
                 val localNotifyExit = notifyExit
                 if (localNotifyExit != null) {
@@ -185,19 +187,6 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
             logInfo("removeListener")
             synchronized(listeners) {
                 listeners.remove(key)
-            }
-        }
-    }
-
-    fun getConnectedGatt(context: Context, timeout:Int?) : Deferred<XYBluetoothGatt?> {
-        return async(CommonPool) {
-            logInfo("getConnectedGatt")
-            val gatt = XYBluetoothGatt.from(context, device, null).await()
-            delay(100) //this is to prevent a 133 on some devices
-            if (gatt.asyncConnect(timeout).await()) {
-                return@async gatt
-            } else {
-                return@async null
             }
         }
     }

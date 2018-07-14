@@ -19,6 +19,7 @@ class XYFilteredSmartScanModern(context: Context) : XYFilteredSmartScan(context)
         launch (BluetoothThread){
 
             val bluetoothAdapter = getBluetoothManager(this@XYFilteredSmartScanModern.context).adapter
+
             bluetoothAdapter.guard {
                 logInfo("Bluetooth Disabled")
                 return@launch
