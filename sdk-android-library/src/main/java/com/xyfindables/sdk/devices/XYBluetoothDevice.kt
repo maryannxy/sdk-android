@@ -61,7 +61,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
     //there is one onExit for every onEnter
     private fun checkForExit() {
         launch(CommonPool) {
-            logInfo("checkForExit: $id")
+            //logInfo("checkForExit: $id")
             delay(outOfRangeDelay)
 
             //check if something else has already marked it as exited
@@ -193,14 +193,17 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
 
     //make a safe session to interact with the device
     //if null is passed back, the sdk was unable to create the safe session
-    fun <T> access(closure: suspend ()->Deferred<T?>) : Deferred<T?> {
-        return async<T?>(CommonPool) {
+    fun <T> access(closure: suspend ()->T?) : Deferred<T?> {
+        return async(CommonPool) {
             logInfo("access")
             var result: T? = null
             references++
             if (connectGatt().await()) {
-                if (asyncDiscover().await()) {
-                    result = closure().await()
+                val discovered = asyncDiscover().await()
+                if (discovered == null) {
+                    logError("access: Discover Failed!", false)
+                } else {
+                    result = closure()
                 }
                 cleanUpIfNeeded()
             }
