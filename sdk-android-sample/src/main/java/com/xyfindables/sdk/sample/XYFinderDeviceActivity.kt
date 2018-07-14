@@ -84,7 +84,9 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         val primaryBuzzerButton : XYButton = findViewById(R.id.primaryBuzzer)
         primaryBuzzerButton.setOnClickListener(View.OnClickListener {
             logInfo("primaryBuzzerButton: onClick")
-            primaryBuzzerButton.setEnabled(false)
+            launch(UIThread) {
+                primaryBuzzerButton.setEnabled(false)
+            }
             logInfo("primaryBuzzerButton: got xyDevice")
             launch(CommonPool) {
                 (device as? XYFinderBluetoothDevice)?.find()?.await()

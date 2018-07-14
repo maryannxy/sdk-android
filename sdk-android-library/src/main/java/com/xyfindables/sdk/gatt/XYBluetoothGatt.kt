@@ -65,9 +65,8 @@ open class XYBluetoothGatt protected constructor(
             logInfo("asyncClose")
             asyncDisconnect().await()
             logInfo("asyncClose: Disconnected")
-            safeClose()
+            safeClose().await()
             logInfo("asyncClose: Closed")
-            //deviceToGattMap.remove(device.hashCode())
             removeGattListener("default")
             _gatt = null
             return@async
@@ -208,6 +207,7 @@ open class XYBluetoothGatt protected constructor(
         }
     }
 
+    @TargetApi(21)
     private fun safeRequestMtu(mtu: Int) : Deferred<Boolean> {
         return async(GattThread) {
             logInfo("safeRequestConnectionPriority")
@@ -241,7 +241,7 @@ open class XYBluetoothGatt protected constructor(
                 }
 
                 removeGattListener("asyncDiscover")
-
+                delay(SAFE_DELAY)
                 return@async result
 
             }
@@ -274,6 +274,7 @@ open class XYBluetoothGatt protected constructor(
             }
 
             removeGattListener("asyncWriteCharacteristic: $result")
+            delay(SAFE_DELAY)
             return@async result
         }
     }
@@ -304,6 +305,7 @@ open class XYBluetoothGatt protected constructor(
             removeGattListener("asyncReadCharacteristic: $readStatus")
 
             if (readStatus == BluetoothGatt.GATT_SUCCESS) {
+                delay(SAFE_DELAY)
                 return@async characteristicToRead.getIntValue(formatType, offset)
             } else {
                 return@async null
@@ -336,6 +338,8 @@ open class XYBluetoothGatt protected constructor(
 
             removeGattListener("asyncReadCharacteristicBytes")
 
+            delay(SAFE_DELAY)
+
             return@async characteristicToRead.value
         }
     }
@@ -347,6 +351,7 @@ open class XYBluetoothGatt protected constructor(
             val characteristicToRead = asyncFindCharacteristic(service, characteristic).await()
             if (characteristicToRead != null) {
                 value = asyncReadCharacteristicInt(characteristicToRead, formatType, offset).await()
+                delay(SAFE_DELAY)
             }
             return@async value
         }
@@ -359,6 +364,7 @@ open class XYBluetoothGatt protected constructor(
             val characteristicToRead = asyncFindCharacteristic(service, characteristic).await()
             if (characteristicToRead != null) {
                 value = asyncReadCharacteristicBytes(characteristicToRead).await()
+                delay(SAFE_DELAY)
             }
             return@async value
         }
@@ -372,6 +378,7 @@ open class XYBluetoothGatt protected constructor(
             if (characteristicToWrite != null) {
                 if (characteristicToWrite.setValue(value, formatType, offset)) {
                     success = asyncWriteCharacteristic(characteristicToWrite).await()
+                    delay(SAFE_DELAY)
                 } else {
                     success = false
                 }
@@ -388,6 +395,7 @@ open class XYBluetoothGatt protected constructor(
             if (characteristicToWrite != null) {
                 if (characteristicToWrite.setValue(bytes)) {
                     success = asyncWriteCharacteristic(characteristicToWrite).await()
+                    delay(SAFE_DELAY)
                 } else {
                     success = false
                 }
@@ -407,7 +415,6 @@ open class XYBluetoothGatt protected constructor(
             logInfo("asyncConnect:async")
             if (connectionState == BluetoothGatt.STATE_CONNECTED) {
                 logInfo("asyncConnect:already connected")
-                removeGattListener("asyncConnect")
                 return@async true
             }
 
@@ -423,12 +430,12 @@ open class XYBluetoothGatt protected constructor(
                     remainingTimeout -= WAIT_RESOLUTION
                     if (remainingTimeout <= 0) {
                         logError("asyncConnect: Connection Timeout!", false)
-                        removeGattListener("asyncConnect")
                         asyncDisconnect().await()
                         return@async false
                     }
                 }
-                removeGattListener("asyncConnect")
+                logInfo("asyncConnect:Complete")
+                delay(SAFE_DELAY)
                 return@async true
             }.await()
         }
@@ -450,6 +457,7 @@ open class XYBluetoothGatt protected constructor(
                     delay(WAIT_RESOLUTION)
                 }
                 logInfo("asyncDisconnect: Complete")
+                delay(SAFE_DELAY)
             }.await()
         }
     }
@@ -750,6 +758,7 @@ open class XYBluetoothGatt protected constructor(
 
         private val WAIT_RESOLUTION = 100
         private val CONNECT_TIMEOUT = 15000
+        private val SAFE_DELAY = 100 //this is how long we pause between actions to prevent 133 errors
 
         private fun safeCreateGatt(context:Context, device: BluetoothDevice, callback: BluetoothGattCallback?) : Deferred<XYBluetoothGatt> {
             return async(GattThread) {
