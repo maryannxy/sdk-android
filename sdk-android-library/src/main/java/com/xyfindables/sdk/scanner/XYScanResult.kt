@@ -20,7 +20,7 @@ abstract class XYScanResult:XYBase() {
 
     abstract fun describeContents() : Int
 
-    val deviceId : String
+    val address : String
         get() {
             return device.address
         }

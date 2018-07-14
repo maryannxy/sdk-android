@@ -7,7 +7,11 @@ import java.util.*
 
 open class XYAppleBluetoothDevice(context: Context, device: BluetoothDevice) : XYBluetoothDevice(context, device) {
 
+    interface Listener : XYBluetoothDevice.Listener {
+    }
+
     companion object {
+
         val MANUFACTURER_ID = 0x004c
 
         var canCreate = false

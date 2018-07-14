@@ -2,9 +2,7 @@ package com.xyfindables.sdk.scanner
 
 import android.bluetooth.BluetoothManager
 import android.content.Context
-import android.os.SystemClock
 import com.xyfindables.core.XYBase
-import com.xyfindables.sdk.UIThread
 import com.xyfindables.sdk.devices.XYBluetoothDevice
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
@@ -47,13 +45,13 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
     fun deviceFromScanResult(scanResult: XYScanResult) : XYBluetoothDevice? {
         var device : XYBluetoothDevice? = null
         synchronized(devices) {
-            device = devices[scanResult.deviceId]
+            device = devices[scanResult.address]
             if (device == null) {
                 device = XYBluetoothDevice.fromScanResult(context, scanResult)
                 //the device will come back null if the device parser for that type of device
                 //is disabled
                 if (device != null) {
-                    devices.set(device!!.id, device!!)
+                    devices.set(scanResult.address, device!!)
                 }
             }
         }

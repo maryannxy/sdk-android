@@ -1,7 +1,6 @@
 package com.xyfindables.sdk.devices
 
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
 import android.content.Context
 import com.xyfindables.sdk.ads.XYBleAd
 import com.xyfindables.sdk.gatt.XYBluetoothGatt
@@ -38,22 +37,26 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
     //last time we heard a ad from this device
     var lastAdTime = 0L
 
-    val address : String
+    open val address : String
         get() {
             return device.address
         }
 
-    val id : String
+    open val id : String
         get() {
             return device.address
         }
 
-    val name: String?
+    open val name: String?
         get() {
             return device.name
         }
 
-    var outOfRangeDelay = OUTOFRANGE_DELAY
+    init {
+        logInfo("XYBluetoothDevice Created: ${device.address}")
+    }
+
+    open var outOfRangeDelay = OUTOFRANGE_DELAY
 
     var notifyExit : ((device: XYBluetoothDevice)->(Unit))? = null
 
@@ -246,6 +249,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
     }
 
     companion object {
+
         //gap after last access that we wait to close the connection
         private const val CLEANUP_DELAY = 5000
 

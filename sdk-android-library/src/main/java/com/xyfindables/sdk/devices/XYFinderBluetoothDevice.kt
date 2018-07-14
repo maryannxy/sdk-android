@@ -9,9 +9,19 @@ import java.util.*
 
 open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult) : XYIBeaconBluetoothDevice(context, scanResult) {
 
+    override val id : String
+        get() {
+            return "$prefix:$uuid:$major.${minor.and(0xfff0).or(0x0004)}"
+        }
+
     val family: Family
         get () {
             return familyFromUuid(uuid)
+        }
+
+    val prefix: String
+        get () {
+            return prefixFromFamily(family)
         }
 
     //signal the user to where it is, usually make it beep
@@ -49,6 +59,9 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult) :
         return async {
             return@async false
         }
+    }
+
+    interface Listener : XYIBeaconBluetoothDevice.Listener {
     }
 
     companion object {

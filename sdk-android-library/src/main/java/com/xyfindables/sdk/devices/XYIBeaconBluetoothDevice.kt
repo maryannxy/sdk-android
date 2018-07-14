@@ -31,6 +31,11 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult) 
             return _power
         }
 
+    override val id : String
+        get() {
+            return "$uuid:$major.$minor"
+        }
+
     init {
         val bytes = scanResult.scanRecord!!.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)!!
         val buffer = ByteBuffer.wrap(bytes)
@@ -46,7 +51,11 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult) 
         _power = buffer.get()
     }
 
+    interface Listener : XYAppleBluetoothDevice.Listener {
+    }
+
     companion object {
+
         val APPLE_IBEACON_ID = 0x02.toByte()
 
         var canCreate = false

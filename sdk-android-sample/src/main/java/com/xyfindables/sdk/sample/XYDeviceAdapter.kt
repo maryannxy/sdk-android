@@ -55,7 +55,7 @@ class XYDeviceAdapter(private val activity: Activity) : BaseAdapter() {
     }
 
     override fun getItemId(position: Int): Long {
-        return getItem(position).hashCode().toLong()
+        return devices[position].second.address.hashCode().toLong()
     }
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
