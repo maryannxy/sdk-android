@@ -17,7 +17,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
 
     private var references = 0
 
-    private val listeners = HashMap<String, WeakReference<Listener>>()
+    protected val listeners = HashMap<String, WeakReference<Listener>>()
     val ads = HashMap<Int, XYBleAd>()
 
     var rssi = OUTOFRANGE_RSSI

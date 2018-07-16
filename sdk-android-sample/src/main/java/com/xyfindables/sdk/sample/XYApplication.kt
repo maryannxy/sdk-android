@@ -27,6 +27,7 @@ class XYApplication : Application() {
         XYIBeaconBluetoothDevice.enable(true)
         XYFinderBluetoothDevice.enable(true)
         XY4BluetoothDevice.enable(true)
+        XY3BluetoothDevice.enable(true)
         scanner.start()
     }
 

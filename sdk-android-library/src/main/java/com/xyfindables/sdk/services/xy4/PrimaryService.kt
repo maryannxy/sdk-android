@@ -1,73 +1,42 @@
-package com.xyfindables.sdk.services
+package com.xyfindables.sdk.services.xy4
 
 import com.xyfindables.sdk.devices.XYBluetoothDevice
-import kotlinx.coroutines.experimental.Deferred
+import com.xyfindables.sdk.services.Service
 import java.util.*
 
-class XY4PrimaryService(device: XYBluetoothDevice) : XYService(device) {
+class PrimaryService(device: XYBluetoothDevice) : Service(device) {
 
-    override val uuid : UUID
+    override val serviceUuid : UUID
         get() {
-            return services.primary.uuid
+            return PrimaryService.uuid
         }
 
-    fun readStayAwake() : Deferred<Int?> {
-        return readInt(characteristics.StayAwake.uuid)
-    }
-
-    fun writeStayAwake(flag: Int) : Deferred<Boolean?> {
-        return writeInt(characteristics.StayAwake.uuid, flag)
-    }
-
-    fun writeUnlock(bytes: ByteArray) : Deferred<Boolean?> {
-        return writeBytes(characteristics.Unlock.uuid, bytes)
-    }
-
-    fun readLock() : Deferred<ByteArray?> {
-        return readBytes(characteristics.Lock.uuid)
-    }
-
-    fun writeLock(bytes: ByteArray) : Deferred<Boolean?> {
-        return writeBytes(characteristics.Lock.uuid, bytes)
-    }
-
-    fun readMajor() : Deferred<Int?> {
-        return readInt(characteristics.Major.uuid)
-    }
-
-    fun writeMajor(flag: Int) : Deferred<Boolean?> {
-        return writeInt(characteristics.Major.uuid, flag)
-    }
-
-    fun readMinor() : Deferred<Int?> {
-        return readInt(characteristics. Minor.uuid)
-    }
-
-    fun writeMinor(flag: Int) : Deferred<Boolean?> {
-        return writeInt(characteristics.Minor.uuid, flag)
-    }
-
-    fun readUuid() : Deferred<ByteArray?> {
-        return readBytes(characteristics.Uuid.uuid)
-    }
-
-    fun writeUuid(bytes: ByteArray) : Deferred<Boolean?> {
-        return writeBytes(characteristics.Uuid.uuid, bytes)
-    }
-
-    fun writeBuzzer(tone: Int) : Deferred<Boolean?> {
-        return writeInt(characteristics.Buzzer.uuid, tone)
-    }
-
-    fun writeBuzzerConfig(bytes: ByteArray) : Deferred<Boolean?> {
-        return writeBytes(characteristics.BuzzerConfig.uuid, bytes)
-    }
+    val stayAwake = IntegerCharacteristic(this, characteristics.StayAwake.uuid)
+    val unlock = BytesCharacteristic(this, characteristics.Unlock.uuid)
+    val lock = BytesCharacteristic(this, characteristics.Lock.uuid)
+    val major = IntegerCharacteristic(this, characteristics.Major.uuid)
+    val minor = IntegerCharacteristic(this, characteristics.Minor.uuid)
+    val uuid = BytesCharacteristic(this, characteristics.Uuid.uuid)
+    val buttonState = IntegerCharacteristic(this, characteristics.ButtonState.uuid)
+    val buzzer = IntegerCharacteristic(this, characteristics.Buzzer.uuid)
+    val buzzerConfig = IntegerCharacteristic(this, characteristics.BuzzerConfig.uuid)
+    val adConfig = BytesCharacteristic(this, characteristics.AdConfig.uuid)
+    val buttonConfig = BytesCharacteristic(this, characteristics.ButtonConfig.uuid)
+    val lastError = IntegerCharacteristic(this, characteristics.LastError.uuid)
+    val uptime = IntegerCharacteristic(this, characteristics.Uptime.uuid)
+    val reset = IntegerCharacteristic(this, characteristics.Reset.uuid)
+    val selfTest = IntegerCharacteristic(this, characteristics.SelfTest.uuid)
+    val debug = IntegerCharacteristic(this, characteristics.Debug.uuid)
+    val leftBehind = IntegerCharacteristic(this, characteristics.LeftBehind.uuid)
+    val eddyStoneUid = BytesCharacteristic(this, characteristics.EddystoneUID.uuid)
+    val eddyStoneUrl = BytesCharacteristic(this, characteristics.EddystoneURL.uuid)
+    val eddyStoneEid = BytesCharacteristic(this, characteristics.EddystoneEID.uuid)
+    val color = BytesCharacteristic(this, characteristics.Color.uuid)
+    val hardwareCreateDate = BytesCharacteristic(this, characteristics.HardwareCreateDate.uuid)
 
     companion object {
 
-        enum class services(val uuid: UUID) {
-            primary(UUID.fromString(            "a44eacf4-0104-0001-0000-5f784c9977b5"))
-        }
+        val uuid = UUID.fromString("a44eacf4-0104-0001-0000-5f784c9977b5")
 
         enum class characteristics(val uuid: UUID) {
             StayAwake(UUID.fromString(          "a44eacf4-0104-0001-0001-5f784c9977b5")),

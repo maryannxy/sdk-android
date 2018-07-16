@@ -11,12 +11,12 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.launch
 import java.util.*
 
-open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult) : XYFinderBluetoothDevice(context, scanResult) {
+open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult) : XYFinderBluetoothDevice(context, scanResult) {
 
     val primary = PrimaryService(this)
 
     init {
-        addGattListener("xy4", object: BluetoothGattCallback() {
+        addGattListener("xy3", object: BluetoothGattCallback() {
             override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
                 logInfo("onCharacteristicChanged")
                 super.onCharacteristicChanged(gatt, characteristic)
@@ -36,10 +36,10 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult) : XYFi
         logInfo("reportButtonPressed")
         synchronized(listeners) {
             for (listener in listeners) {
-                val xy4Listener = listener as? XY4BluetoothDevice.Listener
-                if (xy4Listener != null) {
+                val xy3Listener = listener as? XY3BluetoothDevice.Listener
+                if (xy3Listener != null) {
                     launch(CommonPool) {
-                        xy4Listener.buttonSinglePressed()
+                        xy3Listener.buttonSinglePressed()
                     }
                 }
             }
@@ -52,10 +52,9 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult) : XYFi
 
     companion object {
 
-        val FAMILY_UUID = UUID.fromString("a44eacf4-0104-0000-0000-5f784c9977b5")
+        val FAMILY_UUID = UUID.fromString("08885dd0-111b-11e4-9191-0800200c9a66")
 
-        val DEFAULT_LOCK_CODE = byteArrayOf(0x00.toByte(), 0x01.toByte(), 0x02.toByte(), 0x03.toByte(), 0x04.toByte(), 0x05.toByte(), 0x06.toByte(), 0x07.toByte(), 0x08.toByte(), 0x09.toByte(), 0x0a.toByte(), 0x0b.toByte(), 0x0c.toByte(), 0x0d.toByte(), 0x0e.toByte(), 0x0f.toByte())
-        val DEFAULT_LOCK_CODE_XY3 = byteArrayOf(0x2f.toByte(), 0xbe.toByte(), 0xa2.toByte(), 0x07.toByte(), 0x52.toByte(), 0xfe.toByte(), 0xbf.toByte(), 0x31.toByte(), 0x1d.toByte(), 0xac.toByte(), 0x5d.toByte(), 0xfa.toByte(), 0x7d.toByte(), 0x77.toByte(), 0x76.toByte(), 0x80.toByte())
+        val DEFAULT_LOCK_CODE = byteArrayOf(0x2f.toByte(), 0xbe.toByte(), 0xa2.toByte(), 0x07.toByte(), 0x52.toByte(), 0xfe.toByte(), 0xbf.toByte(), 0x31.toByte(), 0x1d.toByte(), 0xac.toByte(), 0x5d.toByte(), 0xfa.toByte(), 0x7d.toByte(), 0x77.toByte(), 0x76.toByte(), 0x80.toByte())
 
         enum class StayAwake(val state: Int) {
             Off(0),
@@ -76,7 +75,7 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult) : XYFi
                     context: Context,
                     scanResult: XYScanResult
                     ->
-                    XY4BluetoothDevice(context, scanResult)
+                    XY3BluetoothDevice(context, scanResult)
                 }
             } else {
                 XYFinderBluetoothDevice.uuidToCreator.remove(FAMILY_UUID)

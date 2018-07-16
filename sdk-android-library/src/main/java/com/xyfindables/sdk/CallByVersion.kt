@@ -3,7 +3,7 @@ package com.xyfindables.sdk
 import android.os.Build
 import com.xyfindables.core.XYBase
 
-class XYCallByVersion : XYBase() {
+class CallByVersion : XYBase() {
 
     class Call(
             val version: Int,
@@ -16,7 +16,7 @@ class XYCallByVersion : XYBase() {
 
     private val calls = ArrayList<Call>()
 
-    fun add(version: Int, closure: () -> Unit) : XYCallByVersion {
+    fun add(version: Int, closure: () -> Unit) : CallByVersion {
         calls.add(Call(version, closure))
         return this
     }

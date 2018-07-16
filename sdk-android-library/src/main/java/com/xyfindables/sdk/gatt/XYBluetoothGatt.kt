@@ -6,7 +6,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import com.xyfindables.core.XYBase
-import com.xyfindables.sdk.XYCallByVersion
+import com.xyfindables.sdk.CallByVersion
 import com.xyfindables.sdk.scanner.XYFilteredSmartScan
 import kotlinx.coroutines.experimental.*
 import java.lang.ref.WeakReference
@@ -418,6 +418,22 @@ open class XYBluetoothGatt protected constructor(
         }
     }
 
+    fun asyncFindAndWriteCharacteristicNotify(service: UUID, characteristic: UUID, enable:Boolean) : Deferred<Boolean?> {
+        return async(CommonPool) {
+            logInfo("asyncFindAndWriteCharacteristicNotify")
+            var success : Boolean? = null
+            val characteristicToWriteNotify = asyncFindCharacteristic(service, characteristic).await()
+            if (characteristicToWriteNotify != null) {
+                logInfo("asyncFindAndWriteCharacteristicNotify: Found Characteristic")
+                success = safeSetCharacteristicNotification(characteristicToWriteNotify, enable).await()
+                val descriptor = characteristicToWriteNotify.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG)
+                descriptor?.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                success = safeWriteDescriptor(descriptor).await()
+            }
+            return@async success
+        }
+    }
+
     private fun getBluetoothManager(context: Context): BluetoothManager {
         return context.applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     }
@@ -477,7 +493,7 @@ open class XYBluetoothGatt protected constructor(
     }
 
     //this can only be called after a successful discover
-    fun asyncFindCharacteristic(service: UUID, characteristic: UUID) : Deferred<BluetoothGattCharacteristic?> {
+    private fun asyncFindCharacteristic(service: UUID, characteristic: UUID) : Deferred<BluetoothGattCharacteristic?> {
 
         //error and throw exception if discovery not done yet
         if (gatt.services.size == 0) {
@@ -497,27 +513,16 @@ open class XYBluetoothGatt protected constructor(
         }
     }
 
-    fun asyncSetCharacteristicNotification(service: UUID, characteristic: UUID, enable: Boolean) : Deferred<Boolean?> {
-        return async(CommonPool) {
-            logInfo("asyncSetCharacteristicNotification")
-            var success : Boolean? = null
-            val characteristicToNotify = asyncFindCharacteristic(service, characteristic).await()
-            if (characteristicToNotify != null) {
-                success = safeSetCharacteristicNotification(characteristicToNotify, enable).await()
-            }
-            return@async success
-        }
-    }
-
     private val centralCallback = object : BluetoothGattCallback() {
         override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
             super.onCharacteristicChanged(gatt, characteristic)
             logInfo("onCharacteristicChanged: $characteristic")
             synchronized(gattListeners) {
-                for((_, listener) in gattListeners) {
+                for((key, listener) in gattListeners) {
                     val innerListener = listener.get()
                     if (innerListener != null) {
                         launch(CommonPool) {
+                            logInfo("onCharacteristicChanged: $key")
                             innerListener.onCharacteristicChanged(gatt, characteristic)
                         }
                     }
@@ -707,7 +712,7 @@ open class XYBluetoothGatt protected constructor(
         return async(CommonPool) {
             logInfo("connectGatt")
             if (_gatt == null) {
-                XYCallByVersion()
+                CallByVersion()
                         .add(Build.VERSION_CODES.O) {
                             connectGatt26(device, autoConnect, transport, phy, handler)
                         }
@@ -773,6 +778,8 @@ open class XYBluetoothGatt protected constructor(
         private val WAIT_RESOLUTION = 100
         private val CONNECT_TIMEOUT = 15000
         private val SAFE_DELAY = 100 //this is how long we pause between actions to prevent 133 errors
+
+        val CLIENT_CHARACTERISTIC_CONFIG = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
         private fun safeCreateGatt(context:Context, device: BluetoothDevice, callback: BluetoothGattCallback?) : Deferred<XYBluetoothGatt> {
             return async(GattThread) {
