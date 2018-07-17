@@ -11,6 +11,10 @@ class CurrentTimeService(device: XYBluetoothDevice) : Service(device) {
             return LinkLossService.uuid
         }
 
+    val currentTime = IntegerCharacteristic(this, characteristics.CurrentTime.uuid)
+    val localTimeInformation = IntegerCharacteristic(this, characteristics.LocalTimeInformation.uuid)
+    val referenceTimeInformation = IntegerCharacteristic(this, characteristics.ReferenceTimeInformation.uuid)
+
     companion object {
         val uuid = UUID.fromString("00001805-0000-1000-8000-00805F9B34FB")
 

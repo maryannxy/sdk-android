@@ -29,6 +29,18 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:orientation="horizontal">
+                <com.xyfindables.ui.views.XYButton
+                    android:id="@+id/startTest"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Start Test" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_margin="8dp">
                 <TextView
@@ -206,13 +218,11 @@
                         android:id="@+id/stay_awake"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:enabled="false"
                         android:text="Stay Awake" />
                     <com.xyfindables.ui.views.XYButton
                         android:id="@+id/fall_asleep"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:enabled="false"
                         android:layout_marginLeft="16dp"
                         android:text="Fall Asleep" />
                 </LinearLayout>

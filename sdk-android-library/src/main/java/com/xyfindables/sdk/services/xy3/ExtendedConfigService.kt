@@ -11,6 +11,15 @@ class ExtendedConfigService(device: XYBluetoothDevice) : Service(device) {
             return ExtendedConfigService.uuid
         }
 
+    val virtualBeaconSettings = IntegerCharacteristic(this, characteristics.VirtualBeaconSettings.uuid)
+    val tone = IntegerCharacteristic(this, characteristics.Tone.uuid)
+    val registration = IntegerCharacteristic(this, characteristics.Registration.uuid)
+    val inactiveVirtualBeaconSettings = IntegerCharacteristic(this, characteristics.InactiveVirtualBeaconSettings.uuid)
+    val inactiveInterval = IntegerCharacteristic(this, characteristics.InactiveInterval.uuid)
+    val gpsInterval = IntegerCharacteristic(this, characteristics.GpsInterval.uuid)
+    val gpsMode = IntegerCharacteristic(this, characteristics.GpsMode.uuid)
+    val simId = IntegerCharacteristic(this, characteristics.SimId.uuid)
+
     companion object {
         val uuid = UUID.fromString("F014FF00-0439-3000-E001-00001001FFFF")
 

@@ -11,6 +11,16 @@ class BasicConfigService(device: XYBluetoothDevice) : Service(device) {
             return BasicConfigService.uuid
         }
 
+    val lockStatus = IntegerCharacteristic(this, characteristics.LockStatus.uuid)
+    val lock = BytesCharacteristic(this, characteristics.Lock.uuid)
+    val unlock = BytesCharacteristic(this, characteristics.Unlock.uuid)
+    val uuid = BytesCharacteristic(this, characteristics.Uuid.uuid)
+    val major = IntegerCharacteristic(this, characteristics.Major.uuid)
+    val minor = IntegerCharacteristic(this, characteristics.Minor.uuid)
+    val interval = IntegerCharacteristic(this, characteristics.Interval.uuid)
+    val otaWrite = BytesCharacteristic(this, characteristics.OtaWrite.uuid)
+    val reboot = IntegerCharacteristic(this, characteristics.Reboot.uuid)
+
     companion object {
         val uuid = UUID.fromString("F014EE00-0439-3000-E001-00001001FFFF")
 

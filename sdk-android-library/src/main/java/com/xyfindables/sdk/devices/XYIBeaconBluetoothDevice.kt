@@ -1,32 +1,33 @@
 package com.xyfindables.sdk.devices
 
 import android.content.Context
+import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.scanner.XYScanResult
 import java.nio.ByteBuffer
 import java.util.*
 
 open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult) : XYBluetoothDevice(context, scanResult.device) {
 
-    private val _uuid : UUID
-    val uuid : UUID
+    protected val _uuid : UUID
+    open val uuid : UUID
         get() {
             return _uuid
         }
 
-    private val _major : Int
-    val major : Int
+    protected val _major : Int
+    open val major : Int
         get() {
             return _major
         }
 
-    private val _minor : Int
-    val minor : Int
+    protected val _minor : Int
+    open val minor : Int
         get() {
             return _minor
         }
 
-    private val _power : Byte
-    val power : Byte
+    protected val _power : Byte
+    open val power : Byte
         get() {
             return _power
         }

@@ -32,6 +32,34 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult) :
         }
     }
 
+    open fun lock() : Deferred<Boolean?> {
+        logException(UnsupportedOperationException(), true)
+        return async {
+            return@async false
+        }
+    }
+
+    open fun unlock() : Deferred<Boolean?> {
+        logException(UnsupportedOperationException(), true)
+        return async {
+            return@async false
+        }
+    }
+
+    open fun stayAwake() : Deferred<Boolean?> {
+        logException(UnsupportedOperationException(), true)
+        return async {
+            return@async false
+        }
+    }
+
+    open fun fallAsleep() : Deferred<Boolean?> {
+        logException(UnsupportedOperationException(), true)
+        return async {
+            return@async false
+        }
+    }
+
     interface Listener : XYIBeaconBluetoothDevice.Listener {
     }
 
@@ -101,47 +129,21 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult) :
         fun enable(enable: Boolean) {
             if (enable) {
                 XYIBeaconBluetoothDevice.enable(true)
-                XYIBeaconBluetoothDevice.uuidToCreator[family2uuid[Family.XY1]!!] = {
-                    context: Context,
-                    scanResult: XYScanResult
-                    ->
-                    fromScanResult(context, scanResult)
-                }
-                XYIBeaconBluetoothDevice.uuidToCreator[family2uuid[Family.XY2]!!] = {
-                    context: Context,
-                    scanResult: XYScanResult
-                    ->
-                    fromScanResult(context, scanResult)
-                }
-                XYIBeaconBluetoothDevice.uuidToCreator[family2uuid[Family.XY3]!!] = {
-                    context: Context,
-                    scanResult: XYScanResult
-                    ->
-                    fromScanResult(context, scanResult)
-                }
-                XYIBeaconBluetoothDevice.uuidToCreator[family2uuid[Family.XY4]!!] = {
-                    context: Context,
-                    scanResult: XYScanResult
-                    ->
-                    fromScanResult(context, scanResult)
-                }
-                XYIBeaconBluetoothDevice.uuidToCreator[family2uuid[Family.Gps]!!] = {
-                    context: Context,
-                    scanResult: XYScanResult
-                    ->
-                    fromScanResult(context, scanResult)
-                }
-                XYIBeaconBluetoothDevice.uuidToCreator[family2uuid[Family.Webble]!!] = {
-                    context: Context,
-                    scanResult: XYScanResult
-                    ->
-                    fromScanResult(context, scanResult)
-                }
             }
         }
 
-        val uuidToCreator = HashMap<UUID, (context:Context, scanResult: XYScanResult) -> XYFinderBluetoothDevice?>()
-        fun fromScanResult(context:Context, scanResult: XYScanResult) : XYFinderBluetoothDevice? {
+        fun addCreator(uuid: UUID, creator:(context:Context, scanResult: XYScanResult) -> XYFinderBluetoothDevice?) {
+            XYIBeaconBluetoothDevice.uuidToCreator[uuid] = fromScanResult
+            uuidToCreator[uuid] = creator
+        }
+
+        fun removeCreator(uuid: UUID) {
+            uuidToCreator.remove(uuid)
+        }
+
+        private val uuidToCreator = HashMap<UUID, (context:Context, scanResult: XYScanResult) -> XYFinderBluetoothDevice?>()
+
+        val fromScanResult = fun (context:Context, scanResult: XYScanResult) : XYFinderBluetoothDevice? {
             for ((uuid, creator) in uuidToCreator) {
                 val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
                 if (bytes != null) {

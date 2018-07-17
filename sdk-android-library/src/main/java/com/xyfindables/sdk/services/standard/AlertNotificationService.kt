@@ -11,11 +11,13 @@ class AlertNotificationService(device: XYBluetoothDevice) : Service(device) {
             return AlertNotificationService.uuid
         }
 
+    val controlPoint = IntegerCharacteristic(this, characteristics.ControlPoint.uuid)
+
     companion object {
         val uuid = UUID.fromString("00001811-0000-1000-8000-00805F9B34FB")
 
         enum class characteristics(val uuid: UUID) {
-            AlertNotificationControlPoint(  UUID.fromString("00002a44-0000-1000-8000-00805f9b34fb")),
+            ControlPoint(                   UUID.fromString("00002a44-0000-1000-8000-00805f9b34fb")),
             UnreadAlertStatus(              UUID.fromString("00002a45-0000-1000-8000-00805f9b34fb")),
             NewAlert(                       UUID.fromString("00002a46-0000-1000-8000-00805f9b34fb")),
             SupportedNewAlertCategory(      UUID.fromString("00002a47-0000-1000-8000-00805f9b34fb")),

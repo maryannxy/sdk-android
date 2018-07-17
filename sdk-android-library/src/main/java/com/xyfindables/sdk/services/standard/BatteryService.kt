@@ -11,11 +11,13 @@ class BatteryService(device: XYBluetoothDevice) : Service(device) {
             return BatteryService.uuid
         }
 
+    val level = IntegerCharacteristic(this, characteristics.Level.uuid)
+
     companion object {
         val uuid = UUID.fromString("0000180F-0000-1000-8000-00805F9B34FB")
 
         enum class characteristics(val uuid: UUID) {
-            BatteryLevel(UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb"))
+            Level(UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb"))
         }
     }
 }

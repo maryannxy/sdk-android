@@ -11,6 +11,16 @@ class DeviceInformationService(device: XYBluetoothDevice) : Service(device) {
             return DeviceInformationService.uuid
         }
 
+    val systemId = IntegerCharacteristic(this, characteristics.SystemId.uuid)
+    val modelNumberString = StringCharacteristic(this, characteristics.ModelNumberString.uuid)
+    val serialNumberString = StringCharacteristic(this, characteristics.SerialNumberString.uuid)
+    val firmwareRevisionString = StringCharacteristic(this, characteristics.FirmwareRevisionString.uuid)
+    val hardwareRevisionString = StringCharacteristic(this, characteristics.HardwareRevisionString.uuid)
+    val softwareRevisionString = StringCharacteristic(this, characteristics.SoftwareRevisionString.uuid)
+    val manufacturerNameString = StringCharacteristic(this, characteristics.ManufacturerNameString.uuid)
+    val ieeeRegulatoryCertificationDataList = IntegerCharacteristic(this, characteristics.IEEE11073_20601RegulatoryCertificationDataList.uuid)
+    val pnpId = IntegerCharacteristic(this, characteristics.PnPId.uuid)
+
     companion object {
         val uuid = UUID.fromString("0000180A-0000-1000-8000-00805F9B34FB")
 

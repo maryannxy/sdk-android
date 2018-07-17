@@ -16,14 +16,36 @@ abstract class Service(val device: XYBluetoothDevice) : XYBase() {
         }
     }
 
-    class IntegerCharacteristic(service: Service, uuid:UUID) : Characteristic(service, uuid) {
+    class IntegerCharacteristic(service: Service, uuid:UUID, val formatType: Int = BluetoothGattCharacteristic.FORMAT_UINT8, val offset:Int = 0) : Characteristic(service, uuid) {
 
         fun get() : Deferred<Int?> {
-            return service.readInt(uuid)
+            return service.readInt(uuid, formatType, offset)
         }
 
         fun set(value: Int) : Deferred<Boolean?> {
-            return service.writeInt(uuid, value)
+            return service.writeInt(uuid, value, formatType, offset)
+        }
+    }
+
+    class FloatCharacteristic(service: Service, uuid:UUID, val formatType: Int = BluetoothGattCharacteristic.FORMAT_FLOAT, val offset:Int = 0) : Characteristic(service, uuid) {
+
+        fun get() : Deferred<Float?> {
+            return service.readFloat(uuid, formatType, offset)
+        }
+
+        fun set(mantissa: Int, exponent: Int) : Deferred<Boolean?> {
+            return service.writeFloat(uuid, mantissa, exponent, formatType, offset)
+        }
+    }
+
+    class StringCharacteristic(service: Service, uuid:UUID) : Characteristic(service, uuid) {
+
+        fun get() : Deferred<String?> {
+            return service.readString(uuid)
+        }
+
+        fun set(value: String) : Deferred<Boolean?> {
+            return service.writeString(uuid, value)
         }
     }
 
@@ -37,25 +59,79 @@ abstract class Service(val device: XYBluetoothDevice) : XYBase() {
         }
     }
 
-    private fun readInt(characteristic: UUID): Deferred<Int?> {
+    private fun readInt(characteristic: UUID, formatType: Int = BluetoothGattCharacteristic.FORMAT_UINT8, offset:Int = 0): Deferred<Int?> {
         return device.access {
-            return@access device.asyncFindAndReadCharacteristicInt(
+            val result =  device.asyncFindAndReadCharacteristicInt(
                     serviceUuid,
                     characteristic,
-                    BluetoothGattCharacteristic.FORMAT_UINT8,
-                    0
+                    formatType,
+                    offset
+            ).await()
+            if (result == null) {
+                logError("readInt: Returned Null", false)
+            }
+            return@access result
+        }
+    }
+
+    private fun writeInt(characteristic: UUID, value: Int, formatType: Int = BluetoothGattCharacteristic.FORMAT_UINT8, offset:Int = 0): Deferred<Boolean?> {
+        return device.access {
+            val result = device.asyncFindAndWriteCharacteristic(
+                    serviceUuid,
+                    characteristic,
+                    value,
+                    formatType,
+                    offset
+            ).await()
+            if (result == null) {
+                logError("writeInt: Returned Null", false)
+            } else if (result == false) {
+                logError("writeInt failed", false)
+            }
+            return@access result
+        }
+    }
+
+    private fun readFloat(characteristic: UUID, formatType: Int = BluetoothGattCharacteristic.FORMAT_FLOAT, offset:Int = 0): Deferred<Float?> {
+        return device.access {
+            return@access device.asyncFindAndReadCharacteristicFloat(
+                    serviceUuid,
+                    characteristic,
+                    formatType,
+                    offset
             ).await()
         }
     }
 
-    private fun writeInt(characteristic: UUID, value: Int): Deferred<Boolean?> {
+    private fun writeFloat(characteristic: UUID, mantissa: Int, exponent: Int, formatType: Int = BluetoothGattCharacteristic.FORMAT_FLOAT, offset:Int = 0): Deferred<Boolean?> {
+        return device.access {
+            return@access device.asyncFindAndWriteCharacteristicFloat(
+                    serviceUuid,
+                    characteristic,
+                    mantissa,
+                    exponent,
+                    formatType,
+                    offset
+            ).await()
+        }
+    }
+
+    private fun readString(characteristic: UUID, offset:Int = 0): Deferred<String?> {
+        return device.access {
+            return@access device.asyncFindAndReadCharacteristicString(
+                    serviceUuid,
+                    characteristic,
+                    offset
+            ).await()
+        }
+    }
+
+    private fun writeString(characteristic: UUID, value: String): Deferred<Boolean?> {
         return device.access {
             return@access device.asyncFindAndWriteCharacteristic(
                     serviceUuid,
                     characteristic,
-                    value,
-                    BluetoothGattCharacteristic.FORMAT_UINT8,
-                    0
+                    value
             ).await()
         }
     }
