@@ -23,7 +23,7 @@ class XYDeviceItemView(context: Context, attrs: AttributeSet) : RelativeLayout(c
         setOnClickListener {
             if (device != null) {
                 val intent = Intent(context, XYFinderDeviceActivity::class.java)
-                intent.putExtra(XYFinderDeviceActivity.EXTRA_DEVICEADDRESS, device!!.address)
+                intent.putExtra(XYFinderDeviceActivity.EXTRA_DEVICEHASH, device!!.hashCode())
                 context.startActivity(intent)
             }
         }

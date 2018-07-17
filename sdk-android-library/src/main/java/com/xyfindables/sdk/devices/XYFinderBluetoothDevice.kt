@@ -7,7 +7,7 @@ import kotlinx.coroutines.experimental.async
 import java.nio.ByteBuffer
 import java.util.*
 
-open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult) : XYIBeaconBluetoothDevice(context, scanResult) {
+open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, hash: Int) : XYIBeaconBluetoothDevice(context, scanResult, hash) {
 
     override val id : String
         get() {
@@ -63,7 +63,7 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult) :
     interface Listener : XYIBeaconBluetoothDevice.Listener {
     }
 
-    companion object {
+    companion object : XYCreator() {
 
         var canCreate = false
 
@@ -132,8 +132,8 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult) :
             }
         }
 
-        fun addCreator(uuid: UUID, creator:(context:Context, scanResult: XYScanResult) -> XYFinderBluetoothDevice?) {
-            XYIBeaconBluetoothDevice.uuidToCreator[uuid] = fromScanResult
+        fun addCreator(uuid: UUID, creator: XYCreator) {
+            XYIBeaconBluetoothDevice.uuidToCreator[uuid] = this
             uuidToCreator[uuid] = creator
         }
 
@@ -141,28 +141,36 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult) :
             uuidToCreator.remove(uuid)
         }
 
-        private val uuidToCreator = HashMap<UUID, (context:Context, scanResult: XYScanResult) -> XYFinderBluetoothDevice?>()
+        private val uuidToCreator = HashMap<UUID, XYCreator>()
 
-        val fromScanResult = fun (context:Context, scanResult: XYScanResult) : XYFinderBluetoothDevice? {
-            for ((uuid, creator) in uuidToCreator) {
-                val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
-                if (bytes != null) {
-                    val buffer = ByteBuffer.wrap(bytes)
-                    buffer.position(2) //skip the type and size
+        override fun addDevicesFromScanResult(context:Context, scanResult: XYScanResult, devices: HashMap<Int, XYBluetoothDevice>) {
 
-                    //get uuid
-                    val high = buffer.getLong()
-                    val low = buffer.getLong()
-                    val uuidFromScan = UUID(high, low)
+            val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
+            if (bytes != null) {
+                val buffer = ByteBuffer.wrap(bytes)
+                buffer.position(2) //skip the type and size
+
+                // get uuid
+                val high = buffer.getLong()
+                val low = buffer.getLong()
+                val uuidFromScan = UUID(high, low)
+
+                for ((uuid, creator) in uuidToCreator) {
                     if (uuid.equals(uuidFromScan)) {
-                        return creator(context, scanResult)
+                        creator.addDevicesFromScanResult(context, scanResult, devices)
+                        return
                     }
                 }
             }
-            if (canCreate)
-                return XYFinderBluetoothDevice(context, scanResult)
-            else
-                return null
+
+            val hash = hashFromScanResult(scanResult)
+
+            if (canCreate && hash != null)
+                devices[hash] = XYFinderBluetoothDevice(context, scanResult, hash)
+        }
+
+        override fun hashFromScanResult(scanResult: XYScanResult): Int? {
+            return XYIBeaconBluetoothDevice.hashFromScanResult(scanResult)
         }
     }
 }

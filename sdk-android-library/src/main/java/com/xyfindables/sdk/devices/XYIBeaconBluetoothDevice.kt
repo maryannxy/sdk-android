@@ -6,7 +6,7 @@ import com.xyfindables.sdk.scanner.XYScanResult
 import java.nio.ByteBuffer
 import java.util.*
 
-open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult) : XYBluetoothDevice(context, scanResult.device) {
+open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult, hash: Int) : XYBluetoothDevice(context, scanResult.device, hash) {
 
     protected val _uuid : UUID
     open val uuid : UUID
@@ -32,7 +32,7 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult) 
             return _power
         }
 
-    override val id : String
+    open val id : String
         get() {
             return "$uuid:$major.$minor"
         }
@@ -55,7 +55,7 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult) 
     interface Listener : XYAppleBluetoothDevice.Listener {
     }
 
-    companion object {
+    companion object : XYCreator() {
 
         val APPLE_IBEACON_ID = 0x02.toByte()
 
@@ -64,38 +64,47 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult) 
         fun enable(enable: Boolean) {
             if (enable) {
                 XYAppleBluetoothDevice.enable(true)
-                XYAppleBluetoothDevice.typeToCreator[APPLE_IBEACON_ID] = {
-                    context: Context,
-                    scanResult: XYScanResult
-                    ->
-                    fromScanResult(context, scanResult)
-                }
+                XYAppleBluetoothDevice.typeToCreator[APPLE_IBEACON_ID] = this
             } else {
                 XYAppleBluetoothDevice.typeToCreator.remove(APPLE_IBEACON_ID)
             }
         }
 
-        val uuidToCreator = HashMap<UUID, (context:Context, scanResult: XYScanResult) -> XYIBeaconBluetoothDevice?>()
-        fun fromScanResult(context:Context, scanResult: XYScanResult) : XYBluetoothDevice? {
+        fun iBeaconUuidFromScanResult(scanResult: XYScanResult) : UUID? {
+            val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
+            if (bytes != null) {
+                val buffer = ByteBuffer.wrap(bytes)
+                buffer.position(2) //skip the type and size
+
+                //get uuid
+                val high = buffer.getLong()
+                val low = buffer.getLong()
+                return UUID(high, low)
+            } else {
+                return null
+            }
+        }
+
+        val uuidToCreator = HashMap<UUID, XYCreator>()
+        override fun addDevicesFromScanResult(context:Context, scanResult: XYScanResult, devices: HashMap<Int, XYBluetoothDevice>) {
             for ((uuid, creator) in uuidToCreator) {
                 val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
                 if (bytes != null) {
-                    val buffer = ByteBuffer.wrap(bytes)
-                    buffer.position(2) //skip the type and size
-
-                    //get uuid
-                    val high = buffer.getLong()
-                    val low = buffer.getLong()
-                    val uuidFromScan = UUID(high, low)
-                    if (uuid.equals(uuidFromScan)) {
-                        return creator(context, scanResult)
+                    if (uuid.equals(iBeaconUuidFromScanResult(scanResult))) {
+                        creator.addDevicesFromScanResult(context, scanResult, devices)
+                        return
                     }
                 }
             }
-            if (canCreate)
-                return XYIBeaconBluetoothDevice(context, scanResult)
-            else
-                return null
+
+            val hash = hashFromScanResult(scanResult)
+
+            if (canCreate && hash != null)
+                devices[hash] = XYIBeaconBluetoothDevice(context, scanResult, hash)
+        }
+
+        override fun hashFromScanResult(scanResult: XYScanResult): Int? {
+            return scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)?.contentHashCode()
         }
     }
 }

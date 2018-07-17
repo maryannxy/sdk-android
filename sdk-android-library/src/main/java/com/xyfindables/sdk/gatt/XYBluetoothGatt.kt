@@ -14,13 +14,13 @@ import java.util.*
 import kotlin.collections.HashMap
 
 open class XYBluetoothGatt protected constructor(
-        val context:Context,
-        val device: BluetoothDevice,
-        val autoConnect: Boolean,
-        val callback: BluetoothGattCallback?,
-        val transport: Int?,
-        val phy: Int?,
-        val handler: Handler?
+        private val context:Context,
+        protected var device: BluetoothDevice,
+        private val autoConnect: Boolean,
+        private val callback: BluetoothGattCallback?,
+        private val transport: Int?,
+        private val phy: Int?,
+        private val handler: Handler?
 ) : XYBase() {
 
     protected var gatt: BluetoothGatt? = null
@@ -33,6 +33,10 @@ open class XYBluetoothGatt protected constructor(
         get() {
             return _connectionState
         }
+
+    fun updateBluetoothDevice(device: BluetoothDevice) {
+        this.device = device
+    }
 
     private var _connectionState = bluetoothManager.getConnectionState(device, BluetoothProfile.GATT)
 
@@ -859,7 +863,7 @@ open class XYBluetoothGatt protected constructor(
                             connectGatt19(device, autoConnect)
                         }.call()
                 if (gatt == null) {
-                    logError("Failed to connect Gatt!", true)
+                    logError("Failed to connection Gatt!", true)
                     return@async false
                 }
             }

@@ -40,22 +40,19 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
             return uptime/1000F
         }
 
-    val devices = HashMap<String, XYBluetoothDevice>()
+    val devices = HashMap<Int, XYBluetoothDevice>()
 
-    fun deviceFromScanResult(scanResult: XYScanResult) : XYBluetoothDevice? {
-        var device : XYBluetoothDevice? = null
+    fun addDevicesFromScanResult(scanResult: XYScanResult, devices: HashMap<Int, XYBluetoothDevice>) {
+        val hash = XYBluetoothDevice.hashFromScanResult(scanResult)
         synchronized(devices) {
-            device = devices[scanResult.address]
-            if (device == null) {
-                device = XYBluetoothDevice.fromScanResult(context, scanResult)
-                //the device will come back null if the device parser for that type of device
-                //is disabled
-                if (device != null) {
-                    devices.set(scanResult.address, device!!)
+            if (hash != null) {
+                //only add them if they do not already exist
+                val device = this.devices[hash]
+                if (device == null) {
+                    XYBluetoothDevice.addDevicesFromScanResult(context, scanResult, devices)
                 }
             }
         }
-        return device
     }
 
     private val listeners = HashMap<String, WeakReference<Listener>>()
@@ -112,26 +109,37 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
     }
 
     private var handleDeviceNotifyExit = fun(device: XYBluetoothDevice) {
-        devices.remove(device.id)
+        devices.remove(device.hashCode())
         reportExited(device)
     }
 
     protected fun onScanResult(scanResults: List<XYScanResult>): List<XYScanResult> {
-        scanResultCount++
+        scanResultCount += scanResults.size
+        val devices = HashMap<Int, XYBluetoothDevice>()
         for (scanResult in scanResults) {
-            val device = deviceFromScanResult(scanResult)
-            if (device != null) {
-                if (scanResult.scanRecord != null) {
-                    device.updateAds(scanResult.scanRecord!!)
+            addDevicesFromScanResult(scanResult, devices)
+            logInfo("onScanResult: ${devices.size}")
+            if (devices.size > 0) {
+                for ((_, device) in devices) {
+                    var currentDevice = this.devices[device.hashCode()]
+                    if (currentDevice == null) {
+                        currentDevice = device
+                        this.devices[device.hashCode()] = device
+                    } else {
+                        currentDevice.updateBluetoothDevice(scanResult.device)
+                    }
+                    if (scanResult.scanRecord != null) {
+                        currentDevice.updateAds(scanResult.scanRecord!!)
+                    }
+                    if (currentDevice.rssi == -999) {
+                        reportEntered(device)
+                        currentDevice.onEnter()
+                        currentDevice.notifyExit = handleDeviceNotifyExit
+                    }
+                    currentDevice.rssi = scanResult.rssi
+                    reportDetected(currentDevice)
+                    currentDevice.onDetect()
                 }
-                if (device.rssi == -999) {
-                    reportEntered(device)
-                    device.onEnter()
-                    device.notifyExit = handleDeviceNotifyExit
-                }
-                device.rssi = scanResult.rssi
-                reportDetected(device)
-                device.onDetect()
             }
         }
         return scanResults

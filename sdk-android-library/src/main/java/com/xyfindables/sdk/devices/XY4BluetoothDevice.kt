@@ -14,7 +14,7 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.launch
 import java.util.*
 
-open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult) : XYFinderBluetoothDevice(context, scanResult) {
+open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:Int) : XYFinderBluetoothDevice(context, scanResult, hash) {
 
     val alertNotification = AlertNotificationService(this)
     val batteryService = BatteryService(this)
@@ -100,7 +100,7 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult) : XYFi
         fun buttonLongPressed()
     }
 
-    companion object {
+    companion object : XYCreator() {
 
         val FAMILY_UUID = UUID.fromString("a44eacf4-0104-0000-0000-5f784c9977b5")
 
@@ -122,17 +122,22 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult) : XYFi
         fun enable(enable: Boolean) {
             if (enable) {
                 XYFinderBluetoothDevice.enable(true)
-                XYFinderBluetoothDevice.addCreator(FAMILY_UUID) {
-                    context: Context,
-                    scanResult: XYScanResult
-                    ->
-                    XY4BluetoothDevice(context, scanResult)
-                }
+                XYFinderBluetoothDevice.addCreator(FAMILY_UUID, this)
             } else {
                 XYFinderBluetoothDevice.removeCreator(FAMILY_UUID)
             }
         }
 
+        override fun addDevicesFromScanResult(context:Context, scanResult: XYScanResult, devices: HashMap<Int, XYBluetoothDevice>) {
+            val hash = hashFromScanResult(scanResult)
+            if (hash != null) {
+                devices[hash] = XY4BluetoothDevice(context, scanResult, hash)
+            }
+        }
+
+        override fun hashFromScanResult(scanResult: XYScanResult): Int? {
+            return XYFinderBluetoothDevice.hashFromScanResult(scanResult)
+        }
 
     }
 }

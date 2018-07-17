@@ -27,9 +27,9 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val intent = getIntent()
-        val deviceAddress = intent.getStringExtra(XYFinderDeviceActivity.EXTRA_DEVICEADDRESS)
-        logInfo("onCreate: $deviceAddress")
-        device = scanner.devices[deviceAddress]
+        val deviceHash = intent.getIntExtra(XYFinderDeviceActivity.EXTRA_DEVICEHASH, 0)
+        logInfo("onCreate: $deviceHash")
+        device = scanner.devices[deviceHash]
         if (device == null) {
             showToast("Failed to Find Device")
             finish()
@@ -425,7 +425,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
     }
 
     companion object {
-        var EXTRA_DEVICEADDRESS = "DeviceAddress"
+        var EXTRA_DEVICEHASH = "DeviceHash"
         private val TAG = XYFinderDeviceActivity::class.java.simpleName
     }
 }

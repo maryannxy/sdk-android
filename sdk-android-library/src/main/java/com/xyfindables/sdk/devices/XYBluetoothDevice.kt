@@ -2,18 +2,23 @@ package com.xyfindables.sdk.devices
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
+import android.os.ParcelUuid
 import com.xyfindables.sdk.ads.XYBleAd
 import com.xyfindables.sdk.gatt.XYBluetoothGatt
 import com.xyfindables.sdk.scanner.XYScanRecord
-import com.xyfindables.sdk.devices.router.Router
-import com.xyfindables.sdk.devices.router.RouterInterface
 import com.xyfindables.sdk.scanner.XYScanResult
 import kotlinx.coroutines.experimental.*
 import java.lang.ref.WeakReference
 import java.nio.ByteBuffer
 import java.util.*
+import kotlin.collections.ArrayList
 
-open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBluetoothGatt(context, device, false, null, null, null, null) {
+open class XYBluetoothDevice (context: Context, device:BluetoothDevice, private val hash:Int) : XYBluetoothGatt(context, device, false, null, null, null, null) {
+
+    //hash - the reason for the hash system is that some devices rotate MAC addresses or polymorph in other ways
+    //the user generally wants to treat a single physical device as a single logical device so the
+    //hash that is passed in to create the class is used to make sure that the reuse of existing instances
+    //is done based on device specific logic on "sameness"
 
     private var references = 0
 
@@ -42,11 +47,6 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
             return device.address
         }
 
-    open val id : String
-        get() {
-            return device.address
-        }
-
     open val name: String?
         get() {
             return device.name
@@ -59,6 +59,14 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
     open var outOfRangeDelay = OUTOFRANGE_DELAY
 
     var notifyExit : ((device: XYBluetoothDevice)->(Unit))? = null
+
+    override fun hashCode(): Int {
+        return hash
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return super.equals(other)
+    }
 
     //this should only be called from the onEnter function so that
     //there is one onExit for every onEnter
@@ -92,7 +100,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
     }
 
     fun onEnter() {
-        logInfo("onEnter: $id")
+        logInfo("onEnter: $address")
         enterCount++
         lastAdTime = now
         synchronized(listeners) {
@@ -109,7 +117,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
     }
 
     fun onExit() {
-        logInfo("onExit: $id")
+        logInfo("onExit: $address")
         exitCount++
         synchronized(listeners) {
             for ((_, listener) in listeners) {
@@ -140,7 +148,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
     }
 
     fun onConnectionStateChange(newState: Int) {
-        logInfo("onConnectionStateChange: $id : $newState")
+        logInfo("onConnectionStateChange: $hash : $newState")
         synchronized(listeners) {
             for ((_, listener) in listeners) {
                 val innerListener = listener.get()
@@ -196,15 +204,15 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
 
     //make a safe session to interact with the device
     //if null is passed back, the sdk was unable to create the safe session
-    fun <T> access(closure: suspend ()->T?) : Deferred<T?> {
+    fun <T> connection(closure: suspend ()->T?) : Deferred<T?> {
         return async(CommonPool) {
-            logInfo("access")
+            logInfo("connection")
             var result: T? = null
             references++
             if (connectGatt().await()) {
                 val discovered = asyncDiscover().await()
                 if (discovered == null) {
-                    logError("access: Discover Failed!", false)
+                    logError("connection: Discover Failed!", false)
                 } else {
                     result = closure()
                 }
@@ -221,8 +229,8 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
         launch(CommonPool) {
             logInfo("cleanUpIfNeeded")
 
-            //if the global and local last access times do not match
-            //after the delay, that means a newer access is now responsible for closing it
+            //if the global and local last connection times do not match
+            //after the delay, that means a newer connection is now responsible for closing it
             val localAccessTime = now
             lastAccessTime = localAccessTime
 
@@ -248,9 +256,9 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
         fun connectionStateChanged(device: XYBluetoothDevice, newState: Int)
     }
 
-    companion object {
+    companion object : XYCreator() {
 
-        //gap after last access that we wait to close the connection
+        //gap after last connection that we wait to close the connection
         private const val CLEANUP_DELAY = 5000
 
         //the value we set the rssi to when we go out of range
@@ -260,40 +268,46 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice) : XYBlue
         //if we have not gotten any ads or been connected to it
         const val OUTOFRANGE_DELAY = 15000
 
-        val router = Router()
         var canCreate = false
-        val manufacturerToCreator = HashMap<Int, (context:Context, scanResult: XYScanResult) -> XYBluetoothDevice?>()
+        val manufacturerToCreator = HashMap<Int, XYCreator>()
+        val serviceToCreator = HashMap<UUID, XYCreator>()
 
-        private val manufacturerRouter : RouterInterface = object : RouterInterface {
-            override fun run(context: Context, scanResult: XYScanResult): XYBluetoothDevice? {
-                for ((manufacturerId, creator) in manufacturerToCreator) {
-                    val bytes = scanResult.scanRecord?.getManufacturerSpecificData(manufacturerId)
-                    if (bytes != null) {
-                        val device = creator(context, scanResult)
-                        if (device !=null) {
-                            return device
-                        }
-                    }
+        private fun addDevicesFromManufacturers(context:Context, scanResult:XYScanResult, devices: HashMap<Int, XYBluetoothDevice>) {
+            for ((manufacturerId, creator) in manufacturerToCreator) {
+                val bytes = scanResult.scanRecord?.getManufacturerSpecificData(manufacturerId)
+                if (bytes != null) {
+                    creator.addDevicesFromScanResult(context, scanResult, devices)
                 }
-                return null
+            }
+            logInfo("addDevicesFromManufacturers: ${devices.size}")
+        }
+
+        private fun addDevicesFromServices(context:Context, scanResult:XYScanResult, devices: HashMap<Int, XYBluetoothDevice>) {
+            for ((uuid, creator) in serviceToCreator) {
+                val bytes = scanResult.scanRecord?.getServiceData(ParcelUuid(uuid))
+                if (bytes != null) {
+                    creator.addDevicesFromScanResult(context, scanResult, devices)
+                }
             }
         }
 
-        fun fromScanResult(context:Context, scanResult: XYScanResult) : XYBluetoothDevice? {
-            val device = router.run(context, scanResult)
+        override fun addDevicesFromScanResult(context:Context, scanResult:XYScanResult, devices: HashMap<Int, XYBluetoothDevice>) {
 
-            if (device != null) {
-                return device
+            addDevicesFromServices(context, scanResult, devices)
+            addDevicesFromManufacturers(context, scanResult, devices)
+
+            if (devices.size == 0) {
+                val hash = hashFromScanResult(scanResult)
+
+                if (canCreate && hash != null) {
+                    devices[hash] = XYBluetoothDevice(context, scanResult.device, hash)
+                }
             }
-
-            if (canCreate)
-                return XYBluetoothDevice(context, scanResult.device)
-            else
-                return null
         }
 
-        init {
-            router.routers.add(manufacturerRouter)
+        override fun hashFromScanResult(scanResult: XYScanResult): Int? {
+            return scanResult.address.hashCode()
         }
+
     }
 }

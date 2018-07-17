@@ -30,7 +30,7 @@ class XYFindablesSdkSampleActivity : XYAppBaseActivity() {
         logInfo("onResume")
         super.onResume()
         val permissions = XYPermissions(this)
-        permissions.requestPermission(android.Manifest.permission.ACCESS_FINE_LOCATION, "Location services are needed to access and track your finders.", XYPermissions.LOCATION_PERMISSIONS_REQ_CODE)
+        permissions.requestPermission(android.Manifest.permission.ACCESS_FINE_LOCATION, "Location services are needed to connection and track your finders.", XYPermissions.LOCATION_PERMISSIONS_REQ_CODE)
         adapter?.notifyDataSetChanged()
     }
 }

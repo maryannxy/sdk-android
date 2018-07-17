@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
+import android.util.SparseArray
 import com.xyfindables.sdk.scanner.XYScanResult
 import com.xyfindables.sdk.services.standard.*
 import com.xyfindables.sdk.services.xy3.*
@@ -12,9 +13,10 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
+import java.nio.ByteBuffer
 import java.util.*
 
-open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult) : XYFinderBluetoothDevice(context, scanResult) {
+open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: Int) : XYFinderBluetoothDevice(context, scanResult, hash) {
 
     val alertNotification = AlertNotificationService(this)
     val battery = BatteryService(this)
@@ -102,7 +104,7 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult) : XYFi
         fun buttonLongPressed()
     }
 
-    companion object {
+    companion object : XYCreator() {
 
         val FAMILY_UUID = UUID.fromString("08885dd0-111b-11e4-9191-0800200c9a66")
 
@@ -123,17 +125,45 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult) : XYFi
         fun enable(enable: Boolean) {
             if (enable) {
                 XYFinderBluetoothDevice.enable(true)
-                XYFinderBluetoothDevice.addCreator(FAMILY_UUID) {
-                    context: Context,
-                    scanResult: XYScanResult
-                    ->
-                    XY3BluetoothDevice(context, scanResult)
-                }
+                XYFinderBluetoothDevice.addCreator(FAMILY_UUID, this)
             } else {
                 XYFinderBluetoothDevice.removeCreator(FAMILY_UUID)
             }
         }
 
+        override fun addDevicesFromScanResult(context:Context, scanResult: XYScanResult, devices: HashMap<Int, XYBluetoothDevice>) {
+            val hash = hashFromScanResult(scanResult)
+            if (hash != null) {
+                devices[hash] = XY3BluetoothDevice(context, scanResult, hash)
+            }
+        }
+
+        fun iBeaconMajorFromScanResult(scanResult: XYScanResult): Int? {
+            val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
+            if (bytes != null) {
+                val buffer = ByteBuffer.wrap(bytes)
+                return buffer.getShort(18).toInt()
+            } else {
+                return null
+            }
+        }
+
+        fun iBeaconMinorFromScanResult(scanResult: XYScanResult): Int? {
+            val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
+            if (bytes != null) {
+                val buffer = ByteBuffer.wrap(bytes)
+                return buffer.getShort(20).toInt().and(0xfff0).or(0x0004)
+            } else {
+                return null
+            }
+        }
+
+        override fun hashFromScanResult(scanResult: XYScanResult): Int? {
+            val uuid = XYIBeaconBluetoothDevice.iBeaconUuidFromScanResult(scanResult)
+            val major = iBeaconMajorFromScanResult(scanResult)
+            val minor = iBeaconMinorFromScanResult(scanResult)
+            return "$uuid:$major:$minor".hashCode()
+        }
 
     }
 }
