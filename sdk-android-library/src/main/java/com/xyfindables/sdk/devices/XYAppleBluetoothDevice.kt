@@ -25,12 +25,12 @@ open class XYAppleBluetoothDevice(context: Context, device: BluetoothDevice, has
         }
 
         val typeToCreator = HashMap<Byte, XYCreator>()
-        override fun addDevicesFromScanResult(context:Context, scanResult: XYScanResult, devices: HashMap<Int, XYBluetoothDevice>) {
+        override fun getDevicesFromScanResult(context:Context, scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
             for ((typeId, creator) in typeToCreator) {
                 val bytes = scanResult.scanRecord?.getManufacturerSpecificData(MANUFACTURER_ID)
                 if (bytes != null) {
                     if (bytes[0] == typeId) {
-                        creator.addDevicesFromScanResult(context, scanResult, devices)
+                        creator.getDevicesFromScanResult(context, scanResult, globalDevices, foundDevices)
                         return
                     }
                 }
@@ -38,11 +38,12 @@ open class XYAppleBluetoothDevice(context: Context, device: BluetoothDevice, has
 
             val hash = hashFromScanResult(scanResult)
 
-            if (canCreate && hash != null)
-                devices[hash] = XYAppleBluetoothDevice(context, scanResult.device, hash)
+            if (canCreate && hash != null) {
+                foundDevices[hash] = globalDevices[hash] ?: XYAppleBluetoothDevice(context, scanResult.device, hash)
+            }
         }
 
-        override fun hashFromScanResult(scanResult: XYScanResult): Int? {
+        fun hashFromScanResult(scanResult: XYScanResult): Int? {
             return scanResult.address.hashCode()
         }
     }

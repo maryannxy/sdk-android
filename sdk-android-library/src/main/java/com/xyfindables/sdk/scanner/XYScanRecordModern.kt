@@ -47,7 +47,7 @@ class XYScanRecordModern(private val scanRecord: ScanRecord) : XYScanRecord() {
     }
 
     override fun getServiceData(serviceDataUuid: ParcelUuid?): ByteArray? {
-        return getServiceData(serviceDataUuid)
+        return scanRecord.getServiceData(serviceDataUuid)
     }
 
     override fun toString() : String {

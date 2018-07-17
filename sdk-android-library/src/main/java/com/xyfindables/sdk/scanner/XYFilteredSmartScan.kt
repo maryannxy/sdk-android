@@ -42,16 +42,13 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
 
     val devices = HashMap<Int, XYBluetoothDevice>()
 
-    fun addDevicesFromScanResult(scanResult: XYScanResult, devices: HashMap<Int, XYBluetoothDevice>) {
-        val hash = XYBluetoothDevice.hashFromScanResult(scanResult)
-        synchronized(devices) {
-            if (hash != null) {
-                //only add them if they do not already exist
-                val device = this.devices[hash]
-                if (device == null) {
-                    XYBluetoothDevice.addDevicesFromScanResult(context, scanResult, devices)
-                }
-            }
+    fun getDevicesFromScanResult(scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
+        //only add them if they do not already exist
+        XYBluetoothDevice.getDevicesFromScanResult(context, scanResult, globalDevices, foundDevices)
+
+        //add (or replace) all the found devices
+        for ((_, foundDevice) in foundDevices) {
+            globalDevices[foundDevice.hashCode()] = foundDevice
         }
     }
 
@@ -115,30 +112,26 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
 
     protected fun onScanResult(scanResults: List<XYScanResult>): List<XYScanResult> {
         scanResultCount += scanResults.size
-        val devices = HashMap<Int, XYBluetoothDevice>()
         for (scanResult in scanResults) {
-            addDevicesFromScanResult(scanResult, devices)
-            logInfo("onScanResult: ${devices.size}")
-            if (devices.size > 0) {
-                for ((_, device) in devices) {
-                    var currentDevice = this.devices[device.hashCode()]
-                    if (currentDevice == null) {
-                        currentDevice = device
-                        this.devices[device.hashCode()] = device
-                    } else {
-                        currentDevice.updateBluetoothDevice(scanResult.device)
-                    }
+            val foundDevices = HashMap<Int, XYBluetoothDevice>()
+            getDevicesFromScanResult(scanResult, this.devices, foundDevices)
+            this.devices.putAll(foundDevices)
+            if (foundDevices.size > 0) {
+                for ((_, device) in foundDevices) {
+                    this.devices[device.hashCode()] = device
+                    device.updateBluetoothDevice(scanResult.device)
+
                     if (scanResult.scanRecord != null) {
-                        currentDevice.updateAds(scanResult.scanRecord!!)
+                        device.updateAds(scanResult.scanRecord!!)
                     }
-                    if (currentDevice.rssi == -999) {
+                    if (device.rssi == -999) {
                         reportEntered(device)
-                        currentDevice.onEnter()
-                        currentDevice.notifyExit = handleDeviceNotifyExit
+                        device.onEnter()
+                        device.notifyExit = handleDeviceNotifyExit
                     }
-                    currentDevice.rssi = scanResult.rssi
-                    reportDetected(currentDevice)
-                    currentDevice.onDetect()
+                    device.rssi = scanResult.rssi
+                    reportDetected(device)
+                    device.onDetect()
                 }
             }
         }

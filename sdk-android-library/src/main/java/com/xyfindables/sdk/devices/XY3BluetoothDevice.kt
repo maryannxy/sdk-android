@@ -131,14 +131,7 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
             }
         }
 
-        override fun addDevicesFromScanResult(context:Context, scanResult: XYScanResult, devices: HashMap<Int, XYBluetoothDevice>) {
-            val hash = hashFromScanResult(scanResult)
-            if (hash != null) {
-                devices[hash] = XY3BluetoothDevice(context, scanResult, hash)
-            }
-        }
-
-        fun iBeaconMajorFromScanResult(scanResult: XYScanResult): Int? {
+        fun majorFromScanResult(scanResult: XYScanResult): Int? {
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
             if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
@@ -148,7 +141,7 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
             }
         }
 
-        fun iBeaconMinorFromScanResult(scanResult: XYScanResult): Int? {
+        fun minorFromScanResult(scanResult: XYScanResult): Int? {
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
             if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
@@ -158,10 +151,17 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
             }
         }
 
-        override fun hashFromScanResult(scanResult: XYScanResult): Int? {
+        override fun getDevicesFromScanResult(context:Context, scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
+            val hash = hashFromScanResult(scanResult)
+            if (hash != null) {
+                foundDevices[hash] = globalDevices[hash] ?: XY3BluetoothDevice(context, scanResult, hash)
+            }
+        }
+
+        fun hashFromScanResult(scanResult: XYScanResult): Int? {
             val uuid = XYIBeaconBluetoothDevice.iBeaconUuidFromScanResult(scanResult)
-            val major = iBeaconMajorFromScanResult(scanResult)
-            val minor = iBeaconMinorFromScanResult(scanResult)
+            val major = majorFromScanResult(scanResult)
+            val minor = minorFromScanResult(scanResult)
             return "$uuid:$major:$minor".hashCode()
         }
 

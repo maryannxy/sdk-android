@@ -22,6 +22,18 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice, private 
 
     private var references = 0
 
+    private var _stayConnected = false
+    var stayConnected : Boolean
+        get() {
+            return _stayConnected
+        }
+        set(value) {
+            _stayConnected = value
+            if (!_stayConnected) {
+                cleanUpIfNeeded()
+            }
+        }
+
     protected val listeners = HashMap<String, WeakReference<Listener>>()
     val ads = HashMap<Int, XYBleAd>()
 
@@ -240,7 +252,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice, private 
             //down to zero.  We have to check the lastAccess to make sure the delay is after
             //the last guy, not an earlier one
 
-            if (!closed && references == 0 && lastAccessTime == localAccessTime) {
+            if (!stayConnected && !closed && references == 0 && lastAccessTime == localAccessTime) {
                 asyncClose().await()
             }
         }
@@ -272,40 +284,41 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice, private 
         val manufacturerToCreator = HashMap<Int, XYCreator>()
         val serviceToCreator = HashMap<UUID, XYCreator>()
 
-        private fun addDevicesFromManufacturers(context:Context, scanResult:XYScanResult, devices: HashMap<Int, XYBluetoothDevice>) {
+        private fun getDevicesFromManufacturers(context:Context, scanResult:XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, newDevices: HashMap<Int, XYBluetoothDevice>) {
             for ((manufacturerId, creator) in manufacturerToCreator) {
                 val bytes = scanResult.scanRecord?.getManufacturerSpecificData(manufacturerId)
                 if (bytes != null) {
-                    creator.addDevicesFromScanResult(context, scanResult, devices)
+                    creator.getDevicesFromScanResult(context, scanResult, globalDevices, newDevices)
                 }
             }
-            logInfo("addDevicesFromManufacturers: ${devices.size}")
         }
 
-        private fun addDevicesFromServices(context:Context, scanResult:XYScanResult, devices: HashMap<Int, XYBluetoothDevice>) {
+        private fun getDevicesFromServices(context:Context, scanResult:XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, newDevices: HashMap<Int, XYBluetoothDevice>) {
             for ((uuid, creator) in serviceToCreator) {
                 val bytes = scanResult.scanRecord?.getServiceData(ParcelUuid(uuid))
                 if (bytes != null) {
-                    creator.addDevicesFromScanResult(context, scanResult, devices)
+                    creator.getDevicesFromScanResult(context, scanResult, globalDevices, newDevices)
                 }
             }
         }
 
-        override fun addDevicesFromScanResult(context:Context, scanResult:XYScanResult, devices: HashMap<Int, XYBluetoothDevice>) {
+        override fun getDevicesFromScanResult(context:Context, scanResult:XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, newDevices: HashMap<Int, XYBluetoothDevice>) {
 
-            addDevicesFromServices(context, scanResult, devices)
-            addDevicesFromManufacturers(context, scanResult, devices)
+            getDevicesFromServices(context, scanResult, globalDevices, newDevices)
+            getDevicesFromManufacturers(context, scanResult, globalDevices, newDevices)
 
-            if (devices.size == 0) {
+            if (newDevices.size == 0) {
                 val hash = hashFromScanResult(scanResult)
 
                 if (canCreate && hash != null) {
-                    devices[hash] = XYBluetoothDevice(context, scanResult.device, hash)
+                    val createdDevice = XYBluetoothDevice(context, scanResult.device, hash)
+                    newDevices[hash] = createdDevice
+                    globalDevices[hash] = createdDevice
                 }
             }
         }
 
-        override fun hashFromScanResult(scanResult: XYScanResult): Int? {
+        fun hashFromScanResult(scanResult: XYScanResult): Int? {
             return scanResult.address.hashCode()
         }
 

@@ -11,6 +11,7 @@ import com.xyfindables.sdk.services.xy4.PrimaryService
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.launch
+import java.nio.ByteBuffer
 import java.util.*
 
 open class XY2BluetoothDevice(context: Context, scanResult: XYScanResult, hash: Int) : XYFinderBluetoothDevice(context, scanResult, hash) {
@@ -92,15 +93,38 @@ open class XY2BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
             }
         }
 
-        override fun addDevicesFromScanResult(context:Context, scanResult: XYScanResult, devices: HashMap<Int, XYBluetoothDevice>) {
+        override fun getDevicesFromScanResult(context:Context, scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
             val hash = hashFromScanResult(scanResult)
             if (hash != null) {
-                devices[hash] = XY2BluetoothDevice(context, scanResult, hash)
+                foundDevices[hash] = globalDevices[hash] ?: XY2BluetoothDevice(context, scanResult, hash)
             }
         }
 
-        override fun hashFromScanResult(scanResult: XYScanResult): Int? {
-            return XYFinderBluetoothDevice.hashFromScanResult(scanResult)
+        fun majorFromScanResult(scanResult: XYScanResult): Int? {
+            val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
+            if (bytes != null) {
+                val buffer = ByteBuffer.wrap(bytes)
+                return buffer.getShort(18).toInt()
+            } else {
+                return null
+            }
+        }
+
+        fun minorFromScanResult(scanResult: XYScanResult): Int? {
+            val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
+            if (bytes != null) {
+                val buffer = ByteBuffer.wrap(bytes)
+                return buffer.getShort(20).toInt().and(0xfff0).or(0x0004)
+            } else {
+                return null
+            }
+        }
+
+        fun hashFromScanResult(scanResult: XYScanResult): Int? {
+            val uuid = XYIBeaconBluetoothDevice.iBeaconUuidFromScanResult(scanResult)
+            val major = majorFromScanResult(scanResult)
+            val minor = minorFromScanResult(scanResult)
+            return "$uuid:$major:$minor".hashCode()
         }
     }
 }
