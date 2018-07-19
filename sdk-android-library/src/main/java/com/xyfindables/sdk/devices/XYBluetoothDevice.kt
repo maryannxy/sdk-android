@@ -13,26 +13,12 @@ import java.lang.ref.WeakReference
 import java.nio.ByteBuffer
 import java.util.*
 
-open class XYBluetoothDevice (context: Context, device:BluetoothDevice, private val hash:Int) : XYBluetoothGatt(context, device, false, null, null, null, null) {
+open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private val hash:Int) : XYBluetoothGatt(context, device, false, null, null, null, null) {
 
     //hash - the reason for the hash system is that some devices rotate MAC addresses or polymorph in other ways
     //the user generally wants to treat a single physical device as a single logical device so the
     //hash that is passed in to create the class is used to make sure that the reuse of existing instances
     //is done based on device specific logic on "sameness"
-
-    private var references = 0
-
-    private var _stayConnected = false
-    var stayConnected : Boolean
-        get() {
-            return _stayConnected
-        }
-        set(value) {
-            _stayConnected = value
-            if (!_stayConnected) {
-                cleanUpIfNeeded()
-            }
-        }
 
     protected val listeners = HashMap<String, WeakReference<Listener>>()
     val ads = HashMap<Int, XYBleAd>()
@@ -48,19 +34,17 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice, private 
     //with rotating MAC addresses
     var exitAfterDisconnect = false
 
+    protected var _address: String? = null
     open val address : String
         get() {
-            return device.address
+            return device?.address ?: _address ?: "00:00:00:00:00:00"
         }
 
+    protected var _name: String = ""
     open val name: String?
         get() {
-            return device.name
+            return device?.name ?: _name
         }
-
-    init {
-        logInfo("XYBluetoothDevice Created: ${device.address}")
-    }
 
     open var outOfRangeDelay = OUTOFRANGE_DELAY
 
@@ -216,51 +200,27 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice, private 
     fun <T> connection(closure: suspend ()->XYBluetoothResult<T>) : Deferred<XYBluetoothResult<T>> {
         val deferred = asyncBle<T> {
             logInfo("connection")
-            var result: XYBluetoothResult<T>? = null
+            var value: T? = null
+            var error: XYBluetoothError? = null
             references++
-            if (connectGatt().await()) {
-                val discovered = asyncDiscover().await()
-                val error = discovered.error
-                if (error != null) {
-                    references--
-                    return@asyncBle XYBluetoothResult(error)
-                } else {
-                    result = closure()
+
+            if (connectGatt().await().error == null) {
+                if (asyncConnect().await().error == null) {
+                    val discovered = asyncDiscover().await()
+                    error = discovered.error
+                    if (error == null) {
+                        val result = closure()
+                        error = result.error
+                        value = result.value
+                    }
                 }
-                cleanUpIfNeeded()
             } else {
-                return@asyncBle XYBluetoothResult(XYBluetoothError("connection: Failed to Connect"))
+                error = XYBluetoothError("connection: Failed to Connect")
             }
             references--
-            return@asyncBle result
+            return@asyncBle XYBluetoothResult(value, error)
         }
         return deferred
-    }
-
-    //the goal is to leave connections hanging for a little bit in the case
-    //that they need to be reestablished in short notice
-    private fun cleanUpIfNeeded() {
-        launch(CommonPool) {
-            logInfo("cleanUpIfNeeded")
-
-            //if the global and local last connection times do not match
-            //after the delay, that means a newer connection is now responsible for closing it
-            val localAccessTime = now
-            lastAccessTime = localAccessTime
-
-            delay(CLEANUP_DELAY)
-
-            //the goal is to close the connection if the ref count is
-            //down to zero.  We have to check the lastAccess to make sure the delay is after
-            //the last guy, not an earlier one
-
-            logInfo("cleanUpIfNeeded: Checking")
-
-            if (!stayConnected && !closed && references == 0 && lastAccessTime == localAccessTime) {
-                logInfo("cleanUpIfNeeded: Cleaning")
-                asyncClose().await()
-            }
-        }
     }
 
     open class Listener {
@@ -275,15 +235,12 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice, private 
 
     companion object : XYCreator() {
 
-        //gap after last connection that we wait to close the connection
-        private const val CLEANUP_DELAY = 5000
-
         //the value we set the rssi to when we go out of range
         const val OUTOFRANGE_RSSI = -999
 
         //the period of time to wait for marking something as out of range
         //if we have not gotten any ads or been connected to it
-        const val OUTOFRANGE_DELAY = 9915000
+        const val OUTOFRANGE_DELAY = 15000
 
         var canCreate = false
         val manufacturerToCreator = HashMap<Int, XYCreator>()
@@ -316,8 +273,10 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice, private 
             if (foundDevices.size == 0) {
                 val hash = hashFromScanResult(scanResult)
 
-                if (canCreate && hash != null) {
-                    val createdDevice = XYBluetoothDevice(context, scanResult.device, hash)
+                val device = scanResult.device
+
+                if (canCreate && hash != null && device != null) {
+                    val createdDevice = XYBluetoothDevice(context, device, hash)
                     foundDevices[hash] = createdDevice
                     globalDevices[hash] = createdDevice
                 }

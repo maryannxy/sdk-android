@@ -14,7 +14,7 @@ abstract class XYScanResult:XYBase() {
 
     abstract val scanRecord : XYScanRecord?
 
-    abstract val device : BluetoothDevice
+    abstract val device : BluetoothDevice?
 
     abstract fun writeToParcel(dest: Parcel, flags: Int)
 
@@ -22,6 +22,6 @@ abstract class XYScanResult:XYBase() {
 
     val address : String
         get() {
-            return device.address
+            return device?.address ?: "00:00:00:00:00:00"
         }
 }

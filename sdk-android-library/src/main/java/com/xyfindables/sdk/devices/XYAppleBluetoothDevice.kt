@@ -37,9 +37,10 @@ open class XYAppleBluetoothDevice(context: Context, device: BluetoothDevice, has
             }
 
             val hash = hashFromScanResult(scanResult)
+            val device = scanResult.device
 
-            if (canCreate && hash != null) {
-                foundDevices[hash] = globalDevices[hash] ?: XYAppleBluetoothDevice(context, scanResult.device, hash)
+            if (canCreate && hash != null && device != null) {
+                foundDevices[hash] = globalDevices[hash] ?: XYAppleBluetoothDevice(context, device, hash)
             }
         }
 

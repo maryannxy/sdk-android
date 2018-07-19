@@ -12,12 +12,11 @@ import kotlinx.coroutines.experimental.*
 import java.lang.ref.WeakReference
 import java.util.*
 import kotlin.collections.HashMap
-import kotlin.coroutines.experimental.Continuation
 import kotlin.coroutines.experimental.suspendCoroutine
 
 open class XYBluetoothGatt protected constructor(
-        private val context:Context,
-        protected var device: BluetoothDevice,
+        protected val context:Context,
+        protected var device: BluetoothDevice?,
         private val autoConnect: Boolean,
         private val callback: BluetoothGattCallback?,
         private val transport: Int?,
@@ -31,6 +30,21 @@ open class XYBluetoothGatt protected constructor(
 
     private val bluetoothManager = getBluetoothManager(context)
 
+    protected var references = 0
+
+    protected var _stayConnected = false
+
+    var stayConnected : Boolean
+        get() {
+            return _stayConnected
+        }
+        set(value) {
+            _stayConnected = value
+            if (!_stayConnected) {
+                cleanUpIfNeeded()
+            }
+        }
+
     val connectionState: Int
         get() {
             return _connectionState
@@ -42,7 +56,7 @@ open class XYBluetoothGatt protected constructor(
     //last time we heard a ad from this device
     var lastAdTime = 0L
 
-    fun updateBluetoothDevice(device: BluetoothDevice) {
+    fun updateBluetoothDevice(device: BluetoothDevice?) {
         this.device = device
     }
 
@@ -138,6 +152,14 @@ open class XYBluetoothGatt protected constructor(
                                     }
                                 }
                             }
+
+                            override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+                                super.onConnectionStateChange(gatt, status, newState)
+                                if (newState != BluetoothGatt.STATE_CONNECTED) {
+                                    error = XYBluetoothError("asyncDiscover: connection dropped")
+                                    cont.resume(null)
+                                }
+                            }
                         }
                         addGattListener("asyncDiscover", listener)
                         if (!gatt.discoverServices()) {
@@ -178,7 +200,18 @@ open class XYBluetoothGatt protected constructor(
                             if (characteristicToWrite == characteristic) {
                                 if (status == BluetoothGatt.GATT_SUCCESS) {
                                     cont.resume(characteristicToWrite.value)
+                                } else {
+                                    error = XYBluetoothError("asyncWriteCharacteristic: onCharacteristicWrite failed: $status")
+                                    cont.resume(null)
                                 }
+                            }
+                        }
+
+                        override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+                            super.onConnectionStateChange(gatt, status, newState)
+                            if (newState != BluetoothGatt.STATE_CONNECTED) {
+                                error = XYBluetoothError("asyncWriteCharacteristic: connection dropped")
+                                cont.resume(null)
                             }
                         }
                     }
@@ -219,8 +252,17 @@ open class XYBluetoothGatt protected constructor(
                                 if (status == BluetoothGatt.GATT_SUCCESS) {
                                     cont.resume(characteristicToRead.getIntValue(formatType, offset))
                                 } else {
+                                    error = XYBluetoothError("asyncReadCharacteristicInt: onCharacteristicRead failed: $status")
                                     cont.resume(null)
                                 }
+                            }
+                        }
+
+                        override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+                            super.onConnectionStateChange(gatt, status, newState)
+                            if (newState != BluetoothGatt.STATE_CONNECTED) {
+                                error = XYBluetoothError("asyncReadCharacteristicInt: connection dropped")
+                                cont.resume(null)
                             }
                         }
                     }
@@ -262,8 +304,17 @@ open class XYBluetoothGatt protected constructor(
                                 if (status == BluetoothGatt.GATT_SUCCESS) {
                                     cont.resume(characteristicToRead.getStringValue(offset))
                                 } else {
+                                    error = XYBluetoothError("asyncReadCharacteristicString: onCharacteristicRead failed: $status")
                                     cont.resume(null)
                                 }
+                            }
+                        }
+
+                        override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+                            super.onConnectionStateChange(gatt, status, newState)
+                            if (newState != BluetoothGatt.STATE_CONNECTED) {
+                                error = XYBluetoothError("asyncReadCharacteristicString: connection dropped")
+                                cont.resume(null)
                             }
                         }
                     }
@@ -305,8 +356,17 @@ open class XYBluetoothGatt protected constructor(
                                 if (status == BluetoothGatt.GATT_SUCCESS) {
                                     cont.resume(characteristicToRead.getFloatValue(formatType, offset))
                                 } else {
+                                    error = XYBluetoothError("asyncReadCharacteristicFloat: onCharacteristicRead failed: $status")
                                     cont.resume(null)
                                 }
+                            }
+                        }
+
+                        override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+                            super.onConnectionStateChange(gatt, status, newState)
+                            if (newState != BluetoothGatt.STATE_CONNECTED) {
+                                error = XYBluetoothError("asyncReadCharacteristicFloat: connection dropped")
+                                cont.resume(null)
                             }
                         }
                     }
@@ -348,10 +408,20 @@ open class XYBluetoothGatt protected constructor(
                                 if (status == BluetoothGatt.GATT_SUCCESS) {
                                     cont.resume(characteristicToRead.value)
                                 } else {
+                                    error = XYBluetoothError("asyncReadCharacteristicBytes: onCharacteristicRead failed: $status")
                                     cont.resume(null)
                                 }
                             }
                         }
+
+                        override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+                            super.onConnectionStateChange(gatt, status, newState)
+                            if (newState != BluetoothGatt.STATE_CONNECTED) {
+                                error = XYBluetoothError("asyncReadCharacteristicBytes: connection dropped")
+                                cont.resume(null)
+                            }
+                        }
+
                     }
                     addGattListener("asyncReadCharacteristicBytes", listener)
                     if (!gatt.readCharacteristic(characteristicToRead)) {
@@ -601,37 +671,79 @@ open class XYBluetoothGatt protected constructor(
         return context.applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     }
 
-    fun asyncConnect(timeout: Int?) : Deferred<Boolean>{
-        return async(CommonPool) {
+    fun asyncConnect() : Deferred<XYBluetoothResult<Boolean>> {
+        return asyncBle {
             logInfo("asyncConnect")
-            var remainingTimeout = timeout ?: CONNECT_TIMEOUT
-            logInfo("asyncConnect:async")
-            if (connectionState == BluetoothGatt.STATE_CONNECTED) {
-                logInfo("asyncConnect:already connected")
-                return@async true
+            var error: XYBluetoothError? = null
+            var value: Boolean? = null
+
+            val gatt = this@XYBluetoothGatt.gatt
+
+            if (gatt == null) {
+                error = XYBluetoothError("asyncConnect: No Gatt")
             }
 
-            if (connectionState != BluetoothGatt.STATE_CONNECTING) {
-                logInfo("asyncConnect:connecting")
-                safeConnect().await()
-            }
+            if (gatt != null) {
 
-            //this has to be on new thread to allow BT to process
-            return@async async(CommonPool) {
-                while (connectionState != BluetoothGatt.STATE_CONNECTED) {
-                    delay(WAIT_RESOLUTION)
-                    remainingTimeout -= WAIT_RESOLUTION
-                    if (remainingTimeout <= 0) {
-                        logError("asyncConnect: Connection Timeout!", false)
-                        asyncDisconnect().await()
-                        return@async false
+                value = suspendCoroutine { cont ->
+                    val listener = object : BluetoothGattCallback() {
+                        override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+                            super.onConnectionStateChange(gatt, status, newState)
+                            if (status == BluetoothGatt.GATT_FAILURE) {
+                                error = XYBluetoothError("asyncConnect: connection failed(status): $status : $newState")
+                                cont.resume(null)
+                            } else if (newState == BluetoothGatt.STATE_CONNECTED) {
+                                cont.resume(true)
+                            } else if (newState == BluetoothGatt.STATE_CONNECTING) {
+                                //wait some more
+                            } else {
+                                error = XYBluetoothError("asyncConnect: connection failed(state): $status : $newState")
+                                cont.resume(null)
+                            }
+                        }
+                    }
+                    addGattListener("asyncReadCharacteristicBytes", listener)
+
+                    if (connectionState == BluetoothGatt.STATE_CONNECTED) {
+                        logInfo("asyncConnect:already connected")
+                        cont.resume(true)
+                    } else if (connectionState == BluetoothGatt.STATE_CONNECTING) {
+                        logInfo("asyncConnect:connecting")
+                        //dont call connect since already in progress
+                    } else if (!gatt.connect()) {
+                        error = XYBluetoothError("asyncReadCharacteristicBytes: gatt.readCharacteristic failed to start")
+                        cont.resume(null)
                     }
                 }
-                logInfo("asyncConnect:Complete")
-                lastAccessTime = now
-                delay(SAFE_DELAY)
-                return@async true
-            }.await()
+            }
+            return@asyncBle XYBluetoothResult(value, error)
+        }
+    }
+
+    //the goal is to leave connections hanging for a little bit in the case
+    //that they need to be reestablished in short notice
+    private fun cleanUpIfNeeded() {
+        launch(CommonPool) {
+            logInfo("cleanUpIfNeeded")
+
+            while(!closed) {
+                //if the global and local last connection times do not match
+                //after the delay, that means a newer connection is now responsible for closing it
+                val localAccessTime = now
+
+                delay(CLEANUP_DELAY)
+
+                //the goal is to close the connection if the ref count is
+                //down to zero.  We have to check the lastAccess to make sure the delay is after
+                //the last guy, not an earlier one
+
+                logInfo("cleanUpIfNeeded: Checking")
+
+                if (!stayConnected && !closed && references == 0 && lastAccessTime == localAccessTime) {
+                    logInfo("cleanUpIfNeeded: Cleaning")
+                    asyncClose().await()
+                }
+            }
         }
     }
 
@@ -892,29 +1004,41 @@ open class XYBluetoothGatt protected constructor(
         }
     }
 
-    fun connectGatt() : Deferred<Boolean> {
-        if (callback != null) {
-            addGattListener("default", callback)
-        }
-        return async(CommonPool) {
+    fun connectGatt() : Deferred<XYBluetoothResult<Boolean>> {
+        return asyncBle {
             logInfo("connectGatt")
-            if (gatt == null) {
-                CallByVersion()
-                        .add(Build.VERSION_CODES.O) {
-                            connectGatt26(device, autoConnect, transport, phy, handler)
-                        }
-                        .add(Build.VERSION_CODES.M) {
-                            connectGatt23(device, autoConnect, transport)
-                        }
-                        .add(Build.VERSION_CODES.KITKAT) {
-                            connectGatt19(device, autoConnect)
-                        }.call()
+            var error: XYBluetoothError? = null
+            var value: Boolean? = null
+
+            val device = this@XYBluetoothGatt.device
+            if (device == null) {
+                error = XYBluetoothError("connectGatt: No Device")
+            } else {
+                var gatt = this@XYBluetoothGatt.gatt
+
+                if (callback != null) {
+                    addGattListener("default", callback)
+                }
                 if (gatt == null) {
-                    logError("Failed to connection Gatt!", true)
-                    return@async false
+                    CallByVersion()
+                            .add(Build.VERSION_CODES.O) {
+                                connectGatt26(device, autoConnect, transport, phy, handler)
+                            }
+                            .add(Build.VERSION_CODES.M) {
+                                connectGatt23(device, autoConnect, transport)
+                            }
+                            .add(Build.VERSION_CODES.KITKAT) {
+                                connectGatt19(device, autoConnect)
+                            }.call()
+                    gatt = this@XYBluetoothGatt.gatt
+                    if (gatt == null) {
+                        error = XYBluetoothError("connectGatt: Failed to get gatt")
+                    }
+                } else {
+                    value = true
                 }
             }
-            return@async asyncConnect(CONNECT_TIMEOUT).await()
+            return@asyncBle XYBluetoothResult(value, error)
         }
     }
 
@@ -957,6 +1081,9 @@ open class XYBluetoothGatt protected constructor(
     companion object {
 
         val TAG = XYBluetoothGatt.javaClass.simpleName
+
+        //gap after last connection that we wait to close the connection
+        private const val CLEANUP_DELAY = 5000
 
         //this is the thread that all calls should happen on for gatt calls.  Using a single thread
         //it is documented that for 4.4, we should consider using the UIThread

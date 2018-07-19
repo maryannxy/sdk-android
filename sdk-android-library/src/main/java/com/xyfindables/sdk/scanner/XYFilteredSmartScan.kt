@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothManager
 import android.content.Context
 import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.devices.XYBluetoothDevice
+import com.xyfindables.sdk.devices.XYMobileBluetoothDevice
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
@@ -40,7 +41,13 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
             return uptime/1000F
         }
 
+    val hostDevice = XYMobileBluetoothDevice.create(context)
+
     val devices = HashMap<Int, XYBluetoothDevice>()
+
+    init {
+        devices[hostDevice.hashCode()] = hostDevice
+    }
 
     fun deviceFromId(id:String) : XYBluetoothDevice? {
         return null

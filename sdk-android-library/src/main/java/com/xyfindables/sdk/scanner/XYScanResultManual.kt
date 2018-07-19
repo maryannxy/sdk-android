@@ -3,13 +3,13 @@ package com.xyfindables.sdk.scanner
 import android.bluetooth.BluetoothDevice
 import android.os.Parcel
 
-class XYScanResultManual(
-        val _device: BluetoothDevice,
+class XYScanResultManual (
+        val _device: BluetoothDevice?,
         val _rssi: Int,
         val _scanRecord: XYScanRecord?,
         val _timestampNanos: Long
 ) : XYScanResult() {
-    override val device: BluetoothDevice
+    override val device: BluetoothDevice?
         get() = _device
 
     override val rssi: Int

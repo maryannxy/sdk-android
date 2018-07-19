@@ -497,7 +497,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
             }
         }
         if (beaconAddress == null) {
-            beaconAddress = scanResult.device.address
+            beaconAddress = scanResult.device?.address
         }
     }
 
