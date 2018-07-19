@@ -215,26 +215,24 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice, private 
     //if null is passed back, the sdk was unable to create the safe session
     fun <T> connection(closure: suspend ()->XYBluetoothResult<T>) : Deferred<XYBluetoothResult<T>> {
         val deferred = asyncBle<T> {
-                logInfo("connection")
-                var result: XYBluetoothResult<T>? = null
-                references++
-                if (connectGatt().await()) {
-                    val discovered = asyncDiscover().await()
-                    val error = discovered.error
-                    if (error != null) {
-                        references--
-                        return@asyncBle XYBluetoothResult(error)
-                    } else {
-                        result = closure()
-                    }
-                    cleanUpIfNeeded()
-                }
-                references--
-                if (result == null) {
-                    return@asyncBle XYBluetoothResult(XYBluetoothError("closure returned null"))
+            logInfo("connection")
+            var result: XYBluetoothResult<T>? = null
+            references++
+            if (connectGatt().await()) {
+                val discovered = asyncDiscover().await()
+                val error = discovered.error
+                if (error != null) {
+                    references--
+                    return@asyncBle XYBluetoothResult(error)
                 } else {
-                    return@asyncBle result
+                    result = closure()
                 }
+                cleanUpIfNeeded()
+            } else {
+                return@asyncBle XYBluetoothResult(XYBluetoothError("connection: Failed to Connect"))
+            }
+            references--
+            return@asyncBle result
         }
         return deferred
     }
