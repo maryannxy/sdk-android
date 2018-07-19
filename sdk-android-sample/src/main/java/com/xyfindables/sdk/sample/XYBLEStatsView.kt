@@ -16,7 +16,7 @@ class XYBLEStatsView(context: Context, attrs: AttributeSet) : LinearLayout(conte
 
     private val scanner : XYFilteredSmartScan
 
-    val smartScanListener = object : XYFilteredSmartScan.Listener {
+    val smartScanListener = object : XYFilteredSmartScan.Listener() {
         override fun entered(device: XYBluetoothDevice) {
             update()
         }

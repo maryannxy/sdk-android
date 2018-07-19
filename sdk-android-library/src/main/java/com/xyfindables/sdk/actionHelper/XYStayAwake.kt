@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import com.xyfindables.sdk.XYDevice
 import com.xyfindables.sdk.action.*
+import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
 
 /**
  * Created by alex.mcelroy on 9/6/2017.
@@ -16,7 +17,7 @@ class XYStayAwake : XYActionHelper {
     }
 
     constructor(device: XYDevice, callback: Callback) {
-        if (device.family === XYDevice.Family.XY4) {
+        if (device.family === XYFinderBluetoothDevice.Family.XY4) {
             action = object : XYDeviceActionGetRegistrationModern(device) {
                 override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")
@@ -44,7 +45,7 @@ class XYStayAwake : XYActionHelper {
     }
 
     constructor(device: XYDevice, value: Boolean, callback: Callback) {
-        if (device.family === XYDevice.Family.XY4) {
+        if (device.family === XYFinderBluetoothDevice.Family.XY4) {
             action = object : XYDeviceActionSetRegistrationModern(device, value) {
                 override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")

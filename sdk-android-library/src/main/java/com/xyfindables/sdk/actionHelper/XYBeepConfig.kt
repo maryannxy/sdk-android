@@ -2,10 +2,11 @@ package com.xyfindables.sdk.actionHelper
 
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
-
 import com.xyfindables.sdk.XYDevice
+
 import com.xyfindables.sdk.action.XYDeviceAction
 import com.xyfindables.sdk.action.XYDeviceActionBuzzModernConfig
+import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
 
 import java.util.Arrays
 
@@ -20,7 +21,7 @@ class XYBeepConfig(device: XYDevice, slot: Int, song: ByteArray, callback: Callb
     }
 
     init {
-        if (device.family === XYDevice.Family.XY4) {
+        if (device.family === XYFinderBluetoothDevice.Family.XY4) {
             val slotArray = byteArrayOf(slot.toByte())
             val config = ByteArray(257)
             System.arraycopy(slotArray, 0, config, 0, 1)

@@ -42,6 +42,10 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
 
     val devices = HashMap<Int, XYBluetoothDevice>()
 
+    fun deviceFromId(id:String) : XYBluetoothDevice? {
+        return null
+    }
+
     fun getDevicesFromScanResult(scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
         //only add them if they do not already exist
         XYBluetoothDevice.getDevicesFromScanResult(context, scanResult, globalDevices, foundDevices)
@@ -54,8 +58,14 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
 
     private val listeners = HashMap<String, WeakReference<Listener>>()
 
-    interface Listener : XYBluetoothDevice.Listener {
-        fun statusChanged(status: BluetoothStatus)
+    open class Listener : XYBluetoothDevice.Listener() {
+        open fun statusChanged(status: BluetoothStatus) {
+
+        }
+
+        open fun buttonPressed(device: XYBluetoothDevice) {
+
+        }
     }
 
     enum class BluetoothStatus {
@@ -124,7 +134,7 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
                     if (scanResult.scanRecord != null) {
                         device.updateAds(scanResult.scanRecord!!)
                     }
-                    if (device.rssi == -999) {
+                    if (device.rssi == XYBluetoothDevice.OUTOFRANGE_RSSI) {
                         reportEntered(device)
                         device.onEnter()
                         device.notifyExit = handleDeviceNotifyExit

@@ -7,6 +7,7 @@ import com.xyfindables.sdk.XYDevice
 import com.xyfindables.sdk.action.XYDeviceAction
 import com.xyfindables.sdk.action.XYDeviceActionUnlock
 import com.xyfindables.sdk.action.XYDeviceActionUnlockModern
+import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
 
 /**
  * Created by alex.mcelroy on 9/6/2017.
@@ -17,7 +18,7 @@ class XYUnlock(device: XYDevice, value: ByteArray, callback: Callback) : XYActio
     interface Callback : XYActionHelper.Callback
 
     init {
-        if (device.family === XYDevice.Family.XY4) {
+        if (device.family === XYFinderBluetoothDevice.Family.XY4) {
             action = object : XYDeviceActionUnlockModern(device, _defaultXy4UnlockCode) {
                 override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")

@@ -19,7 +19,7 @@ class PrimaryService(device: XYBluetoothDevice) : Service(device) {
     val uuid = BytesCharacteristic(this, characteristics.Uuid.uuid)
     val buttonState = IntegerCharacteristic(this, characteristics.ButtonState.uuid)
     val buzzer = IntegerCharacteristic(this, characteristics.Buzzer.uuid)
-    val buzzerConfig = IntegerCharacteristic(this, characteristics.BuzzerConfig.uuid)
+    val buzzerConfig = BytesCharacteristic(this, characteristics.BuzzerConfig.uuid)
     val adConfig = BytesCharacteristic(this, characteristics.AdConfig.uuid)
     val buttonConfig = BytesCharacteristic(this, characteristics.ButtonConfig.uuid)
     val lastError = IntegerCharacteristic(this, characteristics.LastError.uuid)

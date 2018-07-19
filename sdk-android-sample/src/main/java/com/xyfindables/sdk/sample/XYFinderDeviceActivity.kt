@@ -35,7 +35,6 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             finish()
         }
         setContentView(R.layout.device_activity)
-        scanner.start()
     }
 
     fun updateAdList() {
@@ -49,7 +48,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         }
     }
 
-    val xy3DeviceListener = object : XY3BluetoothDevice.Listener {
+    val xy3DeviceListener = object : XY3BluetoothDevice.Listener() {
         override fun entered(device: XYBluetoothDevice) {
             update()
             showToast("Entered")
@@ -86,7 +85,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         }
     }
 
-    val xy4DeviceListener = object : XY4BluetoothDevice.Listener {
+    val xy4DeviceListener = object : XY4BluetoothDevice.Listener() {
         override fun entered(device: XYBluetoothDevice) {
             update()
             showToast("Entered")
@@ -219,12 +218,12 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             launch(CommonPool) {
                 val locked = (device as? XYFinderBluetoothDevice)?.lock()?.await()
                 if (locked == null) {
-                    showToast("Lock Failed to Complete Call")
-                } else if (locked){
-                    showToast("Locked")
+                    showToast("Device does not support Lock")
+                } else if (locked.error == null){
+                    showToast(locked.toString())
                     updateStayAwakeEnabledStates()
-                } else if (locked){
-                    showToast("Lock Failed")
+                } else {
+                    showToast("Lock Error: ${locked.error}")
                 }
                 launch(UIThread) {
                     lockButton.setEnabled(true)
@@ -242,12 +241,12 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             launch(CommonPool) {
                 val unlocked = (device as? XYFinderBluetoothDevice)?.unlock()?.await()
                 if (unlocked == null) {
-                    showToast("Unlock Failed to Complete Call")
-                } else if (unlocked){
-                    showToast("Unlocked")
+                    showToast("Device does not support Unlock")
+                } else if (unlocked.error == null){
+                    showToast("Unlocked: ${unlocked}")
                     updateStayAwakeEnabledStates()
-                } else if (unlocked){
-                    showToast("Unlock Failed")
+                } else {
+                    showToast("Unlock Error: ${unlocked.error}")
                 }
                 launch(UIThread) {
                     unlockButton.setEnabled(true)
@@ -255,7 +254,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             }
         })
         //readUpdates()
-        enableButtonNotify()
+        //enableButtonNotify()
     }
 
     fun enableButtonNotify() : Deferred<Unit> {
@@ -264,20 +263,12 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             val xy4 = device as? XY4BluetoothDevice
             if (xy4 != null) {
                 val notify = xy4.primary.buttonState.enableNotify(true).await()
-                if (notify == null) {
-                    logError("enableButtonNotify: enableNotify failed", false)
-                } else {
-                    logInfo("enableButtonNotify: $notify")
-                }
+                showToast(notify.toString())
             } else {
                 val xy3 = device as? XY3BluetoothDevice
                 if (xy3 != null) {
                     val notify = xy3.control.button.enableNotify(true).await()
-                    if (notify == null) {
-                        logError("enableButtonNotify: enableNotify failed", false)
-                    } else {
-                        logInfo("enableButtonNotify: $notify")
-                    }
+                    showToast(notify.toString())
                 }
             }
             return@async
@@ -290,26 +281,16 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             val xy4 = device as? XY4BluetoothDevice
             if (xy4 != null) {
                 val stayAwake = xy4.primary.stayAwake.get().await()
-                if (stayAwake == null) {
-                    logError("updateStayAwakeEnabledStates: readPrimaryStayAwake failed", false)
-                    launch(UIThread) {
-                        val fallAsleepButton: XYButton = findViewById(R.id.fall_asleep)
-                        val stayAwakeButton: XYButton = findViewById(R.id.stay_awake)
+                logInfo("updateStayAwakeEnabledStates: $stayAwake")
+                launch(UIThread) {
+                    val fallAsleepButton: XYButton = findViewById(R.id.fall_asleep)
+                    val stayAwakeButton: XYButton = findViewById(R.id.stay_awake)
+                    if (stayAwake.value != 0) {
+                        fallAsleepButton.setEnabled(true)
                         stayAwakeButton.setEnabled(false)
+                    } else {
                         fallAsleepButton.setEnabled(false)
-                    }
-                } else {
-                    logInfo("updateStayAwakeEnabledStates: $stayAwake")
-                    launch(UIThread) {
-                        val fallAsleepButton: XYButton = findViewById(R.id.fall_asleep)
-                        val stayAwakeButton: XYButton = findViewById(R.id.stay_awake)
-                        if (stayAwake != 0) {
-                            fallAsleepButton.setEnabled(true)
-                            stayAwakeButton.setEnabled(false)
-                        } else {
-                            fallAsleepButton.setEnabled(false)
-                            stayAwakeButton.setEnabled(true)
-                        }
+                        stayAwakeButton.setEnabled(true)
                     }
                 }
             } else {
@@ -338,32 +319,16 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             logInfo("updateLockValue")
             val xy4 = device as? XY4BluetoothDevice
             if (xy4 != null) {
-                var lock = xy4.primary.lock.get().await()
-                if (lock == null) {
-                    logInfo("updateLock: read failed to complete, trying to unlock")
-                    val result = xy4.primary.unlock.set(XY4BluetoothDevice.DEFAULT_LOCK_CODE).await()
-                    if (result == null) {
-                        logError("updateLock: failed complete call", false)
-                        return@async
-                    }
-                    else if (!result) {
-                        logError("updateLock: failed to unlock", false)
-                        return@async
-                    } else {
-                        logInfo("updateLock: trying to read again")
-                        lock = xy4.primary.lock.get().await()
-                    }
-                }
+                val lock = xy4.primary.lock.get().await()
 
-                if (lock == null) {
-                    logInfo("updateLock: lock is null even after unlock")
-                    return@async
-                }
-
-                logInfo("updateLock: ${lock.size}")
+                logInfo("updateLock: ${lock}")
                 launch(UIThread) {
                     val lockEdit: EditText = findViewById(R.id.lock_value)
-                    lockEdit.setText(bytesToHex(lock))
+                    if (lock.error != null || lock.error != null) {
+                        lockEdit.setText("----")
+                    } else {
+                        lockEdit.setText(bytesToHex(lock.value!!))
+                    }
                 }
             }
         }

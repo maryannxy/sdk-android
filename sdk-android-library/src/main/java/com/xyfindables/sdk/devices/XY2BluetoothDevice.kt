@@ -1,16 +1,11 @@
 package com.xyfindables.sdk.devices
 
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
-import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
+import com.xyfindables.sdk.gatt.XYBluetoothResult
 import com.xyfindables.sdk.scanner.XYScanResult
 import com.xyfindables.sdk.services.standard.*
 import com.xyfindables.sdk.services.xy3.*
-import com.xyfindables.sdk.services.xy4.PrimaryService
-import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.launch
 import java.nio.ByteBuffer
 import java.util.*
 
@@ -31,39 +26,12 @@ open class XY2BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
     val extendedControl = ExtendedControlService(this)
     val sensor = SensorService(this)
 
-    init {
-        addGattListener("xy3", object: BluetoothGattCallback() {
-            override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
-                logInfo("onCharacteristicChanged")
-                super.onCharacteristicChanged(gatt, characteristic)
-                if (characteristic?.uuid == control.button.uuid) {
-                    reportButtonPressed(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0))
-                }
-            }
-        })
-    }
-
-    override fun find() : Deferred<Boolean?> {
+    override fun find() : Deferred<XYBluetoothResult<Int>> {
         logInfo("find")
         return control.buzzerSelect.set(1)
     }
 
-    fun reportButtonPressed(state: Int) {
-        logInfo("reportButtonPressed")
-        synchronized(listeners) {
-            for (listener in listeners) {
-                val xy2Listener = listener as? XY2BluetoothDevice.Listener
-                if (xy2Listener != null) {
-                    launch(CommonPool) {
-                        xy2Listener.buttonSinglePressed()
-                    }
-                }
-            }
-        }
-    }
-
-    interface Listener : XYFinderBluetoothDevice.Listener {
-        fun buttonSinglePressed()
+    open class Listener : XYFinderBluetoothDevice.Listener() {
     }
 
     companion object : XYCreator() {

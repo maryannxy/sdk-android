@@ -18,7 +18,7 @@ class XYDeviceAdapter(private val activity: Activity) : BaseAdapter() {
             return (activity.applicationContext as XYApplication).scanner
         }
 
-    val smartScannerListener = object : XYFilteredSmartScan.Listener {
+    val smartScannerListener = object : XYFilteredSmartScan.Listener() {
         override fun entered(device: XYBluetoothDevice) {
             activity.runOnUiThread(Thread(Runnable {
                 devices = scanner.devices.toList()
@@ -32,13 +32,6 @@ class XYDeviceAdapter(private val activity: Activity) : BaseAdapter() {
                 notifyDataSetChanged()
             }))
         }
-
-        override fun detected(device: XYBluetoothDevice) {}
-
-        override fun statusChanged(status: XYFilteredSmartScan.BluetoothStatus) {}
-
-        override fun connectionStateChanged(device: XYBluetoothDevice, newState: Int) {}
-
     }
 
     init {

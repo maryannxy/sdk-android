@@ -4,10 +4,10 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
+import com.xyfindables.sdk.gatt.XYBluetoothResult
 import com.xyfindables.sdk.scanner.XYScanResult
 import com.xyfindables.sdk.services.standard.*
 import com.xyfindables.sdk.services.xy3.*
-import com.xyfindables.sdk.services.xy4.PrimaryService
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.launch
@@ -43,7 +43,7 @@ open class XYGpsBluetoothDevice(context: Context, scanResult: XYScanResult, hash
         })
     }
 
-    override fun find() : Deferred<Boolean?> {
+    override fun find() : Deferred<XYBluetoothResult<Int>> {
         logInfo("find")
         return control.buzzerSelect.set(1)
     }
@@ -62,8 +62,8 @@ open class XYGpsBluetoothDevice(context: Context, scanResult: XYScanResult, hash
         }
     }
 
-    interface Listener : XYFinderBluetoothDevice.Listener {
-        fun buttonSinglePressed()
+    open class Listener : XYFinderBluetoothDevice.Listener() {
+        fun buttonSinglePressed() {}
     }
 
     companion object : XYCreator() {

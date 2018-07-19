@@ -2,8 +2,8 @@ package com.xyfindables.sdk.actionHelper
 
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
-
 import com.xyfindables.sdk.XYDevice
+
 import com.xyfindables.sdk.action.XYDeviceAction
 import com.xyfindables.sdk.action.XYDeviceActionGetBatteryLevel
 

@@ -1,13 +1,27 @@
 package com.xyfindables.sdk.devices
 
 import android.content.Context
+import com.xyfindables.sdk.gatt.XYBluetoothError
+import com.xyfindables.sdk.gatt.XYBluetoothResult
+import com.xyfindables.sdk.gatt.asyncBle
 import com.xyfindables.sdk.scanner.XYScanResult
 import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.async
 import java.nio.ByteBuffer
 import java.util.*
 
 open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, hash: Int) : XYIBeaconBluetoothDevice(context, scanResult, hash) {
+
+    enum class Family {
+        Unknown,
+        XY1,
+        XY2,
+        XY3,
+        Mobile,
+        Gps,
+        Near,
+        XY4,
+        Webble
+    }
 
     override val id : String
         get() {
@@ -25,59 +39,66 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
         }
 
     //signal the user to where it is, usually make it beep
-    open fun find() : Deferred<Boolean?> {
+    open fun find() : Deferred<XYBluetoothResult<Int>> {
         logException(UnsupportedOperationException(), true)
-        return async {
-            return@async false
+        return asyncBle {
+            return@asyncBle XYBluetoothResult<Int>(XYBluetoothError("Not Implemented"))
         }
     }
 
-    open fun lock() : Deferred<Boolean?> {
+    open fun lock() : Deferred<XYBluetoothResult<ByteArray>> {
         logException(UnsupportedOperationException(), true)
-        return async {
-            return@async false
+        return asyncBle {
+            return@asyncBle XYBluetoothResult<ByteArray>(XYBluetoothError("Not Implemented"))
         }
     }
 
-    open fun unlock() : Deferred<Boolean?> {
+    open fun unlock() : Deferred<XYBluetoothResult<ByteArray>> {
         logException(UnsupportedOperationException(), true)
-        return async {
-            return@async false
+        return asyncBle {
+            return@asyncBle XYBluetoothResult<ByteArray>(XYBluetoothError("Not Implemented"))
         }
     }
 
-    open fun stayAwake() : Deferred<Boolean?> {
+    open fun stayAwake() : Deferred<XYBluetoothResult<Int>> {
         logException(UnsupportedOperationException(), true)
-        return async {
-            return@async false
+        return asyncBle {
+            return@asyncBle XYBluetoothResult<Int>(XYBluetoothError("Not Implemented"))
         }
     }
 
-    open fun fallAsleep() : Deferred<Boolean?> {
+    open fun fallAsleep() : Deferred<XYBluetoothResult<Int>> {
         logException(UnsupportedOperationException(), true)
-        return async {
-            return@async false
+        return asyncBle {
+            return@asyncBle XYBluetoothResult<Int>(XYBluetoothError("Not Implemented"))
         }
     }
 
-    interface Listener : XYIBeaconBluetoothDevice.Listener {
+    open fun restart() : Deferred<XYBluetoothResult<Int>> {
+        logException(UnsupportedOperationException(), true)
+        return asyncBle {
+            return@asyncBle XYBluetoothResult<Int>(XYBluetoothError("Not Implemented"))
+        }
+    }
+
+    open fun batteryLevel() : Deferred<XYBluetoothResult<Int>> {
+        logException(UnsupportedOperationException(), true)
+        return asyncBle {
+            return@asyncBle XYBluetoothResult<Int>(XYBluetoothError("Not Implemented"))
+        }
+    }
+
+    open val distance : Float
+        get() {
+            return 0.0f
+        }
+
+    open class Listener : XYIBeaconBluetoothDevice.Listener() {
     }
 
     companion object : XYCreator() {
 
         var canCreate = false
-
-        enum class Family {
-            Unknown,
-            XY1,
-            XY2,
-            XY3,
-            Mobile,
-            Gps,
-            Near,
-            XY4,
-            Webble
-        }
 
         val uuid2family: HashMap<UUID, Family>
 

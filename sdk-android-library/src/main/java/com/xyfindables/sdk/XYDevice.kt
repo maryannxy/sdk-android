@@ -14,6 +14,7 @@ import com.xyfindables.sdk.action.XYDeviceActionSubscribeButtonModern
 import com.xyfindables.sdk.action.dialog.SubscribeSpotaNotifications
 import com.xyfindables.sdk.actionHelper.XYBattery
 import com.xyfindables.sdk.actionHelper.XYFirmware
+import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
 import com.xyfindables.sdk.scanner.XYScanResult
 import com.xyfindables.sdk.scanner.XYScanResultManual
 import kotlinx.coroutines.experimental.CommonPool
@@ -830,11 +831,11 @@ class XYDevice internal constructor(id: String) : XYBase() {
         val BATTERYLEVEL_NOTCHECKED = -2
         val BATTERYLEVEL_SCHEDULED = -3
 
-        val uuid2family: HashMap<UUID, XYDevice.Family>
+        val uuid2family: HashMap<UUID, XYFinderBluetoothDevice.Family>
 
-        val family2uuid: HashMap<XYDevice.Family, UUID>
+        val family2uuid: HashMap<XYFinderBluetoothDevice.Family, UUID>
 
-        val family2prefix: HashMap<XYDevice.Family, String>
+        val family2prefix: HashMap<XYFinderBluetoothDevice.Family, String>
 
         private val MAX_BLECONNECTIONS = 4
 
@@ -844,29 +845,29 @@ class XYDevice internal constructor(id: String) : XYBase() {
 
         init {
             uuid2family = HashMap()
-            uuid2family[UUID.fromString("a500248c-abc2-4206-9bd7-034f4fc9ed10")] = XYDevice.Family.XY1
-            uuid2family[UUID.fromString("07775dd0-111b-11e4-9191-0800200c9a66")] = XYDevice.Family.XY2
-            uuid2family[UUID.fromString("08885dd0-111b-11e4-9191-0800200c9a66")] = XYDevice.Family.XY3
-            uuid2family[UUID.fromString("a44eacf4-0104-0000-0000-5f784c9977b5")] = XYDevice.Family.XY4
-            uuid2family[UUID.fromString("735344c9-e820-42ec-9da7-f43a2b6802b9")] = XYDevice.Family.Mobile
-            uuid2family[UUID.fromString("9474f7c6-47a4-11e6-beb8-9e71128cae77")] = XYDevice.Family.Gps
+            uuid2family[UUID.fromString("a500248c-abc2-4206-9bd7-034f4fc9ed10")] = XYFinderBluetoothDevice.Family.XY1
+            uuid2family[UUID.fromString("07775dd0-111b-11e4-9191-0800200c9a66")] = XYFinderBluetoothDevice.Family.XY2
+            uuid2family[UUID.fromString("08885dd0-111b-11e4-9191-0800200c9a66")] = XYFinderBluetoothDevice.Family.XY3
+            uuid2family[UUID.fromString("a44eacf4-0104-0000-0000-5f784c9977b5")] = XYFinderBluetoothDevice.Family.XY4
+            uuid2family[UUID.fromString("735344c9-e820-42ec-9da7-f43a2b6802b9")] = XYFinderBluetoothDevice.Family.Mobile
+            uuid2family[UUID.fromString("9474f7c6-47a4-11e6-beb8-9e71128cae77")] = XYFinderBluetoothDevice.Family.Gps
 
             family2uuid = HashMap()
-            family2uuid[XYDevice.Family.XY1] = UUID.fromString("a500248c-abc2-4206-9bd7-034f4fc9ed10")
-            family2uuid[XYDevice.Family.XY2] = UUID.fromString("07775dd0-111b-11e4-9191-0800200c9a66")
-            family2uuid[XYDevice.Family.XY3] = UUID.fromString("08885dd0-111b-11e4-9191-0800200c9a66")
-            family2uuid[XYDevice.Family.XY4] = UUID.fromString("a44eacf4-0104-0000-0000-5f784c9977b5")
-            family2uuid[XYDevice.Family.Mobile] = UUID.fromString("735344c9-e820-42ec-9da7-f43a2b6802b9")
-            family2uuid[XYDevice.Family.Gps] = UUID.fromString("9474f7c6-47a4-11e6-beb8-9e71128cae77")
+            family2uuid[XYFinderBluetoothDevice.Family.XY1] = UUID.fromString("a500248c-abc2-4206-9bd7-034f4fc9ed10")
+            family2uuid[XYFinderBluetoothDevice.Family.XY2] = UUID.fromString("07775dd0-111b-11e4-9191-0800200c9a66")
+            family2uuid[XYFinderBluetoothDevice.Family.XY3] = UUID.fromString("08885dd0-111b-11e4-9191-0800200c9a66")
+            family2uuid[XYFinderBluetoothDevice.Family.XY4] = UUID.fromString("a44eacf4-0104-0000-0000-5f784c9977b5")
+            family2uuid[XYFinderBluetoothDevice.Family.Mobile] = UUID.fromString("735344c9-e820-42ec-9da7-f43a2b6802b9")
+            family2uuid[XYFinderBluetoothDevice.Family.Gps] = UUID.fromString("9474f7c6-47a4-11e6-beb8-9e71128cae77")
 
             family2prefix = HashMap()
-            family2prefix[XYDevice.Family.XY1] = "ibeacon"
-            family2prefix[XYDevice.Family.XY2] = "ibeacon"
-            family2prefix[XYDevice.Family.XY3] = "ibeacon"
-            family2prefix[XYDevice.Family.XY4] = "ibeacon"
-            family2prefix[XYDevice.Family.Mobile] = "mobiledevice"
-            family2prefix[XYDevice.Family.Gps] = "gps"
-            family2prefix[XYDevice.Family.Near] = "near"
+            family2prefix[XYFinderBluetoothDevice.Family.XY1] = "ibeacon"
+            family2prefix[XYFinderBluetoothDevice.Family.XY2] = "ibeacon"
+            family2prefix[XYFinderBluetoothDevice.Family.XY3] = "ibeacon"
+            family2prefix[XYFinderBluetoothDevice.Family.XY4] = "ibeacon"
+            family2prefix[XYFinderBluetoothDevice.Family.Mobile] = "mobiledevice"
+            family2prefix[XYFinderBluetoothDevice.Family.Gps] = "gps"
+            family2prefix[XYFinderBluetoothDevice.Family.Near] = "near"
         }
 
         var Comparator: Comparator<XYDevice> = Comparator { lhs, rhs -> lhs.id!!.compareTo(rhs.id!!) }
@@ -942,7 +943,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
         }
 
         fun getPrefix(family: Family): String {
-            return family2prefix[family]!!
+            return "" //family2prefix[family]!!
         }
 
         fun getMajor(id: String): Int {
@@ -976,11 +977,11 @@ class XYDevice internal constructor(id: String) : XYBase() {
         }
 
         fun getFamily(uuid: UUID?): Family {
-            return uuid2family[uuid] ?: return Family.Unknown
+            return Family.Unknown //uuid2family[uuid] ?: return Family.Unknown
         }
 
         fun getUUID(family: Family): UUID? {
-            return family2uuid[family]
+            return null //family2uuid[family]
         }
     }
     // endregion =========== Listeners ============

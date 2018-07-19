@@ -12,6 +12,8 @@ import kotlinx.coroutines.experimental.*
 import java.lang.ref.WeakReference
 import java.util.*
 import kotlin.collections.HashMap
+import kotlin.coroutines.experimental.Continuation
+import kotlin.coroutines.experimental.suspendCoroutine
 
 open class XYBluetoothGatt protected constructor(
         private val context:Context,
@@ -33,6 +35,12 @@ open class XYBluetoothGatt protected constructor(
         get() {
             return _connectionState
         }
+
+    //last time this device was accessed (connected to)
+    var lastAccessTime = 0L
+
+    //last time we heard a ad from this device
+    var lastAdTime = 0L
 
     fun updateBluetoothDevice(device: BluetoothDevice) {
         this.device = device
@@ -95,482 +103,497 @@ open class XYBluetoothGatt protected constructor(
         }
     }
 
-    private fun safeDiscoverServices() : Deferred<Boolean?> {
-        return async(GattThread) {
-            logInfo("safeDiscoverServices")
-            return@async gatt?.discoverServices()
-        }
-    }
+    fun asyncDiscover() : Deferred<XYBluetoothResult<List<BluetoothGattService>>> {
+        return asyncBle {
+            var error: XYBluetoothError? = null
+            var value: List<BluetoothGattService>? = null
 
-    private fun safeWriteCharacteristic(characteristic: BluetoothGattCharacteristic) : Deferred<Boolean?> {
-        return async(GattThread) {
-            logInfo("safeWriteCharacteristic")
-            return@async gatt?.writeCharacteristic(characteristic)
-        }
-    }
+            lastAccessTime = now
 
-    private fun safeWriteDescriptor(descriptor: BluetoothGattDescriptor) : Deferred<Boolean?> {
-        return async(GattThread) {
-            logInfo("safeWriteDescriptor")
-            return@async gatt?.writeDescriptor(descriptor)
-        }
-    }
+            val gatt = this@XYBluetoothGatt.gatt
 
-    private fun safeReadCharacteristic(characteristic: BluetoothGattCharacteristic) : Deferred<Boolean?> {
-        return async(GattThread) {
-            logInfo("safeReadCharacteristic")
-            val result = gatt?.readCharacteristic(characteristic)
-            logInfo("safeReadCharacteristic: $result")
-            return@async result
-        }
-    }
-
-    private fun safeSetCharacteristicNotification(characteristic: BluetoothGattCharacteristic, enable: Boolean) : Deferred<Boolean?> {
-        return async(GattThread) {
-            logInfo("safeSetCharacteristicNotification")
-            val result = gatt?.setCharacteristicNotification(characteristic, enable)
-            if (result == null) {
-                logError("safeSetCharacteristicNotification did not Complete", false)
-            } else if (!result) {
-                logError("safeSetCharacteristicNotification Failed", false)
-            } else {
-                logInfo("safeSetCharacteristicNotification Success")
-            }
-            return@async result
-        }
-    }
-
-    private fun safeReadDescriptor(descriptor: BluetoothGattDescriptor) : Deferred<Boolean?> {
-        return async(GattThread) {
-            logInfo("safeReadDescriptor")
-            return@async gatt?.readDescriptor(descriptor)
-        }
-    }
-
-    private fun safeAbortReliableWrite() : Deferred<Unit> {
-        return async(GattThread) {
-            logInfo("safeAbortReliableWrite")
-            gatt?.abortReliableWrite()
-            return@async
-        }
-    }
-
-    private fun safeBeginReliableWrite() : Deferred<Boolean?> {
-        return async(GattThread) {
-            logInfo("safeBeginReliableWrite")
-            return@async gatt?.beginReliableWrite()
-        }
-    }
-
-    private fun safeExecuteBeginReliableWrite() : Deferred<Boolean?> {
-        return async(GattThread) {
-            logInfo("safeExecuteBeginReliableWrite")
-            return@async gatt?.executeReliableWrite()
-        }
-    }
-
-    private fun safeGetService(uuid: UUID) : Deferred<BluetoothGattService?> {
-        return async(GattThread) {
-            logInfo("safeGetService")
-            return@async gatt?.getService(uuid)
-        }
-    }
-
-    private fun safeGetServices() : Deferred<List<BluetoothGattService>?> {
-        return async(GattThread) {
-            logInfo("safeGetServices")
-            return@async gatt?.getServices()
-        }
-    }
-
-    @TargetApi(26)
-    private fun safeReadPhy() : Deferred<Unit> {
-        return async(GattThread) {
-            logInfo("safeReadPhy")
-            gatt?.readPhy()
-            return@async
-        }
-    }
-
-    @TargetApi(26)
-    private fun safeSetPreferredPhy(txPhy: Int, rxPhy: Int, phyOptions: Int) : Deferred<Unit> {
-        return async(GattThread) {
-            logInfo("safeSetPreferredPhy")
-            gatt?.setPreferredPhy(txPhy, rxPhy, phyOptions)
-            return@async
-        }
-    }
-
-    private fun safeReadRemoteRssi() : Deferred<Boolean?> {
-        return async(GattThread) {
-            logInfo("safeReadRemoteRssi")
-            return@async gatt?.readRemoteRssi()
-        }
-    }
-
-    @TargetApi(21)
-    private fun safeRequestConnectionPriority(connectionPriority: Int) : Deferred<Boolean?> {
-        return async(GattThread) {
-            logInfo("safeRequestConnectionPriority")
-            return@async gatt?.requestConnectionPriority(connectionPriority)
-        }
-    }
-
-    @TargetApi(21)
-    private fun safeRequestMtu(mtu: Int) : Deferred<Boolean?> {
-        return async(GattThread) {
-            logInfo("safeRequestConnectionPriority")
-            return@async gatt?.requestMtu(mtu)
-        }
-    }
-
-    fun asyncDiscover() : Deferred<Boolean?>{
-        val gatt = gatt
-        return async(CommonPool) {
             if (gatt == null) {
-                logError("asyncDiscover: null gatt!", false)
-                return@async null
+                error = XYBluetoothError("asyncDiscover: No Gatt")
             }
 
-            logInfo("asyncDiscover:$gatt.services.size")
-            if (gatt.services.size > 0) {
-                return@async true
-            } else {
-                var discoverStatus = -1
-                addGattListener("asyncDiscover", object:BluetoothGattCallback() {
-                    override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-                        super.onServicesDiscovered(gatt, status)
-                        logInfo("onServicesDiscovered:$status")
-                        discoverStatus = status
-                    }
-                })
+            lastAccessTime = now
 
-                var result = safeDiscoverServices().await()
+            if (gatt != null) {
 
-                if (result != null && result) {
-                    //this assumes that we will *always* get a call back from the call, even if it is a failure
-                    while(discoverStatus == -1) {
-                        delay(WAIT_RESOLUTION)
+                logInfo("asyncDiscover:${gatt.services.size}")
+                if (gatt.services.size == 0) {
+                    value = suspendCoroutine { cont ->
+                        logInfo("asyncDiscover:CoRoutine")
+                        val listener = object : BluetoothGattCallback() {
+                            override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
+                                super.onServicesDiscovered(gatt, status)
+                                if (status != BluetoothGatt.GATT_SUCCESS) {
+                                    error = XYBluetoothError("asyncDiscover: discoverStatus: $status")
+                                } else {
+                                    if (gatt == null) {
+                                        error = XYBluetoothError("asyncDiscover: gatt: NULL")
+                                        cont.resume(null)
+                                    } else {
+                                        cont.resume(gatt.services)
+                                    }
+                                }
+                            }
+                        }
+                        addGattListener("asyncDiscover", listener)
+                        if (!gatt.discoverServices()) {
+                            error = XYBluetoothError("asyncDiscover: gatt.discoverServices failed to start")
+                            cont.resume(null)
+                        }
                     }
-                    result = BluetoothGatt.GATT_SUCCESS == discoverStatus
+                    removeGattListener("asyncDiscover")
+                } else {
+                    value = gatt.services
                 }
-
-                removeGattListener("asyncDiscover")
-                delay(SAFE_DELAY)
-                return@async result
-
             }
+
+            return@asyncBle XYBluetoothResult(value, error)
         }
     }
 
-    fun asyncWriteCharacteristic(characteristicToWrite: BluetoothGattCharacteristic) : Deferred<Boolean?>{
-        return async(CommonPool) {
+    fun asyncWriteCharacteristic(characteristicToWrite: BluetoothGattCharacteristic) : Deferred<XYBluetoothResult<ByteArray>>{
+        return asyncBle {
             logInfo("asyncWriteCharacteristic")
-            var writeStatus = -1
-
-            addGattListener("asyncWriteCharacteristic", object:BluetoothGattCallback() {
-                override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-                    super.onCharacteristicWrite(gatt, characteristic, status)
-                    //since it is always possible to have a rogue callback, make sure it is the one we are looking for
-                    if (characteristicToWrite == characteristic) {
-                        writeStatus = status
-                    }
-                }
-            })
-
-            var result = safeWriteCharacteristic(characteristicToWrite).await()
-
-            if (result != null && result) {
-                //this assumes that we will *always* get a call back from the call, even if it is a failure
-                while(writeStatus == -1) {
-                    delay(WAIT_RESOLUTION)
-                }
-                result = BluetoothGatt.GATT_SUCCESS == writeStatus
-            }
-
-            removeGattListener("asyncWriteCharacteristic: $result")
-            delay(SAFE_DELAY)
-            return@async result
-        }
-    }
-
-    fun asyncReadCharacteristicInt(characteristicToRead: BluetoothGattCharacteristic, formatType:Int, offset:Int) : Deferred<Int?>{
-        return async(CommonPool) {
-            logInfo("asyncReadCharacteristicInt")
-            var readStatus = -1
-            addGattListener("asyncReadCharacteristicInt", object:BluetoothGattCallback() {
-                override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-                    super.onCharacteristicRead(gatt, characteristic, status)
-                    //since it is always possible to have a rogue callback, make sure it is the one we are looking for
-                    if (characteristicToRead == characteristic) {
-                        readStatus = status
-                    }
-                }
-            })
-
-            val readTriggered = safeReadCharacteristic(characteristicToRead).await()
-
-            if (readTriggered != null && readTriggered) {
-                //this assumes that we will *always* get a call back from the call, even if it is a failure
-                while(readStatus == -1) {
-                    delay(WAIT_RESOLUTION)
-                }
-            }
-
-            removeGattListener("asyncReadCharacteristicInt: $readStatus")
-
-            if (readStatus == BluetoothGatt.GATT_SUCCESS) {
-                delay(SAFE_DELAY)
-                return@async characteristicToRead.getIntValue(formatType, offset)
-            } else {
-                return@async null
-            }
-        }
-    }
-
-    fun asyncReadCharacteristicString(characteristicToRead: BluetoothGattCharacteristic, offset:Int) : Deferred<String?>{
-        return async(CommonPool) {
-            logInfo("asyncReadCharacteristicString")
-            var readStatus = -1
-            addGattListener("asyncReadCharacteristicString", object:BluetoothGattCallback() {
-                override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-                    super.onCharacteristicRead(gatt, characteristic, status)
-                    //since it is always possible to have a rogue callback, make sure it is the one we are looking for
-                    if (characteristicToRead == characteristic) {
-                        readStatus = status
-                    }
-                }
-            })
-
-            val readTriggered = safeReadCharacteristic(characteristicToRead).await()
-
-            if (readTriggered != null && readTriggered) {
-                //this assumes that we will *always* get a call back from the call, even if it is a failure
-                while(readStatus == -1) {
-                    delay(WAIT_RESOLUTION)
-                }
-            }
-
-            removeGattListener("asyncReadCharacteristicInt: $readStatus")
-
-            if (readStatus == BluetoothGatt.GATT_SUCCESS) {
-                delay(SAFE_DELAY)
-                return@async characteristicToRead.getStringValue(offset)
-            } else {
-                return@async null
-            }
-        }
-    }
-
-    fun asyncReadCharacteristicFloat(characteristicToRead: BluetoothGattCharacteristic, formatType:Int, offset:Int) : Deferred<Float?>{
-        return async(CommonPool) {
-            logInfo("asyncReadCharacteristicInt")
-            var readStatus = -1
-            addGattListener("asyncReadCharacteristicInt", object:BluetoothGattCallback() {
-                override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-                    super.onCharacteristicRead(gatt, characteristic, status)
-                    //since it is always possible to have a rogue callback, make sure it is the one we are looking for
-                    if (characteristicToRead == characteristic) {
-                        readStatus = status
-                    }
-                }
-            })
-
-            val readTriggered = safeReadCharacteristic(characteristicToRead).await()
-
-            if (readTriggered != null && readTriggered) {
-                //this assumes that we will *always* get a call back from the call, even if it is a failure
-                while(readStatus == -1) {
-                    delay(WAIT_RESOLUTION)
-                }
-            }
-
-            removeGattListener("asyncReadCharacteristicInt: $readStatus")
-
-            if (readStatus == BluetoothGatt.GATT_SUCCESS) {
-                delay(SAFE_DELAY)
-                return@async characteristicToRead.getFloatValue(formatType, offset)
-            } else {
-                return@async null
-            }
-        }
-    }
-
-    fun asyncReadCharacteristicBytes(characteristicToRead: BluetoothGattCharacteristic) : Deferred<ByteArray?>{
-        return async(CommonPool) {
-            logInfo("asyncReadCharacteristicBytes")
-            var readStatus = -1
-            addGattListener("asyncReadCharacteristicBytes", object:BluetoothGattCallback() {
-                override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-                    super.onCharacteristicRead(gatt, characteristic, status)
-                    //since it is always possible to have a rogue callback, make sure it is the one we are looking for
-                    if (characteristicToRead == characteristic) {
-                        logInfo("asyncReadCharacteristicBytes: $status")
-                        readStatus = status
-                    }
-                }
-            })
-
-            val readTriggered = safeReadCharacteristic(characteristicToRead).await()
-
-            logInfo("asyncReadCharacteristicBytes: Read Triggered: $readTriggered")
-
-            if (readTriggered != null && readTriggered) {
-                //this assumes that we will *always* get a call back from the call, even if it is a failure
-                while(readStatus == -1) {
-                    delay(WAIT_RESOLUTION)
-                }
-                logInfo("asyncReadCharacteristicBytes: Complete: $readStatus")
-            } else {
-                logError("asyncReadCharacteristicBytes: Read Not Triggered", false)
-            }
-
-            removeGattListener("asyncReadCharacteristicBytes")
-
-            delay(SAFE_DELAY)
-
-            return@async characteristicToRead.value
-        }
-    }
-
-    fun asyncFindAndReadCharacteristicInt(service: UUID, characteristic: UUID, formatType:Int, offset:Int) : Deferred<Int?> {
-        return async(CommonPool) {
-            logInfo("asyncFindAndReadCharacteristicInt")
-            var value: Int? = null
-            val characteristicToRead = asyncFindCharacteristic(service, characteristic).await()
-            if (characteristicToRead != null) {
-                value = asyncReadCharacteristicInt(characteristicToRead, formatType, offset).await()
-                delay(SAFE_DELAY)
-            }
-            return@async value
-        }
-    }
-
-    fun asyncFindAndReadCharacteristicFloat(service: UUID, characteristic: UUID, formatType:Int, offset:Int) : Deferred<Float?> {
-        return async(CommonPool) {
-            logInfo("asyncFindAndReadCharacteristicFloat")
-            var value: Float? = null
-            val characteristicToRead = asyncFindCharacteristic(service, characteristic).await()
-            if (characteristicToRead != null) {
-                value = asyncReadCharacteristicFloat(characteristicToRead, formatType, offset).await()
-                delay(SAFE_DELAY)
-            }
-            return@async value
-        }
-    }
-
-    fun asyncFindAndReadCharacteristicString(service: UUID, characteristic: UUID, offset:Int) : Deferred<String?> {
-        return async(CommonPool) {
-            logInfo("asyncFindAndReadCharacteristicString")
-            var value: String? = null
-            val characteristicToRead = asyncFindCharacteristic(service, characteristic).await()
-            if (characteristicToRead != null) {
-                value = asyncReadCharacteristicString(characteristicToRead, offset).await()
-                delay(SAFE_DELAY)
-            }
-            return@async value
-        }
-    }
-
-    fun asyncFindAndReadCharacteristicBytes(service: UUID, characteristic: UUID) : Deferred<ByteArray?> {
-        return async(CommonPool) {
-            logInfo("asyncFindAndReadCharacteristicBytes")
+            var error: XYBluetoothError? = null
             var value: ByteArray? = null
-            val characteristicToRead = asyncFindCharacteristic(service, characteristic).await()
-            if (characteristicToRead != null) {
-                value = asyncReadCharacteristicBytes(characteristicToRead).await()
-                delay(SAFE_DELAY)
+
+            val gatt = this@XYBluetoothGatt.gatt
+
+            if (gatt == null) {
+                error = XYBluetoothError("asyncWriteCharacteristic: No Gatt")
             }
-            return@async value
+
+            lastAccessTime = now
+
+            if (gatt != null) {
+                value = suspendCoroutine { cont ->
+                    val listener = object : BluetoothGattCallback() {
+                        override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+                            super.onCharacteristicWrite(gatt, characteristic, status)
+                            //since it is always possible to have a rogue callback, make sure it is the one we are looking for
+                            if (characteristicToWrite == characteristic) {
+                                if (status == BluetoothGatt.GATT_SUCCESS) {
+                                    cont.resume(characteristicToWrite.value)
+                                }
+                            }
+                        }
+                    }
+                    addGattListener("asyncWriteCharacteristic", listener)
+                    if (!gatt.writeCharacteristic(characteristicToWrite)) {
+                        error = XYBluetoothError("asyncWriteCharacteristic: gatt.writeCharacteristic failed to start")
+                        cont.resume(null)
+                    }
+                }
+                removeGattListener("asyncWriteCharacteristic")
+            }
+
+            return@asyncBle XYBluetoothResult(value, error)
         }
     }
 
-    fun asyncFindAndWriteCharacteristic(service: UUID, characteristic: UUID, value:Int, formatType:Int, offset:Int) : Deferred<Boolean?> {
-        return async(CommonPool) {
-            logInfo("asyncFindAndWriteCharacteristic")
-            var success : Boolean? = null
-            val characteristicToWrite = asyncFindCharacteristic(service, characteristic).await()
-            if (characteristicToWrite != null) {
-                if (characteristicToWrite.setValue(value, formatType, offset)) {
-                    success = asyncWriteCharacteristic(characteristicToWrite).await()
-                    delay(SAFE_DELAY)
+    fun asyncReadCharacteristicInt(characteristicToRead: BluetoothGattCharacteristic, formatType:Int, offset:Int) : Deferred<XYBluetoothResult<Int>>{
+        return asyncBle {
+            logInfo("asyncReadCharacteristicInt")
+            var error: XYBluetoothError? = null
+            var value: Int? = null
+
+            val gatt = this@XYBluetoothGatt.gatt
+
+            if (gatt == null) {
+                error = XYBluetoothError("asyncReadCharacteristicInt: No Gatt")
+            }
+
+            lastAccessTime = now
+
+            if (gatt != null) {
+                value = suspendCoroutine { cont ->
+                    val listener = object : BluetoothGattCallback() {
+                        override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+                            super.onCharacteristicRead(gatt, characteristic, status)
+                            //since it is always possible to have a rogue callback, make sure it is the one we are looking for
+                            if (characteristicToRead == characteristic) {
+                                if (status == BluetoothGatt.GATT_SUCCESS) {
+                                    cont.resume(characteristicToRead.getIntValue(formatType, offset))
+                                } else {
+                                    cont.resume(null)
+                                }
+                            }
+                        }
+                    }
+                    addGattListener("asyncReadCharacteristicInt", listener)
+                    if (!gatt.readCharacteristic(characteristicToRead)) {
+                        error = XYBluetoothError("asyncReadCharacteristicInt: gatt.readCharacteristic failed to start")
+                        cont.resume(null)
+                    }
+                }
+
+                removeGattListener("asyncReadCharacteristicInt")
+            }
+
+            return@asyncBle XYBluetoothResult(value, error)
+        }
+    }
+
+    fun asyncReadCharacteristicString(characteristicToRead: BluetoothGattCharacteristic, offset:Int) : Deferred<XYBluetoothResult<String>>{
+        return asyncBle {
+            logInfo("asyncReadCharacteristicString")
+            var error: XYBluetoothError? = null
+            var value: String? = null
+
+            val gatt = this@XYBluetoothGatt.gatt
+
+            if (gatt == null) {
+                error = XYBluetoothError("asyncReadCharacteristicString: No Gatt")
+            }
+
+            lastAccessTime = now
+
+            if (gatt != null) {
+                value = suspendCoroutine { cont ->
+                    val listener = object : BluetoothGattCallback() {
+                        override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+                            super.onCharacteristicRead(gatt, characteristic, status)
+                            //since it is always possible to have a rogue callback, make sure it is the one we are looking for
+                            if (characteristicToRead == characteristic) {
+                                if (status == BluetoothGatt.GATT_SUCCESS) {
+                                    cont.resume(characteristicToRead.getStringValue(offset))
+                                } else {
+                                    cont.resume(null)
+                                }
+                            }
+                        }
+                    }
+                    addGattListener("asyncReadCharacteristicString", listener)
+                    if (!gatt.readCharacteristic(characteristicToRead)) {
+                        error = XYBluetoothError("asyncReadCharacteristicString: gatt.readCharacteristic failed to start")
+                        cont.resume(null)
+                    }
+                }
+
+                removeGattListener("asyncReadCharacteristicString")
+            }
+
+            return@asyncBle XYBluetoothResult(value, error)
+        }
+    }
+
+    fun asyncReadCharacteristicFloat(characteristicToRead: BluetoothGattCharacteristic, formatType:Int, offset:Int) : Deferred<XYBluetoothResult<Float>>{
+        return asyncBle {
+            logInfo("asyncReadCharacteristicFloat")
+            var error: XYBluetoothError? = null
+            var value: Float? = null
+
+            val gatt = this@XYBluetoothGatt.gatt
+
+            if (gatt == null) {
+                error = XYBluetoothError("asyncReadCharacteristicFloat: No Gatt")
+            }
+
+            lastAccessTime = now
+
+            if (gatt != null) {
+                value = suspendCoroutine { cont ->
+                    val listener = object : BluetoothGattCallback() {
+                        override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+                            super.onCharacteristicRead(gatt, characteristic, status)
+                            //since it is always possible to have a rogue callback, make sure it is the one we are looking for
+                            if (characteristicToRead == characteristic) {
+                                if (status == BluetoothGatt.GATT_SUCCESS) {
+                                    cont.resume(characteristicToRead.getFloatValue(formatType, offset))
+                                } else {
+                                    cont.resume(null)
+                                }
+                            }
+                        }
+                    }
+                    addGattListener("asyncReadCharacteristicString", listener)
+                    if (!gatt.readCharacteristic(characteristicToRead)) {
+                        error = XYBluetoothError("asyncReadCharacteristicString: gatt.readCharacteristic failed to start")
+                        cont.resume(null)
+                    }
+                }
+
+                removeGattListener("asyncReadCharacteristicString")
+            }
+
+            return@asyncBle XYBluetoothResult(value, error)
+        }
+    }
+
+    fun asyncReadCharacteristicBytes(characteristicToRead: BluetoothGattCharacteristic) : Deferred<XYBluetoothResult<ByteArray>>{
+        return asyncBle {
+            logInfo("asyncReadCharacteristicBytes")
+            var error: XYBluetoothError? = null
+            var value: ByteArray? = null
+
+            val gatt = this@XYBluetoothGatt.gatt
+
+            if (gatt == null) {
+                error = XYBluetoothError("asyncReadCharacteristicBytes: No Gatt")
+            }
+
+            lastAccessTime = now
+
+            if (gatt != null) {
+                value = suspendCoroutine { cont ->
+                    val listener = object : BluetoothGattCallback() {
+                        override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+                            super.onCharacteristicRead(gatt, characteristic, status)
+                            //since it is always possible to have a rogue callback, make sure it is the one we are looking for
+                            if (characteristicToRead == characteristic) {
+                                if (status == BluetoothGatt.GATT_SUCCESS) {
+                                    cont.resume(characteristicToRead.value)
+                                } else {
+                                    cont.resume(null)
+                                }
+                            }
+                        }
+                    }
+                    addGattListener("asyncReadCharacteristicBytes", listener)
+                    if (!gatt.readCharacteristic(characteristicToRead)) {
+                        error = XYBluetoothError("asyncReadCharacteristicBytes: gatt.readCharacteristic failed to start")
+                        cont.resume(null)
+                    }
+                }
+
+                removeGattListener("asyncReadCharacteristicBytes")
+            }
+
+            return@asyncBle XYBluetoothResult(value, error)
+        }
+    }
+
+    fun asyncFindAndReadCharacteristicInt(service: UUID, characteristic: UUID, formatType:Int, offset:Int) : Deferred<XYBluetoothResult<Int>> {
+        return asyncBle {
+            logInfo("asyncFindAndReadCharacteristicInt")
+            var error: XYBluetoothError? = null
+            var value: Int? = null
+
+            val findResult = asyncFindCharacteristic(service, characteristic).await()
+            val characteristicToRead = findResult.value
+            if (findResult.error == null) {
+                if (characteristicToRead != null) {
+                    val readResult = asyncReadCharacteristicInt(characteristicToRead, formatType, offset).await()
+                    value = readResult.value
+                    error = readResult.error
                 } else {
-                    logError("asyncFindAndWriteCharacteristic: failed to call device", false)
-                    success = false
+                    error = XYBluetoothError("asyncFindAndReadCharacteristicInt: Got Null Value")
                 }
             }
-            return@async success
+
+            lastAccessTime = now
+
+            return@asyncBle XYBluetoothResult(value, error)
         }
     }
 
-    fun asyncFindAndWriteCharacteristicFloat(service: UUID, characteristic: UUID, mantissa: Int, exponent: Int, formatType:Int, offset:Int) : Deferred<Boolean?> {
-        return async(CommonPool) {
-            logInfo("asyncFindAndWriteCharacteristic")
-            var success : Boolean? = null
-            val characteristicToWrite = asyncFindCharacteristic(service, characteristic).await()
-            if (characteristicToWrite != null) {
-                if (characteristicToWrite.setValue(mantissa, exponent, formatType, offset)) {
-                    success = asyncWriteCharacteristic(characteristicToWrite).await()
-                    delay(SAFE_DELAY)
+    fun asyncFindAndReadCharacteristicFloat(service: UUID, characteristic: UUID, formatType:Int, offset:Int) : Deferred<XYBluetoothResult<Float>> {
+        return asyncBle {
+            logInfo("asyncFindAndReadCharacteristicFloat")
+            var error: XYBluetoothError? = null
+            var value: Float? = null
+
+            val findResult = asyncFindCharacteristic(service, characteristic).await()
+            val characteristicToRead = findResult.value
+            if (findResult.error == null) {
+                if (characteristicToRead != null) {
+                    val readResult = asyncReadCharacteristicFloat(characteristicToRead, formatType, offset).await()
+                    value = readResult.value
+                    error = readResult.error
                 } else {
-                    logError("asyncFindAndWriteCharacteristic: failed to call device", false)
-                    success = false
+                    error = XYBluetoothError("asyncFindAndReadCharacteristicFloat: Got Null Value")
                 }
             }
-            return@async success
+
+            lastAccessTime = now
+
+            return@asyncBle XYBluetoothResult(value, error)
         }
     }
 
-    fun asyncFindAndWriteCharacteristic(service: UUID, characteristic: UUID, value:String) : Deferred<Boolean?> {
-        return async(CommonPool) {
-            logInfo("asyncFindAndWriteCharacteristic")
-            var success : Boolean? = null
-            val characteristicToWrite = asyncFindCharacteristic(service, characteristic).await()
-            if (characteristicToWrite != null) {
-                if (characteristicToWrite.setValue(value)) {
-                    success = asyncWriteCharacteristic(characteristicToWrite).await()
-                    delay(SAFE_DELAY)
+    fun asyncFindAndReadCharacteristicString(service: UUID, characteristic: UUID, offset:Int) : Deferred<XYBluetoothResult<String>> {
+        return asyncBle {
+            logInfo("asyncFindAndReadCharacteristicString")
+            var error: XYBluetoothError? = null
+            var value: String? = null
+
+            val findResult = asyncFindCharacteristic(service, characteristic).await()
+            val characteristicToRead = findResult.value
+            if (findResult.error == null) {
+                if (characteristicToRead != null) {
+                    val readResult = asyncReadCharacteristicString(characteristicToRead, offset).await()
+                    value = readResult.value
+                    error = readResult.error
                 } else {
-                    logError("asyncFindAndWriteCharacteristic: failed to call device", false)
-                    success = false
+                    error = XYBluetoothError("asyncFindAndReadCharacteristicString: Got Null Value")
                 }
             }
-            return@async success
+
+            lastAccessTime = now
+
+            return@asyncBle XYBluetoothResult(value, error)
         }
     }
 
-    fun asyncFindAndWriteCharacteristic(service: UUID, characteristic: UUID, bytes:ByteArray) : Deferred<Boolean?> {
-        return async(CommonPool) {
-            logInfo("asyncFindAndWriteCharacteristic")
-            var success : Boolean? = null
-            val characteristicToWrite = asyncFindCharacteristic(service, characteristic).await()
-            if (characteristicToWrite != null) {
-                if (characteristicToWrite.setValue(bytes)) {
-                    success = asyncWriteCharacteristic(characteristicToWrite).await()
-                    delay(SAFE_DELAY)
+    fun asyncFindAndReadCharacteristicBytes(service: UUID, characteristic: UUID) : Deferred<XYBluetoothResult<ByteArray>> {
+        return asyncBle {
+            logInfo("asyncFindAndReadCharacteristicBytes")
+            var error: XYBluetoothError? = null
+            var value: ByteArray? = null
+
+            val findResult = asyncFindCharacteristic(service, characteristic).await()
+            val characteristicToRead = findResult.value
+            if (findResult.error == null) {
+                if (characteristicToRead != null) {
+                    val readResult = asyncReadCharacteristicBytes(characteristicToRead).await()
+                    value = readResult.value
+                    error = readResult.error
                 } else {
-                    logError("asyncFindAndWriteCharacteristic: failed to call device", false)
-                    success = false
+                    error = XYBluetoothError("asyncFindAndReadCharacteristicBytes: Got Null Value")
                 }
             }
-            return@async success
+
+            lastAccessTime = now
+
+            return@asyncBle XYBluetoothResult(value, error)
         }
     }
 
-    fun asyncFindAndWriteCharacteristicNotify(service: UUID, characteristic: UUID, enable:Boolean) : Deferred<Boolean?> {
-        return async(CommonPool) {
-            logInfo("asyncFindAndWriteCharacteristicNotify")
-            var success : Boolean? = null
-            val characteristicToWriteNotify = asyncFindCharacteristic(service, characteristic).await()
-            if (characteristicToWriteNotify != null) {
-                logInfo("asyncFindAndWriteCharacteristicNotify: Found Characteristic")
-                success = safeSetCharacteristicNotification(characteristicToWriteNotify, enable).await()
-                val descriptor = characteristicToWriteNotify.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG)
-                descriptor?.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                success = safeWriteDescriptor(descriptor).await()
-                logInfo("asyncFindAndWriteCharacteristicNotify: $success")
+    fun asyncFindAndWriteCharacteristic(service: UUID, characteristic: UUID, valueToWrite:Int, formatType:Int, offset:Int) : Deferred<XYBluetoothResult<Int>> {
+        return asyncBle {
+            logInfo("asyncFindAndWriteCharacteristic")
+            var error: XYBluetoothError? = null
+            var value: Int? = null
+
+            val findResult = asyncFindCharacteristic(service, characteristic).await()
+            logInfo("asyncFindAndWriteCharacteristic: Found")
+            val characteristicToWrite = findResult.value
+            if (findResult.error == null) {
+                logInfo("asyncFindAndWriteCharacteristic: $characteristicToWrite")
+                if (characteristicToWrite != null) {
+                    characteristicToWrite.setValue(valueToWrite, formatType, offset)
+                    logInfo("asyncFindAndWriteCharacteristic: Set")
+                    val writeResult = asyncWriteCharacteristic(characteristicToWrite).await()
+                    logInfo("asyncFindAndWriteCharacteristic: Write Complete: $writeResult")
+                    value = valueToWrite
+                    error = writeResult.error
+                } else {
+                    error = XYBluetoothError("asyncFindAndWriteCharacteristic: Got Null Value")
+                }
             }
-            return@async success
+
+            lastAccessTime = now
+
+            return@asyncBle XYBluetoothResult(value, error)
+        }
+    }
+
+    fun asyncFindAndWriteCharacteristicFloat(service: UUID, characteristic: UUID, mantissa: Int, exponent: Int, formatType:Int, offset:Int) : Deferred<XYBluetoothResult<ByteArray>> {
+        return asyncBle {
+            logInfo("asyncFindAndWriteCharacteristicFloat")
+            var error: XYBluetoothError? = null
+            var value: ByteArray? = null
+
+            val findResult = asyncFindCharacteristic(service, characteristic).await()
+            val characteristicToWrite = findResult.value
+            if (findResult.error == null) {
+                if (characteristicToWrite != null) {
+                    characteristicToWrite.setValue(mantissa, exponent, formatType, offset)
+                    val writeResult = asyncWriteCharacteristic(characteristicToWrite).await()
+                    value = writeResult.value
+                    error = writeResult.error
+                } else {
+                    error = XYBluetoothError("asyncFindAndWriteCharacteristic: Got Null Value")
+                }
+            }
+
+            lastAccessTime = now
+
+            return@asyncBle XYBluetoothResult(value, error)
+        }
+    }
+
+    fun asyncFindAndWriteCharacteristic(service: UUID, characteristic: UUID, valueToWrite:String) : Deferred<XYBluetoothResult<String>> {
+        return asyncBle {
+            logInfo("asyncFindAndWriteCharacteristic")
+            var error: XYBluetoothError? = null
+            var value: String? = null
+
+            val findResult = asyncFindCharacteristic(service, characteristic).await()
+            val characteristicToWrite = findResult.value
+            if (findResult.error == null) {
+                if (characteristicToWrite != null) {
+                    characteristicToWrite.setValue(valueToWrite)
+                    val writeResult = asyncWriteCharacteristic(characteristicToWrite).await()
+                    value = valueToWrite
+                    error = writeResult.error
+                } else {
+                    error = XYBluetoothError("asyncFindAndWriteCharacteristic: Got Null Value")
+                }
+            }
+
+            lastAccessTime = now
+
+            return@asyncBle XYBluetoothResult(value, error)
+        }
+    }
+
+    fun asyncFindAndWriteCharacteristic(service: UUID, characteristic: UUID, bytes:ByteArray) : Deferred<XYBluetoothResult<ByteArray>> {
+        return asyncBle {
+            logInfo("asyncFindAndWriteCharacteristic")
+            var error: XYBluetoothError? = null
+            var value: ByteArray? = null
+
+            val findResult = asyncFindCharacteristic(service, characteristic).await()
+            val characteristicToWrite = findResult.value
+            if (findResult.error == null) {
+                if (characteristicToWrite != null) {
+                    characteristicToWrite.setValue(bytes)
+                    val writeResult = asyncWriteCharacteristic(characteristicToWrite).await()
+                    value = writeResult.value
+                    error = writeResult.error
+                } else {
+                    error = XYBluetoothError("asyncFindAndWriteCharacteristic: Got Null Value")
+                }
+            }
+
+            lastAccessTime = now
+
+            return@asyncBle XYBluetoothResult(value, error)
+        }
+    }
+
+    fun asyncFindAndWriteCharacteristicNotify(service: UUID, characteristic: UUID, enable:Boolean) : Deferred<XYBluetoothResult<Boolean>> {
+        return asyncBle {
+            logInfo("asyncFindAndWriteCharacteristic")
+            var error: XYBluetoothError? = null
+            var value: Boolean? = null
+
+            val findResult = asyncFindCharacteristic(service, characteristic).await()
+            val characteristicToWrite = findResult.value
+            if (findResult.error == null) {
+                if (characteristicToWrite != null) {
+                    if (enable) {
+                        characteristicToWrite.setValue(1, BluetoothGattCharacteristic.FORMAT_UINT8, 0)
+                    }
+                    else {
+                        characteristicToWrite.setValue(0, BluetoothGattCharacteristic.FORMAT_UINT8, 0)
+                    }
+                    val writeResult = asyncWriteCharacteristic(characteristicToWrite).await()
+                    value = enable
+                    error = writeResult.error
+                } else {
+                    error = XYBluetoothError("asyncFindAndWriteCharacteristic: Got Null Value")
+                }
+            }
+
+            lastAccessTime = now
+
+            return@asyncBle XYBluetoothResult(value, error)
         }
     }
 
@@ -605,6 +628,7 @@ open class XYBluetoothGatt protected constructor(
                     }
                 }
                 logInfo("asyncConnect:Complete")
+                lastAccessTime = now
                 delay(SAFE_DELAY)
                 return@async true
             }.await()
@@ -633,23 +657,46 @@ open class XYBluetoothGatt protected constructor(
     }
 
     //this can only be called after a successful discover
-    private fun asyncFindCharacteristic(service: UUID, characteristic: UUID) : Deferred<BluetoothGattCharacteristic?> {
+    private fun asyncFindCharacteristic(service: UUID, characteristic: UUID) : Deferred<XYBluetoothResult<BluetoothGattCharacteristic>> {
 
-        //error and throw exception if discovery not done yet
-        if (gatt?.services?.size == 0) {
-            logError("Services Not Discovered Yet", true)
-        }
+        return asyncBle {
 
-        return async(CommonPool) {
-            logInfo("findCharacteristic")
-            var foundCharacteristic : BluetoothGattCharacteristic? = null
-            val foundService = gatt?.getService(service)
-            logInfo("findCharacteristic:service:$foundService")
-            if (foundService != null) {
-                foundCharacteristic = foundService.getCharacteristic(characteristic)
-                logInfo("findCharacteristic:characteristic:$foundCharacteristic")
+            logInfo("asyncFindCharacteristic")
+            var error: XYBluetoothError? = null
+            var value: BluetoothGattCharacteristic? = null
+
+            val gatt = this@XYBluetoothGatt.gatt
+
+            if (gatt == null) {
+                error = XYBluetoothError("asyncReadCharacteristicBytes: No Gatt")
             }
-            return@async foundCharacteristic
+
+            lastAccessTime = now
+
+            if (gatt != null) {
+                value = suspendCoroutine { cont ->
+                    //error and throw exception if discovery not done yet
+                    if (gatt.services?.size == 0) {
+                        error = XYBluetoothError("Services Not Discovered Yet")
+
+                    }
+
+                    logInfo("findCharacteristic")
+                    var foundCharacteristic: BluetoothGattCharacteristic? = null
+                    val foundService = gatt.getService(service)
+                    logInfo("findCharacteristic:service:$foundService")
+                    if (foundService != null) {
+                        foundCharacteristic = foundService.getCharacteristic(characteristic)
+                        logInfo("findCharacteristic:characteristic:$foundCharacteristic")
+                        cont.resume(foundCharacteristic)
+                    } else {
+                        error = XYBluetoothError("asyncReadCharacteristicBytes: Characteristic not Found!")
+                        cont.resume(null)
+                    }
+                }
+            }
+            logInfo("findCharacteristic: Returning: $value")
+            return@asyncBle XYBluetoothResult(value, error)
         }
     }
 

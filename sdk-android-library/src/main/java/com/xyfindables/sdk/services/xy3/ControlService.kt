@@ -13,7 +13,7 @@ class ControlService(device: XYBluetoothDevice) : Service(device) {
 
     val buzzer = IntegerCharacteristic(this, characteristics.Buzzer.uuid)
     val handshake = IntegerCharacteristic(this, characteristics.Handshake.uuid)
-    val version = IntegerCharacteristic(this, characteristics.Version.uuid)
+    val version = StringCharacteristic(this, characteristics.Version.uuid)
     val buzzerSelect = IntegerCharacteristic(this, characteristics.BuzzerSelect.uuid)
     val surge = IntegerCharacteristic(this, characteristics.Surge.uuid)
     val button = IntegerCharacteristic(this, characteristics.Button.uuid)

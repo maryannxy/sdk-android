@@ -7,7 +7,7 @@ import java.util.*
 
 open class XYAppleBluetoothDevice(context: Context, device: BluetoothDevice, hash: Int) : XYBluetoothDevice(context, device, hash) {
 
-    interface Listener : XYBluetoothDevice.Listener {
+    open class Listener : XYBluetoothDevice.Listener() {
     }
 
     companion object : XYCreator() {

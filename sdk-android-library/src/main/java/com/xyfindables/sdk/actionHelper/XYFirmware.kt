@@ -6,6 +6,7 @@ import com.xyfindables.sdk.XYDevice
 import com.xyfindables.sdk.action.XYDeviceAction
 import com.xyfindables.sdk.action.XYDeviceActionGetVersion
 import com.xyfindables.sdk.action.XYDeviceActionGetVersionModern
+import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
 
 /**
  * Created by alex.mcelroy on 9/6/2017.
@@ -18,7 +19,7 @@ class XYFirmware(device: XYDevice, callback: Callback) : XYActionHelper() {
     }
 
     init {
-        if (device.family === XYDevice.Family.XY4) {
+        if (device.family === XYFinderBluetoothDevice.Family.XY4) {
             action = object : XYDeviceActionGetVersionModern(device) {
                 override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")

@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
+import com.xyfindables.sdk.gatt.XYBluetoothResult
 import com.xyfindables.sdk.scanner.XYScanResult
 import com.xyfindables.sdk.services.EddystoneConfigService
 import com.xyfindables.sdk.services.EddystoneService
@@ -44,27 +45,27 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
         addGattListener("xy4", buttonListener)
     }
 
-    override fun find() : Deferred<Boolean?> {
+    override fun find() : Deferred<XYBluetoothResult<Int>> {
         logInfo("find")
         return primary.buzzer.set(11)
     }
 
-    override fun lock() : Deferred<Boolean?> {
+    override fun lock() : Deferred<XYBluetoothResult<ByteArray>> {
         logInfo("lock")
         return primary.lock.set(XY4BluetoothDevice.DEFAULT_LOCK_CODE)
     }
 
-    override fun unlock() : Deferred<Boolean?> {
+    override fun unlock() : Deferred<XYBluetoothResult<ByteArray>> {
         logInfo("unlock")
         return primary.unlock.set(XY4BluetoothDevice.DEFAULT_LOCK_CODE)
     }
 
-    override fun stayAwake() : Deferred<Boolean?> {
+    override fun stayAwake() : Deferred<XYBluetoothResult<Int>> {
         logInfo("stayAwake")
         return primary.stayAwake.set(1)
     }
 
-    override fun fallAsleep() : Deferred<Boolean?> {
+    override fun fallAsleep() : Deferred<XYBluetoothResult<Int>> {
         logInfo("fallAsleep")
         return primary.stayAwake.set(0)
     }
@@ -95,10 +96,18 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
             return _minor.and(0xfff0).or(0x0004)
         }
 
-    interface Listener : XYFinderBluetoothDevice.Listener {
-        fun buttonSinglePressed()
-        fun buttonDoublePressed()
-        fun buttonLongPressed()
+    open class Listener : XYFinderBluetoothDevice.Listener() {
+        open fun buttonSinglePressed() {
+
+        }
+
+        open fun buttonDoublePressed() {
+
+        }
+
+        open fun buttonLongPressed() {
+
+        }
     }
 
     companion object : XYCreator() {

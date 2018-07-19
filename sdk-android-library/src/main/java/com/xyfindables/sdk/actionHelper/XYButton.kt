@@ -3,9 +3,10 @@ package com.xyfindables.sdk.actionHelper
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.util.Log
-
 import com.xyfindables.sdk.XYDevice
+
 import com.xyfindables.sdk.action.*
+import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
 
 //import static com.xyfindables.core.XYBase.logError;
 
@@ -23,7 +24,7 @@ class XYButton : XYActionHelper {
     }
 
     protected constructor(device: XYDevice, callback: Callback) {
-        if (device.family === XYDevice.Family.XY4) {
+        if (device.family === XYFinderBluetoothDevice.Family.XY4) {
             action = object : XYDeviceActionGetButtonStateModern(device) {
                 override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     //logExtreme(TAG, "statusChanged:" + status + ":" + success);
@@ -51,7 +52,7 @@ class XYButton : XYActionHelper {
     }
 
     protected constructor(device: XYDevice, notification: XYActionHelper.Notification) {
-        if (device.family === XYDevice.Family.XY4) {
+        if (device.family === XYFinderBluetoothDevice.Family.XY4) {
             action = object : XYDeviceActionSubscribeButtonModern(device) {
                 override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     //logExtreme(TAG, "statusChanged:" + status + ":" + success);

@@ -52,7 +52,7 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult, 
         _power = buffer.get()
     }
 
-    interface Listener : XYAppleBluetoothDevice.Listener {
+    open class Listener : XYAppleBluetoothDevice.Listener() {
     }
 
     companion object : XYCreator() {

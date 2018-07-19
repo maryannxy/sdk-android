@@ -2,9 +2,10 @@ package com.xyfindables.sdk.actionHelper
 
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
-
 import com.xyfindables.sdk.XYDevice
+
 import com.xyfindables.sdk.action.*
+import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
 
 /**
  * Created by alex.mcelroy on 9/5/2017.
@@ -17,7 +18,7 @@ class XYBeep : XYActionHelper {
     }
 
     constructor(device: XYDevice, callback: Callback) {
-        if (device.family === XYDevice.Family.XY4) {
+        if (device.family === XYFinderBluetoothDevice.Family.XY4) {
             action = object : XYDeviceActionBuzzModern(device, value) {
                 override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {
                     logExtreme(TAG, "statusChanged:$status:$success")
@@ -45,7 +46,7 @@ class XYBeep : XYActionHelper {
     }
 
     constructor(device: XYDevice, index: Int, callback: Callback) {
-        if (device.family === XYDevice.Family.XY4) {
+        if (device.family === XYFinderBluetoothDevice.Family.XY4) {
             val value = byteArrayOf(index.toByte(), 3.toByte())
             action = object : XYDeviceActionBuzzSelectModern(device, value) {
                 override fun statusChanged(status: Int, gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, success: Boolean): Boolean {

@@ -73,7 +73,7 @@ class XYDeviceItemView(context: Context, attrs: AttributeSet) : RelativeLayout(c
         }
     }
 
-    val deviceListener = object : XYBluetoothDevice.Listener {
+    val deviceListener = object : XYBluetoothDevice.Listener() {
         override fun entered(device: XYBluetoothDevice) {
 
         }

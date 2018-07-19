@@ -4,14 +4,12 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
-import android.util.SparseArray
+import com.xyfindables.sdk.gatt.XYBluetoothResult
 import com.xyfindables.sdk.scanner.XYScanResult
 import com.xyfindables.sdk.services.standard.*
 import com.xyfindables.sdk.services.xy3.*
-import com.xyfindables.sdk.services.xy4.PrimaryService
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import java.nio.ByteBuffer
 import java.util.*
@@ -53,27 +51,27 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
             return _minor.and(0xfff0).or(0x0004)
         }
 
-    override fun find() : Deferred<Boolean?> {
+    override fun find() : Deferred<XYBluetoothResult<Int>> {
         logInfo("find")
         return control.buzzerSelect.set(3)
     }
 
-    override fun lock() : Deferred<Boolean?> {
+    override fun lock() : Deferred<XYBluetoothResult<ByteArray>> {
         logInfo("lock")
         return basicConfig.lock.set(XY3BluetoothDevice.DEFAULT_LOCK_CODE)
     }
 
-    override fun unlock() : Deferred<Boolean?> {
+    override fun unlock() : Deferred<XYBluetoothResult<ByteArray>> {
         logInfo("unlock")
         return basicConfig.unlock.set(XY3BluetoothDevice.DEFAULT_LOCK_CODE)
     }
 
-    override fun stayAwake() : Deferred<Boolean?> {
+    override fun stayAwake() : Deferred<XYBluetoothResult<Int>> {
         logInfo("stayAwake")
         return extendedConfig.registration.set(1)
     }
 
-    override fun fallAsleep() : Deferred<Boolean?> {
+    override fun fallAsleep() : Deferred<XYBluetoothResult<Int>> {
         logInfo("fallAsleep")
         return extendedConfig.registration.set(0)
     }
@@ -98,10 +96,10 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
         }
     }
 
-    interface Listener : XYFinderBluetoothDevice.Listener {
-        fun buttonSinglePressed()
-        fun buttonDoublePressed()
-        fun buttonLongPressed()
+    open class Listener : XYFinderBluetoothDevice.Listener() {
+        open fun buttonSinglePressed() {}
+        open fun buttonDoublePressed() {}
+        open fun buttonLongPressed() {}
     }
 
     companion object : XYCreator() {
