@@ -2,6 +2,7 @@ package com.xyfindables.sdk.scanner
 
 import android.bluetooth.BluetoothManager
 import android.content.Context
+import android.location.LocationManager
 import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.devices.XYBluetoothDevice
 import com.xyfindables.sdk.devices.XYMobileBluetoothDevice
@@ -18,6 +19,13 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
 
     var startTime = 0L
     var scanResultCount = 0
+
+    enum class Status {
+        Enabled,
+        BluetoothDisabled,
+        BluetoothUnavailable,
+        LocationDisabled
+    }
 
     val resultsPerSecond: Float
         get() {
@@ -49,6 +57,29 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
         devices[hostDevice.hashCode()] = hostDevice
     }
 
+    val status: Status
+        get() {
+            val bluetoothManager = getBluetoothManager()
+            if (bluetoothManager.adapter == null) {
+                return Status.BluetoothUnavailable
+            }
+            if (!(bluetoothManager.adapter.isEnabled)) {
+                return Status.BluetoothDisabled
+            }
+            if (areLocationServicesAvailable() == false) {
+                return Status.LocationDisabled
+            }
+            return Status.Enabled
+        }
+
+    fun enableBluetooth(enable: Boolean) {
+        if (enable) {
+            getBluetoothManager().adapter?.enable()
+        } else {
+            getBluetoothManager().adapter?.disable()
+        }
+    }
+
     fun deviceFromId(id:String) : XYBluetoothDevice? {
         return null
     }
@@ -61,6 +92,11 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
         for ((_, foundDevice) in foundDevices) {
             globalDevices[foundDevice.hashCode()] = foundDevice
         }
+    }
+
+    fun areLocationServicesAvailable() : Boolean {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+        return locationManager?.isProviderEnabled(LocationManager.GPS_PROVIDER) ?: false
     }
 
     private val listeners = HashMap<String, WeakReference<Listener>>()
@@ -197,7 +233,7 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
         }
     }
 
-    protected fun getBluetoothManager(context: Context): BluetoothManager {
+    protected fun getBluetoothManager(): BluetoothManager {
         return context.applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     }
 
