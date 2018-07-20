@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Handler
 import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.CallByVersion
+import com.xyfindables.sdk.XYBluetoothBase
 import com.xyfindables.sdk.scanner.XYFilteredSmartScan
 import kotlinx.coroutines.experimental.*
 import java.lang.ref.WeakReference
@@ -15,24 +16,18 @@ import kotlin.collections.HashMap
 import kotlin.coroutines.experimental.suspendCoroutine
 
 open class XYBluetoothGatt protected constructor(
-        protected val context:Context,
+        context:Context,
         protected var device: BluetoothDevice?,
         private var autoConnect: Boolean,
         private val callback: BluetoothGattCallback?,
         private val transport: Int?,
         private val phy: Int?,
         private val handler: Handler?
-) : XYBase() {
-
-    init {
-        autoConnect = true
-    }
+) : XYBluetoothBase(context) {
 
     protected var gatt: BluetoothGatt? = null
 
     private val gattListeners = HashMap<String, WeakReference<BluetoothGattCallback>>()
-
-    private val bluetoothManager = getBluetoothManager(context)
 
     protected var references = 0
 
@@ -49,11 +44,6 @@ open class XYBluetoothGatt protected constructor(
             }
         }
 
-    val connectionState: Int
-        get() {
-            return _connectionState
-        }
-
     //last time this device was accessed (connected to)
     var lastAccessTime = 0L
 
@@ -64,12 +54,11 @@ open class XYBluetoothGatt protected constructor(
         this.device = device
     }
 
-    private var _connectionState = bluetoothManager.getConnectionState(device, BluetoothProfile.GATT)
+    protected val connectionState : Int?
+        get() = bluetoothManager?.getConnectionState(device, BluetoothProfile.GATT)
 
     val closed: Boolean
-        get() {
-            return (gatt == null)
-        }
+        get() = (gatt == null)
 
     fun addGattListener(key: String, listener: BluetoothGattCallback) {
         logInfo("addListener")
@@ -85,24 +74,16 @@ open class XYBluetoothGatt protected constructor(
         }
     }
 
-    fun asyncClose() : Deferred<Unit>{
-        return async(GattThread) {
+    fun asyncClose() : Deferred<XYBluetoothResult<Boolean>> {
+        return asyncBle {
             logInfo("asyncClose")
             asyncDisconnect().await()
             logInfo("asyncClose: Disconnected")
-            safeClose().await()
+            gatt?.close()
             logInfo("asyncClose: Closed")
             removeGattListener("default")
             gatt = null
-            return@async
-        }
-    }
-
-    private fun safeClose() : Deferred<Unit> {
-        return async(GattThread) {
-            logInfo("safeClose")
-            gatt?.close()
-            return@async
+            return@asyncBle XYBluetoothResult(true)
         }
     }
 
@@ -682,10 +663,6 @@ open class XYBluetoothGatt protected constructor(
         }
     }
 
-    private fun getBluetoothManager(context: Context): BluetoothManager {
-        return context.applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-    }
-
     fun asyncConnect() : Deferred<XYBluetoothResult<Boolean>> {
         return asyncBle {
             logInfo("asyncConnect")
@@ -906,7 +883,6 @@ open class XYBluetoothGatt protected constructor(
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
             super.onConnectionStateChange(gatt, status, newState)
             logInfo("onConnectionStateChange: ${gatt?.device?.address} $newState : $status")
-            _connectionState = newState
             synchronized(gattListeners) {
                 for ((_, listener) in gattListeners) {
                     val innerListener = listener.get()
@@ -1119,20 +1095,7 @@ open class XYBluetoothGatt protected constructor(
     }
 
     companion object {
-
-        val TAG = "XYBluetoothGatt"
-
         //gap after last connection that we wait to close the connection
         private const val CLEANUP_DELAY = 5000
-
-        //this is the thread that all calls should happen on for gatt calls.  Using a single thread
-        //it is documented that for 4.4, we should consider using the UIThread
-        val GattThread = XYFilteredSmartScan.BluetoothThread
-
-        private val WAIT_RESOLUTION = 100
-        private val CONNECT_TIMEOUT = 15000
-        private val SAFE_DELAY = 100 //this is how long we pause between actions to prevent 133 errors
-
-        val CLIENT_CHARACTERISTIC_CONFIG = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
     }
 }

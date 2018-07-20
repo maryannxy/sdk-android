@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.location.LocationManager
 import com.xyfindables.core.XYBase
+import com.xyfindables.sdk.XYBluetoothBase
 import com.xyfindables.sdk.devices.XYBluetoothDevice
 import com.xyfindables.sdk.devices.XYMobileBluetoothDevice
 import kotlinx.coroutines.experimental.CommonPool
@@ -12,10 +13,7 @@ import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import java.lang.ref.WeakReference
 import java.util.HashMap
 
-abstract class XYFilteredSmartScan(context: Context): XYBase() {
-
-    //we want to use the application context for everything
-    protected val context = context.applicationContext
+abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
 
     var startTime = 0L
     var scanResultCount = 0
@@ -59,8 +57,8 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
 
     val status: Status
         get() {
-            val bluetoothManager = getBluetoothManager()
-            if (bluetoothManager.adapter == null) {
+            val bluetoothManager = this.bluetoothManager
+            if (bluetoothManager?.adapter == null) {
                 return Status.BluetoothUnavailable
             }
             if (!(bluetoothManager.adapter.isEnabled)) {
@@ -74,9 +72,9 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
 
     fun enableBluetooth(enable: Boolean) {
         if (enable) {
-            getBluetoothManager().adapter?.enable()
+            bluetoothManager?.adapter?.enable()
         } else {
-            getBluetoothManager().adapter?.disable()
+            bluetoothManager?.adapter?.disable()
         }
     }
 
@@ -232,15 +230,6 @@ abstract class XYFilteredSmartScan(context: Context): XYBase() {
                 }
             }
         }
-    }
-
-    protected fun getBluetoothManager(): BluetoothManager {
-        return context.applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-    }
-
-    companion object {
-        //this is the thread that all calls should happen on for gatt calls.
-        val BluetoothThread = newFixedThreadPoolContext(1, "BluetoothThread")
     }
 
 }

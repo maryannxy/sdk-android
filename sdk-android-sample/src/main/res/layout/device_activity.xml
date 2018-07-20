@@ -199,15 +199,9 @@
                     <com.xyfindables.ui.views.XYButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Beep"
-                        android:id="@+id/beep"/>
+                        android:text="Find"
+                        android:id="@+id/find"/>
 
-                    <EditText
-                        android:layout_width="100dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="16dp"
-                        android:text="11"
-                        android:id="@+id/beepIndex"/>
                 </LinearLayout>
                 <LinearLayout
                     android:layout_width="match_parent"

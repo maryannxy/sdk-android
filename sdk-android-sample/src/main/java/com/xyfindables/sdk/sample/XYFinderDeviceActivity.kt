@@ -137,10 +137,8 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
 
         updateAdList()
 
-        val beepButton : XYButton = findViewById(R.id.beep)
+        val beepButton : XYButton = findViewById(R.id.find)
         beepButton.setOnClickListener {
-            val beepIndexText : EditText = findViewById(R.id.beepIndex)
-            val index = Integer.parseInt(beepIndexText.text.toString())
             logInfo("beepButton: onClick")
             launch(UIThread) {
                 beepButton.setEnabled(false)
