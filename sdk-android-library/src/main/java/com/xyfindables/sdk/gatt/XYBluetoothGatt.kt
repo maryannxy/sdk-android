@@ -1080,7 +1080,7 @@ open class XYBluetoothGatt protected constructor(
 
     companion object {
 
-        val TAG = XYBluetoothGatt.javaClass.simpleName
+        val TAG = "XYBluetoothGatt"
 
         //gap after last connection that we wait to close the connection
         private const val CLEANUP_DELAY = 5000
@@ -1094,12 +1094,5 @@ open class XYBluetoothGatt protected constructor(
         private val SAFE_DELAY = 100 //this is how long we pause between actions to prevent 133 errors
 
         val CLIENT_CHARACTERISTIC_CONFIG = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
-
-        private fun safeCreateGatt(context:Context, device: BluetoothDevice, callback: BluetoothGattCallback?) : Deferred<XYBluetoothGatt> {
-            return async(GattThread) {
-                logInfo(TAG, "safeCreateGatt")
-                return@async XYBluetoothGatt(context.applicationContext, device, false, callback, null, null, null)
-            }
-        }
     }
 }
