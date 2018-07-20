@@ -50,6 +50,8 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
 
     var notifyExit : ((device: XYBluetoothDevice)->(Unit))? = null
 
+    var checkingForExit = false
+
     override fun hashCode(): Int {
         return hash
     }
@@ -61,30 +63,37 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
     //this should only be called from the onEnter function so that
     //there is one onExit for every onEnter
     private fun checkForExit() {
+        if (checkingForExit) {
+            return
+        }
+        checkingForExit = true
         launch(CommonPool) {
-            //logInfo("checkForExit: $id")
-            delay(outOfRangeDelay)
+            while(checkingForExit) {
+                //logInfo("checkForExit: $id")
+                delay(outOfRangeDelay)
 
-            //check if something else has already marked it as exited
-            //this should only happen if another system (exit on connection drop for example)
-            //marks this as out of range
-            if (rssi == OUTOFRANGE_RSSI) {
-                return@launch
-            }
+                //check if something else has already marked it as exited
+                //this should only happen if another system (exit on connection drop for example)
+                //marks this as out of range
+                if (rssi == OUTOFRANGE_RSSI) {
+                    return@launch
+                }
 
-            if ((now - lastAdTime) > outOfRangeDelay && (now - lastAccessTime) > outOfRangeDelay) {
-                rssi = OUTOFRANGE_RSSI
-                onExit()
+                if ((now - lastAdTime) > outOfRangeDelay && (now - lastAccessTime) > outOfRangeDelay) {
+                    checkingForExit = false
+                    if (rssi != OUTOFRANGE_RSSI) {
+                        rssi = OUTOFRANGE_RSSI
+                        onExit()
 
-                //make it thread safe
-                val localNotifyExit = notifyExit
-                if (localNotifyExit != null) {
-                    launch(CommonPool) {
-                        localNotifyExit(this@XYBluetoothDevice)
+                        //make it thread safe
+                        val localNotifyExit = notifyExit
+                        if (localNotifyExit != null) {
+                            launch(CommonPool) {
+                                localNotifyExit(this@XYBluetoothDevice)
+                            }
+                        }
                     }
                 }
-            } else {
-                checkForExit()
             }
         }
     }
@@ -240,7 +249,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
 
         //the period of time to wait for marking something as out of range
         //if we have not gotten any ads or been connected to it
-        const val OUTOFRANGE_DELAY = 15000
+        const val OUTOFRANGE_DELAY = 1500000
 
         var canCreate = false
         val manufacturerToCreator = HashMap<Int, XYCreator>()
