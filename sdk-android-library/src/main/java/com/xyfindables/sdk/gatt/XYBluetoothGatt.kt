@@ -716,6 +716,7 @@ open class XYBluetoothGatt protected constructor(
                         cont.resume(null)
                     }
                 }
+                removeGattListener("asyncReadCharacteristicBytes")
             }
             return@asyncBle XYBluetoothResult(value, error)
         }
