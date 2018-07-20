@@ -143,6 +143,7 @@ open class XYBluetoothGatt protected constructor(
                                 super.onServicesDiscovered(gatt, status)
                                 if (status != BluetoothGatt.GATT_SUCCESS) {
                                     error = XYBluetoothError("asyncDiscover: discoverStatus: $status")
+                                    cont.resume(null)
                                 } else {
                                     if (gatt == null) {
                                         error = XYBluetoothError("asyncDiscover: gatt: NULL")
@@ -795,11 +796,10 @@ open class XYBluetoothGatt protected constructor(
                     }
 
                     logInfo("findCharacteristic")
-                    var foundCharacteristic: BluetoothGattCharacteristic? = null
                     val foundService = gatt.getService(service)
                     logInfo("findCharacteristic:service:$foundService")
                     if (foundService != null) {
-                        foundCharacteristic = foundService.getCharacteristic(characteristic)
+                        val foundCharacteristic = foundService.getCharacteristic(characteristic)
                         logInfo("findCharacteristic:characteristic:$foundCharacteristic")
                         cont.resume(foundCharacteristic)
                     } else {
