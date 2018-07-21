@@ -2,7 +2,7 @@ package com.xyfindables.sdk.scanner
 
 import android.content.Context
 import android.location.LocationManager
-import com.xyfindables.sdk.XYBluetoothBase
+import com.xyfindables.sdk.gatt.XYBluetoothBase
 import com.xyfindables.sdk.devices.XYBluetoothDevice
 import com.xyfindables.sdk.devices.XYMobileBluetoothDevice
 import kotlinx.coroutines.experimental.CommonPool

@@ -62,7 +62,7 @@ abstract class Service(val device: XYBluetoothDevice) : XYBase() {
 
     private fun readInt(characteristic: UUID, formatType: Int = BluetoothGattCharacteristic.FORMAT_UINT8, offset:Int = 0): Deferred<XYBluetoothResult<Int>> {
         return device.connection {
-            return@connection device.asyncFindAndReadCharacteristicInt(
+            return@connection device.findAndReadCharacteristicInt(
                     serviceUuid,
                     characteristic,
                     formatType,
@@ -85,7 +85,7 @@ abstract class Service(val device: XYBluetoothDevice) : XYBase() {
 
     private fun readFloat(characteristic: UUID, formatType: Int = BluetoothGattCharacteristic.FORMAT_FLOAT, offset:Int = 0): Deferred<XYBluetoothResult<Float>> {
         return device.connection {
-            return@connection device.asyncFindAndReadCharacteristicFloat(
+            return@connection device.findAndReadCharacteristicFloat(
                     serviceUuid,
                     characteristic,
                     formatType,
@@ -109,7 +109,7 @@ abstract class Service(val device: XYBluetoothDevice) : XYBase() {
 
     private fun readString(characteristic: UUID, offset:Int = 0): Deferred<XYBluetoothResult<String>> {
         return device.connection {
-            return@connection device.asyncFindAndReadCharacteristicString(
+            return@connection device.findAndReadCharacteristicString(
                     serviceUuid,
                     characteristic,
                     offset
@@ -139,7 +139,7 @@ abstract class Service(val device: XYBluetoothDevice) : XYBase() {
 
     private fun readBytes(characteristic: UUID): Deferred<XYBluetoothResult<ByteArray>> {
         return device.connection {
-            return@connection  device.asyncFindAndReadCharacteristicBytes(
+            return@connection  device.findAndReadCharacteristicBytes(
                     serviceUuid,
                     characteristic
             ).await()

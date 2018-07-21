@@ -4,10 +4,10 @@ import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
-import com.xyfindables.core.guard
-import com.xyfindables.sdk.*
 import com.xyfindables.sdk.devices.*
 import com.xyfindables.sdk.gatt.XYBluetoothResult
+import com.xyfindables.ui.UIThread
+import com.xyfindables.ui.ui
 
 import com.xyfindables.ui.views.XYButton
 import com.xyfindables.ui.views.XYTextView
@@ -39,7 +39,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
     }
 
     fun updateAdList() {
-        launch(UIThread) {
+        ui {
             val adList: XYTextView? = findViewById(R.id.adList)
             var txt = ""
             for ((_, ad) in device!!.ads) {
@@ -141,13 +141,13 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         val beepButton : XYButton = findViewById(R.id.find)
         beepButton.setOnClickListener {
             logInfo("beepButton: onClick")
-            launch(UIThread) {
+            ui {
                 beepButton.setEnabled(false)
             }
             logInfo("beepButton: got xyDevice")
             launch(CommonPool) {
                 (device as? XYFinderBluetoothDevice)?.find()?.await()
-                launch(UIThread) {
+                ui {
                     beepButton.setEnabled(true)
                 }
             }
@@ -172,7 +172,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         stayAwakeButton.setOnClickListener {
             launch(CommonPool) {
                 logInfo("stayAwakeButton: onClick")
-                launch(UIThread) {
+                ui {
                     stayAwakeButton.setEnabled(false)
                 }
                 val stayAwake = (device as? XYFinderBluetoothDevice)?.stayAwake()
@@ -181,7 +181,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
                 } else {
                     showToast("Stay Awake Set")
                 }
-                launch(UIThread) {
+                ui {
                     stayAwakeButton.setEnabled(true)
                 }
             }
@@ -191,7 +191,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         fallAsleepButton.setOnClickListener {
             launch(CommonPool) {
                 logInfo("fallAsleepButton: onClick")
-                launch(UIThread) {
+                ui {
                     fallAsleepButton.setEnabled(false)
                 }
                 val fallAsleep = (device as? XYFinderBluetoothDevice)?.fallAsleep()
@@ -200,7 +200,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
                 } else {
                     showToast("Fall Asleep Set")
                 }
-                launch(UIThread) {
+                ui {
                     fallAsleepButton.setEnabled(true)
                 }
             }
@@ -210,7 +210,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         lockButton.setOnClickListener {
             logInfo("lockButton: onClick")
 
-            launch(UIThread) {
+            ui {
                 lockButton.setEnabled(false)
             }
             logInfo("primaryBuzzerButton: got xyDevice")
@@ -224,7 +224,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
                 } else {
                     showToast("Lock Error: ${locked.error}")
                 }
-                launch(UIThread) {
+                ui {
                     lockButton.setEnabled(true)
                 }
             }
@@ -234,7 +234,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         unlockButton.setOnClickListener(View.OnClickListener {
             logInfo("unlockButton: onClick")
 
-            launch(UIThread) {
+            ui {
                 unlockButton.setEnabled(false)
             }
             launch(CommonPool) {
@@ -247,7 +247,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
                 } else {
                     showToast("Unlock Error: ${unlocked.error}")
                 }
-                launch(UIThread) {
+                ui {
                     unlockButton.setEnabled(true)
                 }
             }
@@ -281,7 +281,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             if (xy4 != null) {
                 val stayAwake = xy4.primary.stayAwake.get().await()
                 logInfo("updateStayAwakeEnabledStates: $stayAwake")
-                launch(UIThread) {
+                ui {
                     val fallAsleepButton: XYButton = findViewById(R.id.fall_asleep)
                     val stayAwakeButton: XYButton = findViewById(R.id.stay_awake)
                     if (stayAwake.value != 0) {
@@ -321,7 +321,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
                 val lock = xy4.primary.lock.get().await()
 
                 logInfo("updateLock: ${lock}")
-                launch(UIThread) {
+                ui {
                     val lockEdit: EditText = findViewById(R.id.lock_value)
                     if (lock.error != null || lock.error != null) {
                         lockEdit.setText("----")
@@ -334,7 +334,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
     }
 
     fun update() {
-        launch(UIThread) {
+        ui {
             logInfo("update")
             if (device != null) {
                 val nameView : TextView = findViewById(R.id.family)

@@ -32,7 +32,7 @@ open class XYGpsBluetoothDevice(context: Context, scanResult: XYScanResult, hash
     val sensor = SensorService(this)
 
     init {
-        addGattListener("xy3", object: BluetoothGattCallback() {
+        addGattListener("xy3", object: XYBluetoothGattCallback() {
             override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
                 logInfo("onCharacteristicChanged")
                 super.onCharacteristicChanged(gatt, characteristic)

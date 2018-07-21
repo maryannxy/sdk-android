@@ -1,10 +1,11 @@
-package com.xyfindables.sdk
+package com.xyfindables.sdk.gatt
 
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothManager
+import android.bluetooth.*
 import android.content.Context
 import com.xyfindables.core.XYBase
+import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
+import kotlin.coroutines.experimental.suspendCoroutine
 
 open class XYBluetoothBase(context: Context) : XYBase() {
 

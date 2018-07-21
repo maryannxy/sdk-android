@@ -1,6 +1,5 @@
 package com.xyfindables.sdk.gatt
 
-import com.xyfindables.sdk.XYBluetoothBase
 import kotlinx.coroutines.experimental.*
 import kotlin.coroutines.experimental.CoroutineContext
 

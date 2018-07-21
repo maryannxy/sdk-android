@@ -7,6 +7,7 @@ import android.widget.BaseAdapter
 import com.xyfindables.sdk.devices.XYBluetoothDevice
 
 import com.xyfindables.sdk.scanner.XYFilteredSmartScan
+import com.xyfindables.ui.ui
 
 import java.util.ArrayList
 
@@ -20,17 +21,17 @@ class XYDeviceAdapter(private val activity: Activity) : BaseAdapter() {
 
     val smartScannerListener = object : XYFilteredSmartScan.Listener() {
         override fun entered(device: XYBluetoothDevice) {
-            activity.runOnUiThread(Thread(Runnable {
+            ui {
                 devices = scanner.devices.toList()
                 notifyDataSetChanged()
-            }))
+            }
         }
 
         override fun exited(device: XYBluetoothDevice) {
-            activity.runOnUiThread(Thread(Runnable {
+            ui {
                 devices = scanner.devices.toList()
                 notifyDataSetChanged()
-            }))
+            }
         }
     }
 

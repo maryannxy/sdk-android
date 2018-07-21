@@ -7,21 +7,9 @@ import android.bluetooth.BluetoothGattServerCallback
 import android.content.Context
 import android.os.Handler
 
-open class XYBluetoothServer(context: Context,
-                             device: BluetoothDevice?,
-                             autoConnect: Boolean,
-                             callback: BluetoothGattCallback?,
-                             transport: Int?,
-                             phy: Int?,
-                             handler: Handler?)
-    : XYBluetoothGatt(
-        context,
-        device,
-        autoConnect,
-        callback,
-        transport,
-        phy,
-        handler
+open class XYBluetoothServer(context: Context)
+    : XYBluetoothBase(
+        context
     ) {
 
     var gattServer: BluetoothGattServer? = null

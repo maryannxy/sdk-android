@@ -12,7 +12,7 @@ import kotlinx.coroutines.experimental.*
 import java.nio.ByteBuffer
 import java.util.*
 
-open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private val hash:Int) : XYBluetoothGatt(context, device, false, null, null, null, null) {
+open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private val hash:Int) : XYBluetoothGattClient(context, device, false, null, null, null, null) {
 
     //hash - the reason for the hash system is that some devices rotate MAC addresses or polymorph in other ways
     //the user generally wants to treat a single physical device as a single logical device so the
@@ -121,7 +121,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
                 }
             }
         }
-        asyncClose()
+        close()
     }
 
     fun onDetect() {
@@ -200,9 +200,9 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
             var error: XYBluetoothError? = null
             references++
 
-            if (connectGatt().await().error == null) {
-                if (asyncConnect().await().error == null) {
-                    val discovered = asyncDiscover().await()
+            if (connect().await().error == null) {
+                if (connect().await().error == null) {
+                    val discovered = discover().await()
                     error = discovered.error
                     if (error == null) {
                         val result = closure()
