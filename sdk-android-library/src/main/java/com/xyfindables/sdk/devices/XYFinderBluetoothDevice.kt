@@ -23,6 +23,17 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
         Webble
     }
 
+    enum class Proximity {
+        None,
+        OutOfRange,
+        VeryFar,
+        Far,
+        Medium,
+        Near,
+        VeryNear,
+        Touching
+    }
+
     override val id : String
         get() {
             return "$prefix:$uuid:$major.${minor.and(0xfff0).or(0x0004)}"
@@ -38,8 +49,44 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
             return prefixFromFamily(family)
         }
 
+    val proximity: Proximity
+        get() {
+
+            val distance = distance
+
+            if (distance < -1.0) {
+                return Proximity.OutOfRange
+            }
+            if (distance < 0.0) {
+                return Proximity.None
+            }
+            if (distance < 0.0173) {
+                return Proximity.Touching
+            }
+            if (distance < 1.0108) {
+                return Proximity.VeryNear
+            }
+            if (distance < 3.0639) {
+                return Proximity.Near
+            }
+            if (distance < 8.3779) {
+                return Proximity.Medium
+            }
+            return if (distance < 20.6086) {
+                Proximity.Far
+            } else Proximity.VeryFar
+        }
+
     //signal the user to where it is, usually make it beep
     open fun find() : Deferred<XYBluetoothResult<Int>> {
+        logException(UnsupportedOperationException(), true)
+        return asyncBle {
+            return@asyncBle XYBluetoothResult<Int>(XYBluetoothError("Not Implemented"))
+        }
+    }
+
+    //turn off finding, if supported
+    open fun stopFind() : Deferred<XYBluetoothResult<Int>> {
         logException(UnsupportedOperationException(), true)
         return asyncBle {
             return@asyncBle XYBluetoothResult<Int>(XYBluetoothError("Not Implemented"))

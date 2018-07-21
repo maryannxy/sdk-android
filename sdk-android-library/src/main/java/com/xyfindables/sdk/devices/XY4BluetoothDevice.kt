@@ -74,7 +74,7 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
         logInfo("reportButtonPressed")
         synchronized(listeners) {
             for (listener in listeners) {
-                val xy4Listener = listener.value.get() as? XY4BluetoothDevice.Listener
+                val xy4Listener = listener.value as? XY4BluetoothDevice.Listener
                 if (xy4Listener != null) {
                     launch(CommonPool) {
                         when (state) {

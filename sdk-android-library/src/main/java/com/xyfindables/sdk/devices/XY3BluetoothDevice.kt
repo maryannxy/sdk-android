@@ -80,7 +80,7 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
         logInfo("reportButtonPressed")
         synchronized(listeners) {
             for (listener in listeners) {
-                val xy3Listener = listener.value.get() as? XY3BluetoothDevice.Listener
+                val xy3Listener = listener.value as? XY3BluetoothDevice.Listener
                 if (xy3Listener != null) {
                     launch(CommonPool) {
                         when (state) {

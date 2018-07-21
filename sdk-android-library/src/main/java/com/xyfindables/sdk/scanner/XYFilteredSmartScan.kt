@@ -1,16 +1,12 @@
 package com.xyfindables.sdk.scanner
 
-import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.location.LocationManager
-import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.XYBluetoothBase
 import com.xyfindables.sdk.devices.XYBluetoothDevice
 import com.xyfindables.sdk.devices.XYMobileBluetoothDevice
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.newFixedThreadPoolContext
-import java.lang.ref.WeakReference
 import java.util.HashMap
 
 abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
@@ -97,7 +93,7 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
         return locationManager?.isProviderEnabled(LocationManager.GPS_PROVIDER) ?: false
     }
 
-    private val listeners = HashMap<String, WeakReference<Listener>>()
+    private val listeners = HashMap<String, Listener>()
 
     open class Listener : XYBluetoothDevice.Listener() {
         open fun statusChanged(status: BluetoothStatus) {
@@ -142,7 +138,7 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
         logInfo("addListener")
         launch(CommonPool){
             synchronized(listeners) {
-                listeners.put(key, WeakReference(listener))
+                listeners.put(key, listener)
             }
         }
     }
@@ -194,11 +190,8 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
         logInfo("reportEntered")
         synchronized(listeners) {
             for ((_, listener) in listeners) {
-                val innerListener = listener.get()
-                if (innerListener != null) {
-                    launch(CommonPool) {
-                        innerListener.entered(device)
-                    }
+                launch(CommonPool) {
+                    listener.entered(device)
                 }
             }
         }
@@ -208,11 +201,8 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
         logInfo("reportExited")
         synchronized(listeners) {
             for ((_, listener) in listeners) {
-                val innerListener = listener.get()
-                if (innerListener != null) {
-                    launch(CommonPool) {
-                        innerListener.exited(device)
-                    }
+                launch(CommonPool) {
+                    listener.exited(device)
                 }
             }
         }
@@ -222,11 +212,8 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
         //logInfo("reportDetected")
         synchronized(listeners) {
             for ((_, listener) in listeners) {
-                val innerListener = listener.get()
-                if (innerListener != null) {
-                    launch(CommonPool) {
-                        innerListener.detected(device)
-                    }
+                launch(CommonPool) {
+                    listener.detected(device)
                 }
             }
         }

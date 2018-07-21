@@ -9,7 +9,6 @@ import com.xyfindables.sdk.gatt.*
 import com.xyfindables.sdk.scanner.XYScanRecord
 import com.xyfindables.sdk.scanner.XYScanResult
 import kotlinx.coroutines.experimental.*
-import java.lang.ref.WeakReference
 import java.nio.ByteBuffer
 import java.util.*
 
@@ -20,7 +19,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
     //hash that is passed in to create the class is used to make sure that the reuse of existing instances
     //is done based on device specific logic on "sameness"
 
-    protected val listeners = HashMap<String, WeakReference<Listener>>()
+    protected val listeners = HashMap<String, Listener>()
     val ads = HashMap<Int, XYBleAd>()
 
     var rssi = OUTOFRANGE_RSSI
@@ -104,11 +103,8 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         lastAdTime = now
         synchronized(listeners) {
             for ((_, listener) in listeners) {
-                val innerListener = listener.get()
-                if (innerListener != null) {
-                    launch (CommonPool) {
-                        innerListener.entered(this@XYBluetoothDevice)
-                    }
+                launch (CommonPool) {
+                    listener.entered(this@XYBluetoothDevice)
                 }
             }
         }
@@ -120,11 +116,8 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         exitCount++
         synchronized(listeners) {
             for ((_, listener) in listeners) {
-                val innerListener = listener.get()
-                if (innerListener != null) {
-                    launch(CommonPool) {
-                        innerListener.exited(this@XYBluetoothDevice)
-                    }
+                launch(CommonPool) {
+                    listener.exited(this@XYBluetoothDevice)
                 }
             }
         }
@@ -136,11 +129,8 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         lastAdTime = now
         synchronized(listeners) {
             for ((_, listener) in listeners) {
-                val innerListener = listener.get()
-                if (innerListener != null) {
-                    launch(CommonPool) {
-                        innerListener.detected(this@XYBluetoothDevice)
-                    }
+                launch(CommonPool) {
+                    listener.detected(this@XYBluetoothDevice)
                 }
             }
         }
@@ -150,13 +140,10 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         logInfo("onConnectionStateChange: $hash : $newState")
         synchronized(listeners) {
             for ((_, listener) in listeners) {
-                val innerListener = listener.get()
-                if (innerListener != null) {
-                    launch(CommonPool) {
-                        innerListener.connectionStateChanged(this@XYBluetoothDevice, newState)
-                        if (newState == BluetoothGatt.STATE_CONNECTED) {
-                            lastAccessTime = now
-                        }
+                launch(CommonPool) {
+                    listener.connectionStateChanged(this@XYBluetoothDevice, newState)
+                    if (newState == BluetoothGatt.STATE_CONNECTED) {
+                        lastAccessTime = now
                     }
                 }
             }
@@ -190,7 +177,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         launch(CommonPool){
             logInfo("addListener")
             synchronized(listeners) {
-                listeners.put(key, WeakReference(listener))
+                listeners.put(key, listener)
             }
         }
     }

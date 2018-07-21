@@ -5,12 +5,9 @@ import android.bluetooth.*
 import android.content.Context
 import android.os.Build
 import android.os.Handler
-import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.CallByVersion
 import com.xyfindables.sdk.XYBluetoothBase
-import com.xyfindables.sdk.scanner.XYFilteredSmartScan
 import kotlinx.coroutines.experimental.*
-import java.lang.ref.WeakReference
 import java.util.*
 import kotlin.collections.HashMap
 import kotlin.coroutines.experimental.suspendCoroutine
@@ -54,7 +51,7 @@ open class XYBluetoothGatt protected constructor(
         this.device = device
     }
 
-    protected val connectionState : Int?
+    val connectionState : Int?
         get() = bluetoothManager?.getConnectionState(device, BluetoothProfile.GATT)
 
     val closed: Boolean
