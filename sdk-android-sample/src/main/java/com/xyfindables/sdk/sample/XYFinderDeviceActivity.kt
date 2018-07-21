@@ -7,6 +7,7 @@ import android.widget.TextView
 import com.xyfindables.core.guard
 import com.xyfindables.sdk.*
 import com.xyfindables.sdk.devices.*
+import com.xyfindables.sdk.gatt.XYBluetoothResult
 
 import com.xyfindables.ui.views.XYButton
 import com.xyfindables.ui.views.XYTextView
@@ -372,7 +373,24 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
     }
 
     private fun testXy4() {
-
+        logInfo("textXy4")
+        launch{
+            val xy4 = device as? XY4BluetoothDevice
+            if (xy4 != null) {
+               xy4.connection {
+                   for (i in 0..10000) {
+                       val text = "Hello+$i"
+                       val write = xy4.primary.lock.set(XY4BluetoothDevice.DEFAULT_LOCK_CODE).await()
+                       if (write.error == null) {
+                           logInfo("testXy4: Success: $text")
+                       } else {
+                           logInfo("testXy4: Fail: $text : ${write.error}")
+                       }
+                   }
+                   return@connection XYBluetoothResult(true)
+               }
+            }
+        }
     }
 
     private fun testXy3() {
