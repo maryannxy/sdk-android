@@ -7,7 +7,7 @@ import android.bluetooth.BluetoothGattServerCallback
 import android.content.Context
 import android.os.Handler
 
-open class XYBluetoothServer(context: Context)
+open class XYBluetoothGattServer(context: Context)
     : XYBluetoothBase(
         context
     ) {
