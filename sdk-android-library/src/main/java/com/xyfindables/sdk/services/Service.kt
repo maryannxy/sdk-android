@@ -11,7 +11,7 @@ abstract class Service(val device: XYBluetoothDevice) : XYBase() {
 
     abstract val serviceUuid : UUID
 
-    open class Characteristic(val service: Service, val uuid:UUID) {
+    open class Characteristic(val service: Service, val uuid:UUID) : XYBase() {
         fun enableNotify(enable: Boolean) : Deferred<XYBluetoothResult<Boolean>> {
             return service.enableNotify(uuid, enable)
         }
@@ -24,6 +24,7 @@ abstract class Service(val device: XYBluetoothDevice) : XYBase() {
         }
 
         fun set(value: Int) : Deferred<XYBluetoothResult<Int>> {
+            logInfo("IntegerCharacteristic: Set")
             return service.writeInt(uuid, value, formatType, offset)
         }
     }
@@ -73,7 +74,8 @@ abstract class Service(val device: XYBluetoothDevice) : XYBase() {
 
     private fun writeInt(characteristic: UUID, value: Int, formatType: Int = BluetoothGattCharacteristic.FORMAT_UINT8, offset:Int = 0): Deferred<XYBluetoothResult<Int>> {
         return device.connection {
-            return@connection device.asyncFindAndWriteCharacteristic(
+            logInfo("writeInt: connection")
+            return@connection device.findAndWriteCharacteristic(
                     serviceUuid,
                     characteristic,
                     value,
@@ -96,7 +98,7 @@ abstract class Service(val device: XYBluetoothDevice) : XYBase() {
 
     private fun writeFloat(characteristic: UUID, mantissa: Int, exponent: Int, formatType: Int = BluetoothGattCharacteristic.FORMAT_FLOAT, offset:Int = 0): Deferred<XYBluetoothResult<ByteArray>> {
         return device.connection {
-            return@connection device.asyncFindAndWriteCharacteristicFloat(
+            return@connection device.findAndWriteCharacteristicFloat(
                     serviceUuid,
                     characteristic,
                     mantissa,
@@ -119,7 +121,7 @@ abstract class Service(val device: XYBluetoothDevice) : XYBase() {
 
     private fun writeString(characteristic: UUID, value: String): Deferred<XYBluetoothResult<String>> {
         return device.connection {
-            return@connection  device.asyncFindAndWriteCharacteristic(
+            return@connection  device.findAndWriteCharacteristic(
                     serviceUuid,
                     characteristic,
                     value
@@ -129,7 +131,7 @@ abstract class Service(val device: XYBluetoothDevice) : XYBase() {
 
     private fun enableNotify(characteristic: UUID, enabled: Boolean): Deferred<XYBluetoothResult<Boolean>> {
         return device.connection {
-            return@connection device.asyncFindAndWriteCharacteristicNotify(
+            return@connection device.findAndWriteCharacteristicNotify(
                     serviceUuid,
                     characteristic,
                     enabled
@@ -148,7 +150,7 @@ abstract class Service(val device: XYBluetoothDevice) : XYBase() {
 
     private fun writeBytes(characteristic: UUID, bytes: ByteArray): Deferred<XYBluetoothResult<ByteArray>> {
         return device.connection {
-            return@connection device.asyncFindAndWriteCharacteristic(
+            return@connection device.findAndWriteCharacteristic(
                     serviceUuid,
                     characteristic,
                     bytes
