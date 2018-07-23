@@ -22,8 +22,6 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
     protected val listeners = HashMap<String, Listener>()
     val ads = HashMap<Int, XYBleAd>()
 
-    var rssi = OUTOFRANGE_RSSI
-
     var detectCount = 0
     var enterCount = 0
     var exitCount = 0
@@ -124,7 +122,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         close()
     }
 
-    fun onDetect() {
+    override fun onDetect() {
         detectCount++
         lastAdTime = now
         synchronized(listeners) {
@@ -200,9 +198,6 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
     }
 
     companion object : XYCreator() {
-
-        //the value we set the rssi to when we go out of range
-        const val OUTOFRANGE_RSSI = -999
 
         //the period of time to wait for marking something as out of range
         //if we have not gotten any ads or been connected to it

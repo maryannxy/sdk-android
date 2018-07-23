@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import com.xyfindables.sdk.CallByVersion
+import com.xyfindables.sdk.devices.XYBluetoothDevice
 import kotlinx.coroutines.experimental.*
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -31,6 +32,8 @@ open class XYBluetoothGatt protected constructor(
 
     //last time we heard a ad from this device
     var lastAdTime = 0L
+
+    var rssi = OUTOFRANGE_RSSI
 
     open class XYBluetoothGattCallback : BluetoothGattCallback() {
 
@@ -86,6 +89,10 @@ open class XYBluetoothGatt protected constructor(
         synchronized(gattListeners) {
             gattListeners.remove(key)
         }
+    }
+
+    open fun onDetect() {
+
     }
 
     fun connectGatt() : Deferred<XYBluetoothResult<Boolean>> {
@@ -666,6 +673,8 @@ open class XYBluetoothGatt protected constructor(
         override fun onReadRemoteRssi(gatt: BluetoothGatt?, rssi: Int, status: Int) {
             super.onReadRemoteRssi(gatt, rssi, status)
             logInfo("onReadRemoteRssi: $rssi : $status")
+            this@XYBluetoothGatt.rssi = rssi
+            onDetect()
             synchronized(gattListeners) {
                 for((_, listener) in gattListeners) {
                     launch(CommonPool) {
@@ -716,6 +725,9 @@ open class XYBluetoothGatt protected constructor(
 
                     delay(CLEANUP_DELAY)
 
+                    //this initiates a fake pulse
+                    gatt?.readRemoteRssi()
+
                     //the goal is to close the connection if the ref count is
                     //down to zero.  We have to check the lastAccess to make sure the delay is after
                     //the last guy, not an earlier one
@@ -735,5 +747,8 @@ open class XYBluetoothGatt protected constructor(
     companion object {
         //gap after last connection that we wait to close the connection
         private const val CLEANUP_DELAY = 5000
+
+        //the value we set the rssi to when we go out of range
+        const val OUTOFRANGE_RSSI = -999
     }
 }

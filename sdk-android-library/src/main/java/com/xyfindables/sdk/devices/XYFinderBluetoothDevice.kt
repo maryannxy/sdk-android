@@ -145,9 +145,11 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
         }
     }
 
-    open val distance : Float
+    open val distance : Double
         get() {
-            return rssi.toFloat()
+            val a = power - rssi
+            val b = a / (10.0f * 2.0f)
+            return Math.pow(10.0, b.toDouble());
         }
 
     open class Listener : XYIBeaconBluetoothDevice.Listener() {

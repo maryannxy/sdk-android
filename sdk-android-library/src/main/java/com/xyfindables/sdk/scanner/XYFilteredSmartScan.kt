@@ -7,6 +7,7 @@ import android.location.LocationManager
 import com.xyfindables.sdk.gatt.XYBluetoothBase
 import com.xyfindables.sdk.devices.XYBluetoothDevice
 import com.xyfindables.sdk.devices.XYMobileBluetoothDevice
+import com.xyfindables.sdk.gatt.XYBluetoothGatt
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
 import java.util.HashMap
@@ -171,7 +172,7 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
     }
 
     private var handleDeviceNotifyExit = fun(device: XYBluetoothDevice) {
-        device.rssi = XYBluetoothDevice.OUTOFRANGE_RSSI
+        device.rssi = XYBluetoothGatt.OUTOFRANGE_RSSI
         devices.remove(device.hashCode())
         reportExited(device)
     }
@@ -190,7 +191,7 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
                     if (scanResult.scanRecord != null) {
                         device.updateAds(scanResult.scanRecord!!)
                     }
-                    if (device.rssi == XYBluetoothDevice.OUTOFRANGE_RSSI) {
+                    if (device.rssi == XYBluetoothGatt.OUTOFRANGE_RSSI) {
                         reportEntered(device)
                         device.onEnter()
                         device.notifyExit = handleDeviceNotifyExit
