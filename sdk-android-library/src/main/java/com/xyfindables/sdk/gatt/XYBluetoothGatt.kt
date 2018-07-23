@@ -6,11 +6,9 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import com.xyfindables.sdk.CallByVersion
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.*
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.experimental.suspendCoroutine
 
 //XYBluetoothGatt is a pure wrapper that does not add any functionality
@@ -28,6 +26,12 @@ open class XYBluetoothGatt protected constructor(
 
     protected var references = 0
 
+    //last time this device was accessed (connected to)
+    var lastAccessTime = 0L
+
+    //last time we heard a ad from this device
+    var lastAdTime = 0L
+
     open class XYBluetoothGattCallback : BluetoothGattCallback() {
 
     }
@@ -40,14 +44,28 @@ open class XYBluetoothGatt protected constructor(
         Disconnecting(BluetoothGatt.STATE_DISCONNECTING)
     }
 
+    var _connectionState = bluetoothManager?.getConnectionState(device, BluetoothProfile.GATT)
     val connectionState : ConnectionState
         get() {
-            when (bluetoothManager?.getConnectionState(device, BluetoothProfile.GATT)) {
+            when (_connectionState) {
                 BluetoothGatt.STATE_DISCONNECTED -> return ConnectionState.Disconnected
                 BluetoothGatt.STATE_CONNECTING -> return ConnectionState.Connecting
                 BluetoothGatt.STATE_CONNECTED -> return ConnectionState.Connected
                 BluetoothGatt.STATE_DISCONNECTING -> return ConnectionState.Disconnecting
                 else -> return ConnectionState.Unknown
+            }
+        }
+
+    protected var _stayConnected = false
+
+    var stayConnected : Boolean
+        get() {
+            return _stayConnected
+        }
+        set(value) {
+            _stayConnected = value
+            if (!_stayConnected) {
+                cleanUpIfNeeded()
             }
         }
 
@@ -59,14 +77,12 @@ open class XYBluetoothGatt protected constructor(
     private val gattListeners = HashMap<String, XYBluetoothGattCallback>()
 
     fun addGattListener(key: String, listener: XYBluetoothGattCallback) {
-        logInfo("addGattListener: $key")
         synchronized(gattListeners) {
             gattListeners[key] = listener
         }
     }
 
     fun removeGattListener(key: String) {
-        logInfo("removeGattListener: $key")
         synchronized(gattListeners) {
             gattListeners.remove(key)
         }
@@ -102,6 +118,7 @@ open class XYBluetoothGatt protected constructor(
                     if (gatt == null) {
                         error = XYBluetoothError("connectGatt: Failed to get gatt")
                     }
+                    cleanUpIfNeeded()
                 } else {
                     value = true
                 }
@@ -123,6 +140,8 @@ open class XYBluetoothGatt protected constructor(
             } else {
                 val listenerName = "connect$nowNano"
                 value = suspendCoroutine { cont ->
+                    var resumed = false
+                    logInfo("connect: suspendCoroutine")
                     val listener = object : XYBluetoothGattCallback() {
                         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
                             super.onConnectionStateChange(gatt, status, newState)
@@ -130,17 +149,21 @@ open class XYBluetoothGatt protected constructor(
                                 logInfo("connect:failure: $status : $newState")
                                 error = XYBluetoothError("connect: connection failed(status): $status : $newState")
                                 removeGattListener(listenerName)
+                                resumed = true
                                 cont.resume(null)
                             } else if (newState == BluetoothGatt.STATE_CONNECTED) {
                                 logInfo("connect:connected")
                                 removeGattListener(listenerName)
+                                resumed = true
                                 cont.resume(true)
                             } else if (newState == BluetoothGatt.STATE_CONNECTING) {
                                 logInfo("connect:connecting")
                                 //wait some more
                             } else {
-                                //error = XYBluetoothError("asyncConnect: connection failed(state): $status : $newState")
-                                //cont.resume(null)
+                                error = XYBluetoothError("asyncConnect: connection failed(state): $status : $newState")
+                                removeGattListener(listenerName)
+                                resumed = true
+                                cont.resume(null)
                             }
                         }
                     }
@@ -149,14 +172,35 @@ open class XYBluetoothGatt protected constructor(
                     if (connectionState == ConnectionState.Connected) {
                         logInfo("asyncConnect:already connected")
                         removeGattListener(listenerName)
+                        resumed = true
                         cont.resume(true)
                     } else if (connectionState == ConnectionState.Connecting) {
                         logInfo("connect:connecting")
                         //dont call connect since already in progress
                     } else if (!gatt.connect()) {
+                        logInfo("connect: failed to start connect")
                         error = XYBluetoothError("connect: gatt.readCharacteristic failed to start")
                         removeGattListener(listenerName)
+                        resumed = true
                         cont.resume(null)
+                    } else {
+                        launch(CommonPool)  {
+                            try {
+                                withTimeout(15, TimeUnit.SECONDS) {
+                                    while (!resumed) {
+                                        delay(500)
+                                        logInfo("connect: waiting...")
+                                    }
+                                }
+                            } catch (ex: TimeoutCancellationException) {
+                                if (!resumed) {
+                                    logInfo("connect:timeout - cancelling")
+                                    removeGattListener(listenerName)
+                                    close()
+                                    cont.resume(null)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -546,6 +590,7 @@ open class XYBluetoothGatt protected constructor(
             super.onConnectionStateChange(gatt, status, newState)
             logInfo("onConnectionStateChange: ${gatt?.device?.address} $newState : $status")
             synchronized(gattListeners) {
+                _connectionState = newState
                 for ((_, listener) in gattListeners) {
                     launch(CommonPool) {
                         listener.onConnectionStateChange(gatt, status, newState)
@@ -653,5 +698,42 @@ open class XYBluetoothGatt protected constructor(
                 }
             }
         }
+    }
+
+    private var cleanUpThread : Job? = null
+
+    //the goal is to leave connections hanging for a little bit in the case
+    //that they need to be reestablished in short notice
+    private fun cleanUpIfNeeded() {
+        if (cleanUpThread == null) {
+            cleanUpThread = launch(CommonPool) {
+                logInfo("cleanUpIfNeeded")
+
+                while (!closed) {
+                    //if the global and local last connection times do not match
+                    //after the delay, that means a newer connection is now responsible for closing it
+                    val localAccessTime = now
+
+                    delay(CLEANUP_DELAY)
+
+                    //the goal is to close the connection if the ref count is
+                    //down to zero.  We have to check the lastAccess to make sure the delay is after
+                    //the last guy, not an earlier one
+
+                    logInfo("cleanUpIfNeeded: Checking")
+
+                    if (!stayConnected && !closed && references == 0 && lastAccessTime == localAccessTime) {
+                        logInfo("cleanUpIfNeeded: Cleaning")
+                        close().await()
+                    }
+                }
+                cleanUpThread = null
+            }
+        }
+    }
+
+    companion object {
+        //gap after last connection that we wait to close the connection
+        private const val CLEANUP_DELAY = 5000
     }
 }

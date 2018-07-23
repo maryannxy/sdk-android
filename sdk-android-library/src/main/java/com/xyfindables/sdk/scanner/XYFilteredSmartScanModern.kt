@@ -50,7 +50,7 @@ class XYFilteredSmartScanModern(context: Context) : XYFilteredSmartScan(context)
 
         override fun onScanFailed(errorCode: Int) {
             super.onScanFailed(errorCode)
-            logError("onScanFailed: $errorCode", false)
+            logError("onScanFailed: ${codeToScanFailed(errorCode)}", false)
         }
 
         override fun onScanResult(callbackType: Int, result: ScanResult?) {

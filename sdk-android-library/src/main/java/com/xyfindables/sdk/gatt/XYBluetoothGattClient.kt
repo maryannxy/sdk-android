@@ -17,27 +17,9 @@ open class XYBluetoothGattClient protected constructor(
         handler: Handler?
 ) : XYBluetoothGatt(context, device, autoConnect, callback, transport, phy, handler) {
 
-    protected var _stayConnected = false
-
-    var stayConnected : Boolean
-        get() {
-            return _stayConnected
-        }
-        set(value) {
-            _stayConnected = value
-            if (!_stayConnected) {
-                cleanUpIfNeeded()
-            }
-        }
-
-    //last time this device was accessed (connected to)
-    var lastAccessTime = 0L
-
-    //last time we heard a ad from this device
-    var lastAdTime = 0L
-
     fun updateBluetoothDevice(device: BluetoothDevice?) {
         this.device = device
+        lastAdTime = now
     }
 
     fun readCharacteristicInt(characteristicToRead: BluetoothGattCharacteristic, formatType:Int, offset:Int) : Deferred<XYBluetoothResult<Int>>{
@@ -308,37 +290,5 @@ open class XYBluetoothGattClient protected constructor(
 
             return@asyncBle XYBluetoothResult(value, error)
         }
-    }
-
-    //the goal is to leave connections hanging for a little bit in the case
-    //that they need to be reestablished in short notice
-    private fun cleanUpIfNeeded() {
-        launch(CommonPool) {
-            logInfo("cleanUpIfNeeded")
-
-            while(!closed) {
-                //if the global and local last connection times do not match
-                //after the delay, that means a newer connection is now responsible for closing it
-                val localAccessTime = now
-
-                delay(CLEANUP_DELAY)
-
-                //the goal is to close the connection if the ref count is
-                //down to zero.  We have to check the lastAccess to make sure the delay is after
-                //the last guy, not an earlier one
-
-                logInfo("cleanUpIfNeeded: Checking")
-
-                if (!stayConnected && !closed && references == 0 && lastAccessTime == localAccessTime) {
-                    logInfo("cleanUpIfNeeded: Cleaning")
-                    close().await()
-                }
-            }
-        }
-    }
-
-    companion object {
-        //gap after last connection that we wait to close the connection
-        private const val CLEANUP_DELAY = 5000
     }
 }

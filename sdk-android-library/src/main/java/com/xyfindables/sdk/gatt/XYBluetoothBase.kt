@@ -9,8 +9,14 @@ import kotlin.coroutines.experimental.suspendCoroutine
 
 open class XYBluetoothBase(context: Context) : XYBase() {
 
+    //we store this since on initial creation, the applicationContext may not yet be available
+    private val _context = context
+
     //we want to use the application context for everything
-    protected val context = context.applicationContext
+    protected val context : Context
+        get() {
+            return _context.applicationContext
+        }
 
     protected val bluetoothManager : BluetoothManager?
         get() {

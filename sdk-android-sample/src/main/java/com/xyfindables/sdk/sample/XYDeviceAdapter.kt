@@ -4,7 +4,9 @@ import android.app.Activity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.devices.XYBluetoothDevice
+import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
 
 import com.xyfindables.sdk.scanner.XYFilteredSmartScan
 import com.xyfindables.ui.ui
@@ -12,7 +14,8 @@ import com.xyfindables.ui.ui
 import java.util.ArrayList
 
 class XYDeviceAdapter(private val activity: Activity) : BaseAdapter() {
-    private var devices: List<Pair<Int, XYBluetoothDevice>>
+    private var devices: List<XYFinderBluetoothDevice>
+    private var lastSort = System.currentTimeMillis()
 
     val scanner : XYFilteredSmartScan
         get() {
@@ -21,17 +24,23 @@ class XYDeviceAdapter(private val activity: Activity) : BaseAdapter() {
 
     val smartScannerListener = object : XYFilteredSmartScan.Listener() {
         override fun entered(device: XYBluetoothDevice) {
-            ui {
-                devices = scanner.devices.toList()
-                notifyDataSetChanged()
-            }
+            refreshDevices()
         }
 
         override fun exited(device: XYBluetoothDevice) {
-            ui {
-                devices = scanner.devices.toList()
-                notifyDataSetChanged()
-            }
+            refreshDevices()
+        }
+
+        override fun detected(device: XYBluetoothDevice) {
+            refreshDevices()
+        }
+    }
+
+    fun refreshDevices() {
+        if (System.currentTimeMillis() -  lastSort < 5000) {
+            devices = XYFinderBluetoothDevice.sortedList(scanner.devices)
+            ui { notifyDataSetChanged() }
+            lastSort = System.currentTimeMillis()
         }
     }
 
@@ -45,11 +54,11 @@ class XYDeviceAdapter(private val activity: Activity) : BaseAdapter() {
     }
 
     override fun getItem(position: Int): Any {
-        return devices[position].second
+        return devices[position]
     }
 
     override fun getItemId(position: Int): Long {
-        return devices[position].second.address.hashCode().toLong()
+        return devices[position].address.hashCode().toLong()
     }
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {

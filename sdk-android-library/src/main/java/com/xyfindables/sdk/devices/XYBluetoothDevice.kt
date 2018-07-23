@@ -175,7 +175,6 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
 
     fun addListener(key: String, listener: Listener) {
         launch(CommonPool){
-            logInfo("addListener")
             synchronized(listeners) {
                 listeners.put(key, listener)
             }
@@ -184,7 +183,6 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
 
     fun removeListener(key: String) {
         launch(CommonPool){
-            logInfo("removeListener")
             synchronized(listeners) {
                 listeners.remove(key)
             }

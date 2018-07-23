@@ -9,7 +9,7 @@ import kotlinx.coroutines.experimental.Deferred
 import java.nio.ByteBuffer
 import java.util.*
 
-open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, hash: Int) : XYIBeaconBluetoothDevice(context, scanResult, hash) {
+open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, hash: Int) : XYIBeaconBluetoothDevice(context, scanResult, hash), Comparable<XYFinderBluetoothDevice> {
 
     enum class Family {
         Unknown,
@@ -32,6 +32,16 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
         Near,
         VeryNear,
         Touching
+    }
+
+    override fun compareTo(other: XYFinderBluetoothDevice): Int {
+        if (distance == other.distance) {
+            return 0
+        } else if (distance > other.distance) {
+            return 1
+        } else {
+            return -1
+        }
     }
 
     override val id : String
@@ -137,7 +147,7 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
 
     open val distance : Float
         get() {
-            return 0.0f
+            return rssi.toFloat()
         }
 
     open class Listener : XYIBeaconBluetoothDevice.Listener() {
@@ -240,6 +250,29 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
 
         fun hashFromScanResult(scanResult: XYScanResult): Int? {
             return XYIBeaconBluetoothDevice.hashFromScanResult(scanResult)
+        }
+
+        val compareDistance = object : kotlin.Comparator<XYFinderBluetoothDevice> {
+            override fun compare(o1: XYFinderBluetoothDevice?, o2: XYFinderBluetoothDevice?): Int {
+                if (o1 == null && o2 == null) return 0
+                if (o1 != null && o2 == null) return -1
+                if (o1 == null && o2 != null) return 1
+
+                if (o1!!.distance == o2!!.distance) return 0
+                if (o1.distance > o2.distance) return -1
+                return 1
+            }
+        }
+
+        fun sortedList(devices: HashMap<Int, XYBluetoothDevice>) : List<XYFinderBluetoothDevice> {
+            val result = ArrayList<XYFinderBluetoothDevice>()
+            for ((_, device) in devices) {
+                val deviceToAdd = device as? XYFinderBluetoothDevice
+                if (deviceToAdd != null) {
+                    result.add(deviceToAdd)
+                }
+            }
+            return result.sortedWith(compareDistance)
         }
     }
 }

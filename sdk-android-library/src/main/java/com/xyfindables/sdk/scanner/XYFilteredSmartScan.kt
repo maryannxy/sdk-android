@@ -1,5 +1,7 @@
 package com.xyfindables.sdk.scanner
 
+import android.bluetooth.le.BluetoothLeScanner
+import android.bluetooth.le.ScanCallback
 import android.content.Context
 import android.location.LocationManager
 import com.xyfindables.sdk.gatt.XYBluetoothBase
@@ -114,6 +116,24 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
         LocationDisabled
     }
 
+    enum class ScanFailed {
+        Unknown,
+        AlreadyStarted,
+        ApplicationRegistrationFailed,
+        FeatureUnsupported,
+        InternalError
+    }
+
+    fun codeToScanFailed(code: Int) : ScanFailed {
+        return when(code) {
+            ScanCallback.SCAN_FAILED_ALREADY_STARTED -> ScanFailed.AlreadyStarted
+            ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED -> ScanFailed.ApplicationRegistrationFailed
+            ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED -> ScanFailed.FeatureUnsupported
+            ScanCallback.SCAN_FAILED_INTERNAL_ERROR -> ScanFailed.InternalError
+            else -> ScanFailed.Unknown
+        }
+    }
+
     private var _background = false
     var background: Boolean
         get() {
@@ -135,7 +155,6 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
     }
 
     fun addListener(key: String, listener: Listener) {
-        logInfo("addListener")
         launch(CommonPool){
             synchronized(listeners) {
                 listeners.put(key, listener)
@@ -144,7 +163,6 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
     }
 
     fun removeListener(key: String) {
-        logInfo("removeListener")
         launch(CommonPool){
             synchronized(listeners) {
                 listeners.remove(key)
