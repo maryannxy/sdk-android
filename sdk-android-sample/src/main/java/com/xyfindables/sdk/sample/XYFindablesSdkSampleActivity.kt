@@ -4,11 +4,8 @@ import android.os.Bundle
 import android.widget.BaseAdapter
 import android.widget.ListView
 
-import com.crashlytics.android.Crashlytics
 import com.xyfindables.core.XYBase
 import com.xyfindables.core.XYPermissions
-
-import io.fabric.sdk.android.Fabric
 
 class XYFindablesSdkSampleActivity : XYAppBaseActivity() {
     private var adapter: BaseAdapter? = null
@@ -17,8 +14,6 @@ class XYFindablesSdkSampleActivity : XYAppBaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         logInfo("onCreate")
         super.onCreate(savedInstanceState)
-        val crashlytics = Crashlytics()
-        Fabric.with(this, crashlytics, Crashlytics())
         XYBase.init(this)
         setContentView(R.layout.activity_xyfindables_sdk_sample)
         listView = findViewById(R.id.listview)
