@@ -257,12 +257,12 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
         val compareDistance = object : kotlin.Comparator<XYFinderBluetoothDevice> {
             override fun compare(o1: XYFinderBluetoothDevice?, o2: XYFinderBluetoothDevice?): Int {
                 if (o1 == null && o2 == null) return 0
-                if (o1 != null && o2 == null) return -1
-                if (o1 == null && o2 != null) return 1
+                if (o1 != null && o2 == null) return 1
+                if (o1 == null && o2 != null) return -1
 
                 if (o1!!.distance == o2!!.distance) return 0
-                if (o1.distance > o2.distance) return -1
-                return 1
+                if (o1.distance > o2.distance) return 1
+                return -1
             }
         }
 

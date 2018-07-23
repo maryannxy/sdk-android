@@ -167,7 +167,7 @@ open class XYBluetoothGatt protected constructor(
                                 logInfo("connect:connecting")
                                 //wait some more
                             } else {
-                                error = XYBluetoothError("asyncConnect: connection failed(state): $status : $newState")
+                                error = XYBluetoothError("connect: connection failed(state): $status : $newState")
                                 removeGattListener(listenerName)
                                 resumed = true
                                 cont.resume(null)
@@ -191,17 +191,19 @@ open class XYBluetoothGatt protected constructor(
                         resumed = true
                         cont.resume(null)
                     } else {
+                        lastAccessTime = now
                         launch(CommonPool)  {
                             try {
                                 withTimeout(15, TimeUnit.SECONDS) {
                                     while (!resumed) {
                                         delay(500)
+                                        lastAccessTime = now //prevent cleanup for cleaningup before the timeout
                                         logInfo("connect: waiting...")
                                     }
                                 }
                             } catch (ex: TimeoutCancellationException) {
                                 if (!resumed) {
-                                    logInfo("connect:timeout - cancelling")
+                                    logInfo("connect: timeout - cancelling")
                                     removeGattListener(listenerName)
                                     close()
                                     cont.resume(null)

@@ -37,7 +37,7 @@ class XYDeviceAdapter(private val activity: Activity) : BaseAdapter() {
     }
 
     fun refreshDevices() {
-        if (System.currentTimeMillis() -  lastSort < 5000) {
+        if ((System.currentTimeMillis() -  lastSort) > 5000) {
             devices = XYFinderBluetoothDevice.sortedList(scanner.devices)
             ui { notifyDataSetChanged() }
             lastSort = System.currentTimeMillis()
