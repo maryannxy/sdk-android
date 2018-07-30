@@ -6,9 +6,7 @@ import android.widget.EditText
 import android.widget.TextView
 import com.xyfindables.sdk.devices.*
 import com.xyfindables.sdk.gatt.XYBluetoothResult
-import com.xyfindables.ui.UIThread
 import com.xyfindables.ui.ui
-
 import com.xyfindables.ui.views.XYButton
 import com.xyfindables.ui.views.XYTextView
 import kotlinx.coroutines.experimental.CommonPool
@@ -27,7 +25,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val intent = getIntent()
+        val intent = intent
         val deviceHash = intent.getIntExtra(XYFinderDeviceActivity.EXTRA_DEVICEHASH, 0)
         logInfo("onCreate: $deviceHash")
         device = scanner.devices[deviceHash]
@@ -36,6 +34,11 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             finish()
         }
         setContentView(R.layout.device_activity)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        device!!.removeListener(TAG)
     }
 
     fun updateAdList() {
@@ -142,13 +145,13 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         beepButton.setOnClickListener {
             logInfo("beepButton: onClick")
             ui {
-                beepButton.setEnabled(false)
+                beepButton.isEnabled = false
             }
             logInfo("beepButton: got xyDevice")
             launch(CommonPool) {
                 (device as? XYFinderBluetoothDevice)?.find()?.await()
                 ui {
-                    beepButton.setEnabled(true)
+                    beepButton.isEnabled = true
                 }
             }
         }
@@ -173,7 +176,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             launch(CommonPool) {
                 logInfo("stayAwakeButton: onClick")
                 ui {
-                    stayAwakeButton.setEnabled(false)
+                    stayAwakeButton.isEnabled = false
                 }
                 val stayAwake = (device as? XYFinderBluetoothDevice)?.stayAwake()
                 if (stayAwake == null) {
@@ -182,7 +185,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
                     showToast("Stay Awake Set")
                 }
                 ui {
-                    stayAwakeButton.setEnabled(true)
+                    stayAwakeButton.isEnabled = true
                 }
             }
         }
@@ -192,7 +195,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             launch(CommonPool) {
                 logInfo("fallAsleepButton: onClick")
                 ui {
-                    fallAsleepButton.setEnabled(false)
+                    fallAsleepButton.isEnabled = false
                 }
                 val fallAsleep = (device as? XYFinderBluetoothDevice)?.fallAsleep()
                 if (fallAsleep == null) {
@@ -201,7 +204,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
                     showToast("Fall Asleep Set")
                 }
                 ui {
-                    fallAsleepButton.setEnabled(true)
+                    fallAsleepButton.isEnabled = true
                 }
             }
         }
@@ -211,21 +214,21 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             logInfo("lockButton: onClick")
 
             ui {
-                lockButton.setEnabled(false)
+                lockButton.isEnabled = false
             }
             logInfo("primaryBuzzerButton: got xyDevice")
             launch(CommonPool) {
                 val locked = (device as? XYFinderBluetoothDevice)?.lock()?.await()
-                if (locked == null) {
-                    showToast("Device does not support Lock")
-                } else if (locked.error == null){
-                    showToast(locked.toString())
-                    updateStayAwakeEnabledStates()
-                } else {
-                    showToast("Lock Error: ${locked.error}")
+                when {
+                    locked == null -> showToast("Device does not support Lock")
+                    locked.error == null -> {
+                        showToast(locked.toString())
+                        updateStayAwakeEnabledStates()
+                    }
+                    else -> showToast("Lock Error: ${locked.error}")
                 }
                 ui {
-                    lockButton.setEnabled(true)
+                    lockButton.isEnabled = true
                 }
             }
         }
@@ -235,20 +238,20 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             logInfo("unlockButton: onClick")
 
             ui {
-                unlockButton.setEnabled(false)
+                unlockButton.isEnabled = false
             }
             launch(CommonPool) {
                 val unlocked = (device as? XYFinderBluetoothDevice)?.unlock()?.await()
-                if (unlocked == null) {
-                    showToast("Device does not support Unlock")
-                } else if (unlocked.error == null){
-                    showToast("Unlocked: ${unlocked}")
-                    updateStayAwakeEnabledStates()
-                } else {
-                    showToast("Unlock Error: ${unlocked.error}")
+                when {
+                    unlocked == null -> showToast("Device does not support Unlock")
+                    unlocked.error == null -> {
+                        showToast("Unlocked: ${unlocked}")
+                        updateStayAwakeEnabledStates()
+                    }
+                    else -> showToast("Unlock Error: ${unlocked.error}")
                 }
                 ui {
-                    unlockButton.setEnabled(true)
+                    unlockButton.isEnabled = true
                 }
             }
         })
@@ -274,7 +277,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         }
     }
 
-    fun updateStayAwakeEnabledStates() : Deferred<Unit> {
+    private fun updateStayAwakeEnabledStates() : Deferred<Unit> {
         return async (CommonPool) {
             logInfo("updateStayAwakeEnabledStates")
             val xy4 = device as? XY4BluetoothDevice
@@ -285,11 +288,11 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
                     val fallAsleepButton: XYButton = findViewById(R.id.fall_asleep)
                     val stayAwakeButton: XYButton = findViewById(R.id.stay_awake)
                     if (stayAwake.value != 0) {
-                        fallAsleepButton.setEnabled(true)
-                        stayAwakeButton.setEnabled(false)
+                        fallAsleepButton.isEnabled = true
+                        stayAwakeButton.isEnabled = false
                     } else {
-                        fallAsleepButton.setEnabled(false)
-                        stayAwakeButton.setEnabled(true)
+                        fallAsleepButton.isEnabled = false
+                        stayAwakeButton.isEnabled = true
                     }
                 }
             } else {
@@ -313,7 +316,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
     }
 
     //it is possible that reading the lock value is not implemented in the firmware
-    fun updateLockValue() : Deferred<Unit>{
+    private fun updateLockValue() : Deferred<Unit>{
         return async (CommonPool) {
             logInfo("updateLockValue")
             val xy4 = device as? XY4BluetoothDevice
@@ -338,28 +341,28 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             logInfo("update")
             if (device != null) {
                 val nameView : TextView = findViewById(R.id.family)
-                nameView.setText(device!!.name)
+                nameView.text = device!!.name
 
                 val rssiView : TextView = findViewById(R.id.rssi)
-                rssiView.setText(device!!.rssi.toString())
+                rssiView.text = device!!.rssi.toString()
 
                 val iBeaconDevice = device as XYIBeaconBluetoothDevice?
                 if (iBeaconDevice != null) {
                     val majorView: TextView = findViewById(R.id.major)
-                    majorView.setText(iBeaconDevice.major.toString())
+                    majorView.text = iBeaconDevice.major.toString()
 
                     val minorView: TextView = findViewById(R.id.minor)
-                    minorView.setText(iBeaconDevice.minor.toString())
+                    minorView.text = iBeaconDevice.minor.toString()
                 }
 
                 val pulsesView : TextView = findViewById(R.id.pulseCount)
-                pulsesView.setText(device!!.detectCount.toString())
+                pulsesView.text = device!!.detectCount.toString()
 
                 val enterView : TextView = findViewById(R.id.enterCount)
-                enterView.setText(device!!.enterCount.toString())
+                enterView.text = device!!.enterCount.toString()
 
                 val exitView : TextView = findViewById(R.id.exitCount)
-                exitView.setText(device!!.exitCount.toString())
+                exitView.text = device!!.exitCount.toString()
             }
         }
     }
@@ -373,22 +376,21 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
     }
 
     private fun testXy4() {
+        //TODO - disable btn, show progress
         logInfo("textXy4")
         launch{
             val xy4 = device as? XY4BluetoothDevice
-            if (xy4 != null) {
-               xy4.connection {
-                   for (i in 0..10000) {
-                       val text = "Hello+$i"
-                       val write = xy4.primary.lock.set(XY4BluetoothDevice.DEFAULT_LOCK_CODE).await()
-                       if (write.error == null) {
-                           logInfo("testXy4: Success: $text")
-                       } else {
-                           logInfo("testXy4: Fail: $text : ${write.error}")
-                       }
-                   }
-                   return@connection XYBluetoothResult(true)
-               }
+            xy4?.connection {
+                for (i in 0..10000) {
+                    val text = "Hello+$i"
+                    val write = xy4.primary.lock.set(XY4BluetoothDevice.DEFAULT_LOCK_CODE).await()
+                    if (write.error == null) {
+                        logInfo("testXy4: Success: $text")
+                    } else {
+                        logInfo("testXy4: Fail: $text : ${write.error}")
+                    }
+                }
+                return@connection XYBluetoothResult(true)
             }
         }
     }
