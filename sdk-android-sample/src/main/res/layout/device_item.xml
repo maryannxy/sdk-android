@@ -1,125 +1,147 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.xyfindables.sdk.sample.XYDeviceItemView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent"
-    android:theme="@style/XYTheme"
-    >
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:theme="@style/XYTheme">
+
     <LinearLayout
-        android:orientation="vertical"
-        android:layout_margin="8dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:orientation="vertical"
         android:padding="4dp">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="4dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:padding="4dp">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="4dp"
-                android:text="Name: "/>
+                android:text="@string/name" />
+
             <TextView
                 android:id="@+id/name"
                 android:layout_width="wrap_content"
-                android:padding="4dp"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:padding="4dp" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="4dp"
-                android:text="Family: "/>
+                android:text="@string/family" />
+
             <TextView
                 android:id="@+id/family"
                 android:layout_width="wrap_content"
-                android:padding="4dp"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:padding="4dp" />
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="4dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:padding="4dp">
+
             <TextView
                 android:layout_width="wrap_content"
-                android:padding="4dp"
                 android:layout_height="wrap_content"
-                android:text="Address: "/>
+                android:padding="4dp"
+                android:text="@string/address" />
+
             <TextView
                 android:id="@+id/address"
                 android:layout_width="wrap_content"
-                android:padding="4dp"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:padding="4dp" />
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="4dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:padding="4dp">
+
             <TextView
                 android:id="@+id/majorLabel"
                 android:layout_width="wrap_content"
-                android:padding="4dp"
                 android:layout_height="wrap_content"
-                android:text=" Major: "/>
+                android:padding="4dp"
+                android:text="@string/major" />
+
             <TextView
                 android:id="@+id/major"
                 android:layout_width="wrap_content"
-                android:padding="4dp"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:padding="4dp" />
+
             <TextView
                 android:id="@+id/minorLabel"
                 android:layout_width="wrap_content"
-                android:padding="4dp"
                 android:layout_height="wrap_content"
-                android:text=" Minor: "/>
+                android:padding="4dp"
+                android:text="@string/minor" />
+
             <TextView
                 android:id="@+id/minor"
                 android:layout_width="wrap_content"
-                android:padding="4dp"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:padding="4dp" />
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="4dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:padding="4dp">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="4dp"
-                android:text="RSSI:"/>
+                android:text="@string/rssi" />
+
             <TextView
                 android:id="@+id/rssi"
                 android:layout_width="wrap_content"
-                android:padding="4dp"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:padding="4dp" />
+
             <TextView
                 android:layout_width="wrap_content"
-                android:padding="4dp"
                 android:layout_height="wrap_content"
-                android:text=" Pulses:"/>
+                android:padding="4dp"
+                android:text="@string/pulses" />
+
             <TextView
                 android:id="@+id/pulses"
                 android:layout_width="wrap_content"
-                android:padding="4dp"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:padding="4dp" />
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="4dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:padding="4dp">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="4dp"
-                android:text="UUID:"/>
+                android:text="@string/uuid" />
+
             <TextView
                 android:id="@+id/uuid"
                 android:layout_width="wrap_content"
-                android:padding="4dp"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:padding="4dp" />
         </LinearLayout>
     </LinearLayout>
 </com.xyfindables.sdk.sample.XYDeviceItemView>

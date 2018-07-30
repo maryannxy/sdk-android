@@ -10,6 +10,7 @@ import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.devices.XYBluetoothDevice
 
 import com.xyfindables.sdk.devices.XYIBeaconBluetoothDevice
+import kotlinx.android.synthetic.main.device_item.view.*
 
 /**
  * Created by arietrouw on 12/27/17.
@@ -31,49 +32,35 @@ class XYDeviceItemView(context: Context, attrs: AttributeSet) : RelativeLayout(c
 
     fun update() {
         post {
-            val familyView = findViewById<TextView>(R.id.family)
-            familyView.text = device!!.javaClass.simpleName
-
-            val nameView = findViewById<TextView>(R.id.name)
-            nameView.text = device!!.name
-
-            val addressView = findViewById<TextView>(R.id.address)
-            addressView.text = device!!.address
-
-            val rssiView = findViewById<TextView>(R.id.rssi)
-            rssiView.text = device!!.rssi.toString()
-
-            val ibeacon = device as? XYIBeaconBluetoothDevice
-
-            val majorView = findViewById<TextView>(R.id.major)
-            val minorView = findViewById<TextView>(R.id.minor)
-            val uuidView = findViewById<TextView>(R.id.uuid)
-
+            family.text = device!!.javaClass.simpleName
+            name.text = device!!.name
+            address.text = device!!.address
+            rssi.text = device!!.rssi.toString()
             val majorLabelView = findViewById<TextView>(R.id.majorLabel)
             val minorLabelView = findViewById<TextView>(R.id.minorLabel)
 
+            val ibeacon = device as? XYIBeaconBluetoothDevice
             if (ibeacon != null) {
-                majorView.text = ibeacon.major.toString()
-                minorView.text = ibeacon.minor.toString()
-                uuidView.text = ibeacon.uuid.toString()
-                majorView.visibility = View.VISIBLE
-                minorView.visibility = View.VISIBLE
+                major.text = ibeacon.major.toString()
+                minor.text = ibeacon.minor.toString()
+                uuid.text = ibeacon.uuid.toString()
+                major.visibility = View.VISIBLE
+                minor.visibility = View.VISIBLE
                 majorLabelView.visibility = View.VISIBLE
                 minorLabelView.visibility = View.VISIBLE
             } else {
-                uuidView.text = "N/A"
-                majorView.visibility = View.GONE
-                minorView.visibility = View.GONE
+                uuid.text = "N/A"
+                major.visibility = View.GONE
+                minor.visibility = View.GONE
                 majorLabelView.visibility = View.GONE
                 minorLabelView.visibility = View.GONE
             }
 
-            val pulsesView = findViewById<TextView>(R.id.pulses)
-            pulsesView.text = device!!.detectCount.toString()
+            pulses.text = device!!.detectCount.toString()
         }
     }
 
-    val deviceListener = object : XYBluetoothDevice.Listener() {
+    private val deviceListener = object : XYBluetoothDevice.Listener() {
         override fun entered(device: XYBluetoothDevice) {
 
         }
