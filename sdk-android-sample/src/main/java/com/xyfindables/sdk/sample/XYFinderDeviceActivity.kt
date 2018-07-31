@@ -110,15 +110,15 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             }
         }
 
-        override fun buttonSinglePressed() {
+        override fun buttonSinglePressed(device: XYFinderBluetoothDevice) {
             showToast("Button Pressed: Single")
         }
 
-        override fun buttonDoublePressed() {
+        override fun buttonDoublePressed(device: XYFinderBluetoothDevice) {
             showToast("Button Pressed: Double")
         }
 
-        override fun buttonLongPressed() {
+        override fun buttonLongPressed(device: XYFinderBluetoothDevice) {
             showToast("Button Pressed: Long")
         }
     }

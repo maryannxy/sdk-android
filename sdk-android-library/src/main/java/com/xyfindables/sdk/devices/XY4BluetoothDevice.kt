@@ -98,15 +98,15 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
         }
 
     open class Listener : XYFinderBluetoothDevice.Listener() {
-        open fun buttonSinglePressed(device: XYFinderBluetoothDevice) {
+        override fun buttonSinglePressed(device: XYFinderBluetoothDevice) {
 
         }
 
-        open fun buttonDoublePressed(device: XYFinderBluetoothDevice) {
+        override fun buttonDoublePressed(device: XYFinderBluetoothDevice) {
 
         }
 
-        open fun buttonLongPressed(device: XYFinderBluetoothDevice) {
+        override fun buttonLongPressed(device: XYFinderBluetoothDevice) {
 
         }
     }

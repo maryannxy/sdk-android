@@ -153,6 +153,11 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
         }
 
     open class Listener : XYIBeaconBluetoothDevice.Listener() {
+        open fun buttonSinglePressed(device: XYFinderBluetoothDevice) {}
+
+        open fun buttonDoublePressed(device: XYFinderBluetoothDevice) {}
+
+        open fun buttonLongPressed(device: XYFinderBluetoothDevice) {}
     }
 
     companion object : XYCreator() {
