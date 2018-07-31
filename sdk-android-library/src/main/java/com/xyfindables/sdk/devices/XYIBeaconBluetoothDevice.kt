@@ -1,8 +1,9 @@
 package com.xyfindables.sdk.devices
 
 import android.content.Context
-import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.scanner.XYScanResult
+import unsigned.Ubyte
+import unsigned.Ushort
 import java.nio.ByteBuffer
 import java.util.*
 
@@ -14,20 +15,20 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult?,
             return _uuid
         }
 
-    protected var _major : Int
-    open val major : Int
+    protected var _major : Ushort
+    open val major : Ushort
         get() {
             return _major
         }
 
-    protected var _minor : Int
-    open val minor : Int
+    protected var _minor : Ushort
+    open val minor : Ushort
         get() {
             return _minor
         }
 
-    protected val _power : Byte
-    open val power : Byte
+    protected val _power : Ubyte
+    open val power : Ubyte
         get() {
             return _power
         }
@@ -48,18 +49,21 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult?,
             val low = buffer.getLong()
             _uuid = UUID(high, low)
 
-            _major = buffer.getShort().toInt() and 0xffff
-            _minor = buffer.getShort().toInt() and 0xffff
-            _power = buffer.get()
+            _major = Ushort(buffer.getShort())
+            _minor = Ushort(buffer.getShort())
+            _power = Ubyte(buffer.get())
         } else {
             _uuid = UUID(0,0)
-            _major = 0
-            _minor = 0
-            _power = 0
+            _major = Ushort(0)
+            _minor = Ushort(0)
+            _power = Ubyte(0)
         }
     }
 
     open class Listener : XYAppleBluetoothDevice.Listener() {
+        open fun onIBeaconDetect(uuid: String, major: Ushort, minor: Ushort) {
+
+        }
     }
 
     companion object : XYCreator() {

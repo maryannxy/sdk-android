@@ -7,6 +7,8 @@ import android.os.SystemClock
 import android.provider.Settings
 import com.xyfindables.sdk.scanner.XYScanResult
 import com.xyfindables.sdk.scanner.XYScanResultManual
+import unsigned.Uint
+import unsigned.Ushort
 import java.util.*
 
 //this is a "fake" device that represents the device that is doing the scanning
@@ -14,13 +16,10 @@ open class XYMobileBluetoothDevice(context: Context, scanResult: XYScanResult, h
 
     init {
         //we use this since the user would prefer for it to survice a resinstall.  DO NOT USE for advertising!
-        var uniqueId = Settings.Secure.getString(context.getContentResolver(),
-                Settings.Secure.ANDROID_ID).hashCode().toLong()
-        if (uniqueId < 0) {
-            uniqueId += 0x100000000
-        }
-        _major = uniqueId.and(0xffff0000).shr(16).toInt()
-        _minor = uniqueId.and(0xffff).toInt()
+        val uniqueId = Uint(Settings.Secure.getString(context.getContentResolver(),
+                Settings.Secure.ANDROID_ID).hashCode())
+        _major = Ushort(uniqueId.and(Uint(0xffff0000)).shr(16).toInt())
+        _minor = Ushort(uniqueId.and(0xffff).toInt())
 
         var address = device?.address
         if (address == null) {

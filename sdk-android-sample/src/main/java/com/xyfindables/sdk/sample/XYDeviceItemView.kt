@@ -41,8 +41,8 @@ class XYDeviceItemView(context: Context, attrs: AttributeSet) : RelativeLayout(c
 
             val ibeacon = device as? XYIBeaconBluetoothDevice
             if (ibeacon != null) {
-                major.text = ibeacon.major.toString()
-                minor.text = ibeacon.minor.toString()
+                major.text = ibeacon.major.toInt().toString()
+                minor.text = ibeacon.minor.toInt().toString()
                 uuid.text = ibeacon.uuid.toString()
                 major.visibility = View.VISIBLE
                 minor.visibility = View.VISIBLE

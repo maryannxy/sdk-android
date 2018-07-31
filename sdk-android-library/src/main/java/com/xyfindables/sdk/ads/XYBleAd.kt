@@ -1,6 +1,7 @@
 package com.xyfindables.sdk.ads
 
 import com.xyfindables.core.XYBase
+import unsigned.Ubyte
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 
@@ -28,8 +29,8 @@ open class XYBleAd(buffer: ByteBuffer) : XYBase() {
     }
 
     override fun hashCode(): Int {
-        val p : Int = 16777619
-        var hash : Int = 216613626
+        val p = 16777619
+        var hash = 216613626
 
         hash = (Math.pow(hash.toDouble(), size.toDouble()) * p).toInt()
         hash += hash.shl(13)
@@ -61,11 +62,7 @@ open class XYBleAd(buffer: ByteBuffer) : XYBase() {
     }
 
     override fun toString(): String {
-        if (data != null) {
-            return "Type: $type, Bytes: ${data!!.contentToString()}"
-        } else {
-            return ""
-        }
+        return "Type: $type, Bytes: ${data?.contentToString()}"
     }
 
     companion object {
@@ -89,8 +86,8 @@ open class XYBleAd(buffer: ByteBuffer) : XYBase() {
             SecurityManagerTkValue(0x10),
             SecurityManagerOutOfBandFlags(0x11),
             SlaveConnectionIntervalRange(0x12),
-            ListOf16BitServiceSolicitationUuisds(0x14),
-            ListOf128BitServiceSolicitationUuisds(0x15),
+            ListOf16BitServiceSolicitationUuids(0x14),
+            ListOf128BitServiceSolicitationUuids(0x15),
             ServiceData(0x16),
             ServiceData16BitUuid(0x16),
             PublicTargetAddress(0x17),
@@ -101,13 +98,13 @@ open class XYBleAd(buffer: ByteBuffer) : XYBase() {
             LeRole(0x1c),
             SimpleParingHashC256(0x1d),
             SimpleParingRandomizerR256(0x1e),
-            ListOf32BitServiceSolicitationUuisds(0x1f),
+            ListOf32BitServiceSolicitationUuids(0x1f),
             ServiceData32BitUuid(0x20),
             ServiceData128BitUuid(0x21),
             LeSecureConnectionsConfirmationValue(0x22),
             LeSecureConnectionsRandomValue(0x23),
             Uri(0x24),
-            IndoorPOsitioning(0x25),
+            IndoorPositioning(0x25),
             TransportDiscoveryData(0x26),
             LeSupportedFeatures(0x27),
             ChannelMapUpdateIndication(0x28),

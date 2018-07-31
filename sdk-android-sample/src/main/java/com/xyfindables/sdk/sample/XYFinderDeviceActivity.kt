@@ -333,8 +333,8 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
 
                 val iBeaconDevice = device as XYIBeaconBluetoothDevice?
                 if (iBeaconDevice != null) {
-                    major.text = iBeaconDevice.major.toString()
-                    minor.text = iBeaconDevice.minor.toString()
+                    major.text = iBeaconDevice.major.toInt().toString()
+                    minor.text = iBeaconDevice.minor.toInt().toString()
                 }
 
                 pulseCount.text = device!!.detectCount.toString()

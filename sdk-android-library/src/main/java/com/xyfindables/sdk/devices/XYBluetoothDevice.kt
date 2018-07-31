@@ -100,7 +100,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         }
     }
 
-    fun onEnter() {
+    open fun onEnter() {
         logInfo("onEnter: $address")
         enterCount++
         lastAdTime = now
@@ -114,7 +114,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         checkForExit()
     }
 
-    fun onExit() {
+    open fun onExit() {
         logInfo("onExit: $address")
         exitCount++
         synchronized(listeners) {
@@ -127,7 +127,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         close()
     }
 
-    fun onPressed() {
+    open fun onPressed() {
         logInfo("onPressed: $address")
         synchronized(listeners) {
             for ((_, listener) in listeners) {

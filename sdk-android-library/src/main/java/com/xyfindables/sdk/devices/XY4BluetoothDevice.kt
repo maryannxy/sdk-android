@@ -13,6 +13,7 @@ import com.xyfindables.sdk.services.xy4.PrimaryService
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.launch
+import unsigned.Ushort
 import java.nio.ByteBuffer
 import java.util.*
 
@@ -91,7 +92,7 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
         }
     }
 
-    override val minor : Int
+    override val minor : Ushort
         get() {
             //we have to mask the low nibble for the power level
             return _minor.and(0xfff0).or(0x0004)
