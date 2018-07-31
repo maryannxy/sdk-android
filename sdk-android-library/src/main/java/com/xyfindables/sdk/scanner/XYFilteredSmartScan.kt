@@ -78,6 +78,11 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
     }
 
     fun deviceFromId(id:String) : XYBluetoothDevice? {
+        for ((_, device) in devices) {
+            if (device.id == id) {
+                return device
+            }
+        }
         return null
     }
 
@@ -185,6 +190,14 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
             this.devices.putAll(foundDevices)
             if (foundDevices.size > 0) {
                 for ((_, device) in foundDevices) {
+
+                    device.addListener("scanner", object : XYBluetoothDevice.Listener() {
+                        override fun pressed(device: XYBluetoothDevice) {
+                            super.pressed(device)
+                            reportPressed(device)
+                        }
+                    })
+
                     this.devices[device.hashCode()] = device
                     device.updateBluetoothDevice(scanResult.device)
 
@@ -233,6 +246,17 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
             for ((_, listener) in listeners) {
                 launch(CommonPool) {
                     listener.detected(device)
+                }
+            }
+        }
+    }
+
+    protected fun reportPressed(device: XYBluetoothDevice) {
+        logInfo("reportPressed")
+        synchronized(listeners) {
+            for ((_, listener) in listeners) {
+                launch(CommonPool) {
+                    listener.pressed(device)
                 }
             }
         }

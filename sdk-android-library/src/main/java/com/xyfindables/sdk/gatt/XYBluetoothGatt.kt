@@ -47,15 +47,15 @@ open class XYBluetoothGatt protected constructor(
         Disconnecting(BluetoothGatt.STATE_DISCONNECTING)
     }
 
-    var _connectionState = bluetoothManager?.getConnectionState(device, BluetoothProfile.GATT)
+    var _connectionState : Int? = null
     val connectionState : ConnectionState
         get() {
-            when (_connectionState) {
-                BluetoothGatt.STATE_DISCONNECTED -> return ConnectionState.Disconnected
-                BluetoothGatt.STATE_CONNECTING -> return ConnectionState.Connecting
-                BluetoothGatt.STATE_CONNECTED -> return ConnectionState.Connected
-                BluetoothGatt.STATE_DISCONNECTING -> return ConnectionState.Disconnecting
-                else -> return ConnectionState.Unknown
+            return when (_connectionState) {
+                BluetoothGatt.STATE_DISCONNECTED -> ConnectionState.Disconnected
+                BluetoothGatt.STATE_CONNECTING -> ConnectionState.Connecting
+                BluetoothGatt.STATE_CONNECTED -> ConnectionState.Connected
+                BluetoothGatt.STATE_DISCONNECTING -> ConnectionState.Disconnecting
+                else -> ConnectionState.Unknown
             }
         }
 

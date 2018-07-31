@@ -32,7 +32,7 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult?,
             return _power
         }
 
-    open val id : String
+    override val id : String
         get() {
             return "$uuid:$major.$minor"
         }

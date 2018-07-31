@@ -20,7 +20,7 @@ open class XYBluetoothBase(context: Context) : XYBase() {
 
     protected val bluetoothManager : BluetoothManager?
         get() {
-            return context.applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?
+            return context.applicationContext?.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
         }
 
     protected val bluetoothAdapter : BluetoothAdapter?

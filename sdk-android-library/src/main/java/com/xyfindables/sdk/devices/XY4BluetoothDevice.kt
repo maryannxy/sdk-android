@@ -77,10 +77,11 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
                 val xy4Listener = listener.value as? XY4BluetoothDevice.Listener
                 if (xy4Listener != null) {
                     launch(CommonPool) {
+                        xy4Listener.pressed(this@XY4BluetoothDevice)
                         when (state) {
-                            1 -> xy4Listener.buttonSinglePressed()
-                            2 -> xy4Listener.buttonDoublePressed()
-                            3 -> xy4Listener.buttonLongPressed()
+                            1 -> xy4Listener.buttonSinglePressed(this@XY4BluetoothDevice)
+                            2 -> xy4Listener.buttonDoublePressed(this@XY4BluetoothDevice)
+                            3 -> xy4Listener.buttonLongPressed(this@XY4BluetoothDevice)
                         }
                         //everytime a notify fires, we have to re-enable it
                         primary.buttonState.enableNotify(true)
@@ -97,15 +98,15 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
         }
 
     open class Listener : XYFinderBluetoothDevice.Listener() {
-        open fun buttonSinglePressed() {
+        open fun buttonSinglePressed(device: XYFinderBluetoothDevice) {
 
         }
 
-        open fun buttonDoublePressed() {
+        open fun buttonDoublePressed(device: XYFinderBluetoothDevice) {
 
         }
 
-        open fun buttonLongPressed() {
+        open fun buttonLongPressed(device: XYFinderBluetoothDevice) {
 
         }
     }

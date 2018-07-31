@@ -43,6 +43,11 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
             return device?.name ?: _name
         }
 
+    open val id : String
+        get() {
+            return ""
+        }
+
     open var outOfRangeDelay = OUTOFRANGE_DELAY
 
     var notifyExit : ((device: XYBluetoothDevice)->(Unit))? = null
@@ -122,6 +127,17 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         close()
     }
 
+    fun onPressed() {
+        logInfo("onPressed: $address")
+        synchronized(listeners) {
+            for ((_, listener) in listeners) {
+                launch(CommonPool) {
+                    listener.pressed(this@XYBluetoothDevice)
+                }
+            }
+        }
+    }
+
     override fun onDetect() {
         detectCount++
         lastAdTime = now
@@ -193,6 +209,8 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         open fun exited(device: XYBluetoothDevice) {}
 
         open fun detected(device: XYBluetoothDevice) {}
+
+        open fun pressed(device: XYBluetoothDevice) {}
 
         open fun connectionStateChanged(device: XYBluetoothDevice, newState: Int) {}
     }

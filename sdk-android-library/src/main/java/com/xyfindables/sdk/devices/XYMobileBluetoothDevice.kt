@@ -26,7 +26,7 @@ open class XYMobileBluetoothDevice(context: Context, scanResult: XYScanResult, h
         if (address == null) {
             val bluetoothManager = context.applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
             if (bluetoothManager != null) {
-                address = bluetoothManager.adapter.address
+                address = bluetoothManager?.adapter?.address
             }
         }
         _address = address ?: "00:00:00:00:00:00"
