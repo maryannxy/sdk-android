@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Handler
 import com.xyfindables.sdk.CallByVersion
 import com.xyfindables.sdk.devices.XYBluetoothDevice
+import com.xyfindables.sdk.scanner.XYScanResult
 import kotlinx.coroutines.experimental.*
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -91,7 +92,7 @@ open class XYBluetoothGatt protected constructor(
         }
     }
 
-    open fun onDetect() {
+    open fun onDetect(scanResult: XYScanResult?) {
 
     }
 
@@ -676,7 +677,7 @@ open class XYBluetoothGatt protected constructor(
             super.onReadRemoteRssi(gatt, rssi, status)
             logInfo("onReadRemoteRssi: $rssi : $status")
             this@XYBluetoothGatt.rssi = rssi
-            onDetect()
+            onDetect(null)
             synchronized(gattListeners) {
                 for((_, listener) in gattListeners) {
                     launch(CommonPool) {

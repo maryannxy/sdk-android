@@ -32,12 +32,14 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
 
     val primary = PrimaryService(this)
 
+    private var lastButtonPressTime = 0L
+
     val buttonListener = object: XYBluetoothGattCallback() {
         override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
             logInfo("onCharacteristicChanged")
             super.onCharacteristicChanged(gatt, characteristic)
             if (characteristic?.uuid == primary.buttonState.uuid) {
-                reportButtonPressed(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0))
+                reportButtonPressed(buttonPressFromInt(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0)))
             }
         }
     }
@@ -71,21 +73,35 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
         return primary.stayAwake.set(0)
     }
 
-    fun reportButtonPressed(state: Int) {
+    override fun onDetect(scanResult: XYScanResult?) {
+        super.onDetect(scanResult)
+        if (scanResult != null) {
+            if (pressFromScanResult(scanResult)) {
+                if (now - lastButtonPressTime > BUTTON_ADVERTISEMENT_LENGTH) {
+                    reportButtonPressed(ButtonPress.Single)
+                    lastButtonPressTime = now
+                }
+            }
+        }
+    }
+
+    fun reportButtonPressed(state: ButtonPress) {
         logInfo("reportButtonPressed")
         synchronized(listeners) {
             for (listener in listeners) {
                 val xy4Listener = listener.value as? XY4BluetoothDevice.Listener
                 if (xy4Listener != null) {
                     launch(CommonPool) {
-                        xy4Listener.pressed(this@XY4BluetoothDevice)
                         when (state) {
-                            1 -> xy4Listener.buttonSinglePressed(this@XY4BluetoothDevice)
-                            2 -> xy4Listener.buttonDoublePressed(this@XY4BluetoothDevice)
-                            3 -> xy4Listener.buttonLongPressed(this@XY4BluetoothDevice)
+                            ButtonPress.Single -> xy4Listener.buttonSinglePressed(this@XY4BluetoothDevice)
+                            ButtonPress.Double -> xy4Listener.buttonDoublePressed(this@XY4BluetoothDevice)
+                            ButtonPress.Long -> xy4Listener.buttonLongPressed(this@XY4BluetoothDevice)
+                            else -> {}
                         }
-                        //everytime a notify fires, we have to re-enable it
-                        primary.buttonState.enableNotify(true)
+                        if (connectionState == ConnectionState.Connected) {
+                            //every time a notify fires, we have to re-enable it
+                            primary.buttonState.enableNotify(true)
+                        }
                     }
                 }
             }
@@ -117,7 +133,9 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
         val FAMILY_UUID = UUID.fromString("a44eacf4-0104-0000-0000-5f784c9977b5")
 
         val DEFAULT_LOCK_CODE = byteArrayOf(0x00.toByte(), 0x01.toByte(), 0x02.toByte(), 0x03.toByte(), 0x04.toByte(), 0x05.toByte(), 0x06.toByte(), 0x07.toByte(), 0x08.toByte(), 0x09.toByte(), 0x0a.toByte(), 0x0b.toByte(), 0x0c.toByte(), 0x0d.toByte(), 0x0e.toByte(), 0x0f.toByte())
-        val DEFAULT_LOCK_CODE_XY3 = byteArrayOf(0x2f.toByte(), 0xbe.toByte(), 0xa2.toByte(), 0x07.toByte(), 0x52.toByte(), 0xfe.toByte(), 0xbf.toByte(), 0x31.toByte(), 0x1d.toByte(), 0xac.toByte(), 0x5d.toByte(), 0xfa.toByte(), 0x7d.toByte(), 0x77.toByte(), 0x76.toByte(), 0x80.toByte())
+
+        //this is how long the xy4 will broadcast ads with power level 8 when a button is pressed once
+        val BUTTON_ADVERTISEMENT_LENGTH = 30 * 1000
 
         enum class StayAwake(val state: Int) {
             Off(0),
@@ -129,6 +147,15 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
             Single(1),
             Double(2),
             Long(3)
+        }
+
+        fun buttonPressFromInt(index: Int) : ButtonPress {
+            return when(index) {
+                1 -> ButtonPress.Single
+                2 -> ButtonPress.Double
+                3 -> ButtonPress.Long
+                else -> {ButtonPress.None}
+            }
         }
 
         fun enable(enable: Boolean) {
@@ -147,21 +174,31 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
             }
         }
 
-        fun majorFromScanResult(scanResult: XYScanResult): Int? {
+        fun majorFromScanResult(scanResult: XYScanResult): Ushort? {
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
             if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
-                return buffer.getShort(18).toInt()
+                return Ushort(buffer.getShort(18).toInt())
             } else {
                 return null
             }
         }
 
-        fun minorFromScanResult(scanResult: XYScanResult): Int? {
+        fun pressFromScanResult(scanResult: XYScanResult): Boolean {
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
             if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
-                return buffer.getShort(20).toInt().and(0xfff0).or(0x0004)
+                return Ushort(buffer.getShort(20).toInt()).and(0x0008) == Ushort(0x0008)
+            } else {
+                return false
+            }
+        }
+
+        fun minorFromScanResult(scanResult: XYScanResult): Ushort? {
+            val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
+            if (bytes != null) {
+                val buffer = ByteBuffer.wrap(bytes)
+                return Ushort(buffer.getShort(20).toInt()).and(0xfff0).or(0x0004)
             } else {
                 return null
             }

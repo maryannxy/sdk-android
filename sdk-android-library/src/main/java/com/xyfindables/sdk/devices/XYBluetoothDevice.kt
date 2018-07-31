@@ -127,18 +127,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         close()
     }
 
-    open fun onPressed() {
-        logInfo("onPressed: $address")
-        synchronized(listeners) {
-            for ((_, listener) in listeners) {
-                launch(CommonPool) {
-                    listener.pressed(this@XYBluetoothDevice)
-                }
-            }
-        }
-    }
-
-    override fun onDetect() {
+    override fun onDetect(scanResult: XYScanResult?) {
         detectCount++
         lastAdTime = now
         synchronized(listeners) {
@@ -209,8 +198,6 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         open fun exited(device: XYBluetoothDevice) {}
 
         open fun detected(device: XYBluetoothDevice) {}
-
-        open fun pressed(device: XYBluetoothDevice) {}
 
         open fun connectionStateChanged(device: XYBluetoothDevice, newState: Int) {}
     }

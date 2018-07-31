@@ -107,10 +107,6 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
         open fun statusChanged(status: BluetoothStatus) {
 
         }
-
-        open fun buttonPressed(device: XYBluetoothDevice) {
-
-        }
     }
 
     enum class BluetoothStatus {
@@ -190,14 +186,6 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
             this.devices.putAll(foundDevices)
             if (foundDevices.size > 0) {
                 for ((_, device) in foundDevices) {
-
-                    device.addListener("scanner", object : XYBluetoothDevice.Listener() {
-                        override fun pressed(device: XYBluetoothDevice) {
-                            super.pressed(device)
-                            reportPressed(device)
-                        }
-                    })
-
                     this.devices[device.hashCode()] = device
                     device.updateBluetoothDevice(scanResult.device)
 
@@ -211,14 +199,14 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
                     }
                     device.rssi = scanResult.rssi
                     reportDetected(device)
-                    device.onDetect()
+                    device.onDetect(scanResult)
                 }
             }
         }
         return scanResults
     }
 
-    protected fun reportEntered(device: XYBluetoothDevice) {
+    private fun reportEntered(device: XYBluetoothDevice) {
         logInfo("reportEntered")
         synchronized(listeners) {
             for ((_, listener) in listeners) {
@@ -229,7 +217,7 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
         }
     }
 
-    protected fun reportExited(device: XYBluetoothDevice) {
+    private fun reportExited(device: XYBluetoothDevice) {
         logInfo("reportExited")
         synchronized(listeners) {
             for ((_, listener) in listeners) {
@@ -240,23 +228,12 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
         }
     }
 
-    protected fun reportDetected(device: XYBluetoothDevice) {
+    private fun reportDetected(device: XYBluetoothDevice) {
         //logInfo("reportDetected")
         synchronized(listeners) {
             for ((_, listener) in listeners) {
                 launch(CommonPool) {
                     listener.detected(device)
-                }
-            }
-        }
-    }
-
-    protected fun reportPressed(device: XYBluetoothDevice) {
-        logInfo("reportPressed")
-        synchronized(listeners) {
-            for ((_, listener) in listeners) {
-                launch(CommonPool) {
-                    listener.pressed(device)
                 }
             }
         }
