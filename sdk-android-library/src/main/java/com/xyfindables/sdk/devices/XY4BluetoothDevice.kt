@@ -188,6 +188,13 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
             if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
+                val s = buffer.getShort(20)
+                val i = s.toInt()
+                val m1 = i.and(0x0008)
+                val m2 = Ushort(m1)
+                val m3 = Ushort(0x0008)
+                val b = m2 == m3
+
                 return Ushort(buffer.getShort(20).toInt()).and(0x0008) == Ushort(0x0008)
             } else {
                 return false
