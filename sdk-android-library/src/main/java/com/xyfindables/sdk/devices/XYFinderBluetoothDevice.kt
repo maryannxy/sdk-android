@@ -214,7 +214,7 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
             return XYIBeaconBluetoothDevice.hashFromScanResult(scanResult)
         }
 
-        private val compareDistance = object : kotlin.Comparator<XYFinderBluetoothDevice> {
+        val compareDistance = object : kotlin.Comparator<XYFinderBluetoothDevice> {
             override fun compare(o1: XYFinderBluetoothDevice?, o2: XYFinderBluetoothDevice?): Int {
                 if (o1 == null || o2 == null) {
                     if (o1 != null && o2 == null) return -1
