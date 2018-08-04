@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
+import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.gatt.XYBluetoothResult
 import com.xyfindables.sdk.scanner.XYScanResult
 import com.xyfindables.sdk.services.EddystoneConfigService
@@ -34,7 +35,7 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
 
     private var lastButtonPressTime = 0L
 
-    val buttonListener = object: XYBluetoothGattCallback() {
+    internal val buttonListener = object: XYBluetoothGattCallback() {
         override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
             logInfo("onCharacteristicChanged")
             super.onCharacteristicChanged(gatt, characteristic)
@@ -48,6 +49,8 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
         addGattListener("xy4", buttonListener)
     }
 
+    override val prefix = "ibeacon"
+
     override fun find() : Deferred<XYBluetoothResult<Int>> {
         logInfo("find")
         return primary.buzzer.set(11)
@@ -55,12 +58,12 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
 
     override fun lock() : Deferred<XYBluetoothResult<ByteArray>> {
         logInfo("lock")
-        return primary.lock.set(XY4BluetoothDevice.DEFAULT_LOCK_CODE)
+        return primary.lock.set(XY4BluetoothDevice.DefaultLockCode)
     }
 
     override fun unlock() : Deferred<XYBluetoothResult<ByteArray>> {
         logInfo("unlock")
-        return primary.unlock.set(XY4BluetoothDevice.DEFAULT_LOCK_CODE)
+        return primary.unlock.set(XY4BluetoothDevice.DefaultLockCode)
     }
 
     override fun stayAwake() : Deferred<XYBluetoothResult<Int>> {
@@ -128,14 +131,14 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
         }
     }
 
-    companion object : XYCreator() {
+    companion object : XYBase() {
 
-        val FAMILY_UUID = UUID.fromString("a44eacf4-0104-0000-0000-5f784c9977b5")
+        private val FAMILY_UUID = UUID.fromString("a44eacf4-0104-0000-0000-5f784c9977b5")!!
 
-        val DEFAULT_LOCK_CODE = byteArrayOf(0x00.toByte(), 0x01.toByte(), 0x02.toByte(), 0x03.toByte(), 0x04.toByte(), 0x05.toByte(), 0x06.toByte(), 0x07.toByte(), 0x08.toByte(), 0x09.toByte(), 0x0a.toByte(), 0x0b.toByte(), 0x0c.toByte(), 0x0d.toByte(), 0x0e.toByte(), 0x0f.toByte())
+        val DefaultLockCode = byteArrayOf(0x00.toByte(), 0x01.toByte(), 0x02.toByte(), 0x03.toByte(), 0x04.toByte(), 0x05.toByte(), 0x06.toByte(), 0x07.toByte(), 0x08.toByte(), 0x09.toByte(), 0x0a.toByte(), 0x0b.toByte(), 0x0c.toByte(), 0x0d.toByte(), 0x0e.toByte(), 0x0f.toByte())
 
         //this is how long the xy4 will broadcast ads with power level 8 when a button is pressed once
-        val BUTTON_ADVERTISEMENT_LENGTH = 30 * 1000
+        private val BUTTON_ADVERTISEMENT_LENGTH = 30 * 1000
 
         enum class StayAwake(val state: Int) {
             Off(0),
@@ -161,16 +164,18 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
         fun enable(enable: Boolean) {
             if (enable) {
                 XYFinderBluetoothDevice.enable(true)
-                XYFinderBluetoothDevice.addCreator(FAMILY_UUID, this)
+                XYFinderBluetoothDevice.addCreator(FAMILY_UUID, this.creator)
             } else {
                 XYFinderBluetoothDevice.removeCreator(FAMILY_UUID)
             }
         }
 
-        override fun getDevicesFromScanResult(context:Context, scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
-            val hash = hashFromScanResult(scanResult)
-            if (hash != null) {
-                foundDevices[hash] = globalDevices[hash] ?: XY4BluetoothDevice(context, scanResult, hash)
+        internal val creator = object : XYCreator() {
+            override fun getDevicesFromScanResult(context: Context, scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
+                val hash = hashFromScanResult(scanResult)
+                if (hash != null) {
+                    foundDevices[hash] = globalDevices[hash] ?: XY4BluetoothDevice(context, scanResult, hash)
+                }
             }
         }
 

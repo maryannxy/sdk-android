@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
+import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.gatt.XYBluetoothResult
 import com.xyfindables.sdk.scanner.XYScanResult
 import com.xyfindables.sdk.services.standard.*
@@ -32,7 +33,7 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
     val extendedControl = ExtendedControlService(this)
     val sensor = SensorService(this)
 
-    val buttonListener = object: XYBluetoothGattCallback() {
+    internal val buttonListener = object: XYBluetoothGattCallback() {
         override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
             logInfo("onCharacteristicChanged")
             super.onCharacteristicChanged(gatt, characteristic)
@@ -51,6 +52,8 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
             //we have to mask the low nibble for the power level
             return _minor.and(0xfff0).or(0x0004)
         }
+
+    override val prefix = "ibeacon"
 
     override fun find() : Deferred<XYBluetoothResult<Int>> {
         logInfo("find")
@@ -103,11 +106,11 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
         open fun buttonLongPressed() {}
     }
 
-    companion object : XYCreator() {
+    companion object : XYBase() {
 
-        val FAMILY_UUID = UUID.fromString("08885dd0-111b-11e4-9191-0800200c9a66")
+        private val FAMILY_UUID = UUID.fromString("08885dd0-111b-11e4-9191-0800200c9a66")!!
 
-        val DEFAULT_LOCK_CODE = byteArrayOf(0x2f.toByte(), 0xbe.toByte(), 0xa2.toByte(), 0x07.toByte(), 0x52.toByte(), 0xfe.toByte(), 0xbf.toByte(), 0x31.toByte(), 0x1d.toByte(), 0xac.toByte(), 0x5d.toByte(), 0xfa.toByte(), 0x7d.toByte(), 0x77.toByte(), 0x76.toByte(), 0x80.toByte())
+        private val DEFAULT_LOCK_CODE = byteArrayOf(0x2f.toByte(), 0xbe.toByte(), 0xa2.toByte(), 0x07.toByte(), 0x52.toByte(), 0xfe.toByte(), 0xbf.toByte(), 0x31.toByte(), 0x1d.toByte(), 0xac.toByte(), 0x5d.toByte(), 0xfa.toByte(), 0x7d.toByte(), 0x77.toByte(), 0x76.toByte(), 0x80.toByte())
 
         enum class StayAwake(val state: Int) {
             Off(0),
@@ -124,7 +127,7 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
         fun enable(enable: Boolean) {
             if (enable) {
                 XYFinderBluetoothDevice.enable(true)
-                XYFinderBluetoothDevice.addCreator(FAMILY_UUID, this)
+                XYFinderBluetoothDevice.addCreator(FAMILY_UUID, this.creator)
             } else {
                 XYFinderBluetoothDevice.removeCreator(FAMILY_UUID)
             }
@@ -150,10 +153,12 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
             }
         }
 
-        override fun getDevicesFromScanResult(context:Context, scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
-            val hash = hashFromScanResult(scanResult)
-            if (hash != null) {
-                foundDevices[hash] = globalDevices[hash] ?: XY3BluetoothDevice(context, scanResult, hash)
+        internal val creator = object : XYCreator() {
+            override fun getDevicesFromScanResult(context: Context, scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
+                val hash = hashFromScanResult(scanResult)
+                if (hash != null) {
+                    foundDevices[hash] = globalDevices[hash] ?: XY3BluetoothDevice(context, scanResult, hash)
+                }
             }
         }
 

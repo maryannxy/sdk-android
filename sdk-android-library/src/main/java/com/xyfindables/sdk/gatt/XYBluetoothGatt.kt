@@ -29,12 +29,12 @@ open class XYBluetoothGatt protected constructor(
     protected var references = 0
 
     //last time this device was accessed (connected to)
-    var lastAccessTime = 0L
+    protected var lastAccessTime = 0L
 
     //last time we heard a ad from this device
-    var lastAdTime = 0L
+    protected var lastAdTime = 0L
 
-    var rssi = OUTOFRANGE_RSSI
+    var rssi: Int? = null
 
     open class XYBluetoothGattCallback : BluetoothGattCallback() {
 
@@ -74,29 +74,29 @@ open class XYBluetoothGatt protected constructor(
         }
 
     val closed: Boolean
-    get() = (gatt == null)
+        get() = (gatt == null)
 
     private var gatt: BluetoothGatt? = null
 
     private val gattListeners = HashMap<String, XYBluetoothGattCallback>()
 
-    fun addGattListener(key: String, listener: XYBluetoothGattCallback) {
+    internal fun addGattListener(key: String, listener: XYBluetoothGattCallback) {
         synchronized(gattListeners) {
             gattListeners[key] = listener
         }
     }
 
-    fun removeGattListener(key: String) {
+    internal fun removeGattListener(key: String) {
         synchronized(gattListeners) {
             gattListeners.remove(key)
         }
     }
 
-    open fun onDetect(scanResult: XYScanResult?) {
+    internal open fun onDetect(scanResult: XYScanResult?) {
 
     }
 
-    fun connectGatt() : Deferred<XYBluetoothResult<Boolean>> {
+    protected fun connectGatt() : Deferred<XYBluetoothResult<Boolean>> {
         return asyncBle {
             logInfo("connectGatt")
             var error: XYBluetoothError? = null
@@ -135,7 +135,7 @@ open class XYBluetoothGatt protected constructor(
         }
     }
 
-    fun connect() : Deferred<XYBluetoothResult<Boolean>> {
+    protected fun connect() : Deferred<XYBluetoothResult<Boolean>> {
         return asyncBle {
             logInfo("connect")
             var error: XYBluetoothError? = null
@@ -218,7 +218,7 @@ open class XYBluetoothGatt protected constructor(
         }
     }
 
-    fun disconnect() : Deferred<XYBluetoothResult<Boolean>>{
+    protected fun disconnect() : Deferred<XYBluetoothResult<Boolean>>{
         return asyncBle {
             logInfo("disconnect")
             var error: XYBluetoothError? = null
@@ -270,7 +270,7 @@ open class XYBluetoothGatt protected constructor(
         }
     }
 
-    fun close() : Deferred<XYBluetoothResult<Boolean>> {
+    protected fun close() : Deferred<XYBluetoothResult<Boolean>> {
         return asyncBle {
             logInfo("close")
             if (connectionState != ConnectionState.Disconnected) {
@@ -284,7 +284,7 @@ open class XYBluetoothGatt protected constructor(
         }
     }
 
-    fun discover() : Deferred<XYBluetoothResult<List<BluetoothGattService>>> {
+    protected fun discover() : Deferred<XYBluetoothResult<List<BluetoothGattService>>> {
         var error: XYBluetoothError? = null
         var value: List<BluetoothGattService>? = null
         return asyncBle {
@@ -343,7 +343,7 @@ open class XYBluetoothGatt protected constructor(
     }
 
     //this can only be called after a successful discover
-    fun findCharacteristic(service: UUID, characteristic: UUID) : Deferred<XYBluetoothResult<BluetoothGattCharacteristic>> {
+    protected fun findCharacteristic(service: UUID, characteristic: UUID) : Deferred<XYBluetoothResult<BluetoothGattCharacteristic>> {
 
         return asyncBle {
 
@@ -380,7 +380,7 @@ open class XYBluetoothGatt protected constructor(
         }
     }
 
-    fun writeCharacteristic(characteristicToWrite: BluetoothGattCharacteristic) : Deferred<XYBluetoothResult<ByteArray>>{
+    protected fun writeCharacteristic(characteristicToWrite: BluetoothGattCharacteristic) : Deferred<XYBluetoothResult<ByteArray>>{
         return asyncBle {
             logInfo("asyncWriteCharacteristic")
             var error: XYBluetoothError? = null
@@ -437,7 +437,7 @@ open class XYBluetoothGatt protected constructor(
         }
     }
 
-    fun readCharacteristic(characteristicToRead: BluetoothGattCharacteristic) : Deferred<XYBluetoothResult<BluetoothGattCharacteristic>>{
+    protected fun readCharacteristic(characteristicToRead: BluetoothGattCharacteristic) : Deferred<XYBluetoothResult<BluetoothGattCharacteristic>>{
         return asyncBle {
             logInfo("readCharacteristic")
             var error: XYBluetoothError? = null
@@ -492,6 +492,8 @@ open class XYBluetoothGatt protected constructor(
             return@asyncBle XYBluetoothResult(value, error)
         }
     }
+
+
 
     //make a safe session to interact with the device
     //if null is passed back, the sdk was unable to create the safe session
@@ -750,8 +752,5 @@ open class XYBluetoothGatt protected constructor(
     companion object {
         //gap after last connection that we wait to close the connection
         private const val CLEANUP_DELAY = 5000
-
-        //the value we set the rssi to when we go out of range
-        const val OUTOFRANGE_RSSI = -999
     }
 }

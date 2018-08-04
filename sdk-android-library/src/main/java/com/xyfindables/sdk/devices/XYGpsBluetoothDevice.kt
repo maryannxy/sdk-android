@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
+import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.gatt.XYBluetoothResult
 import com.xyfindables.sdk.scanner.XYScanResult
 import com.xyfindables.sdk.services.standard.*
@@ -43,6 +44,8 @@ open class XYGpsBluetoothDevice(context: Context, scanResult: XYScanResult, hash
         })
     }
 
+    override val prefix = "gps"
+
     override fun find() : Deferred<XYBluetoothResult<Int>> {
         logInfo("find")
         return control.buzzerSelect.set(1)
@@ -66,7 +69,7 @@ open class XYGpsBluetoothDevice(context: Context, scanResult: XYScanResult, hash
         fun buttonSinglePressed() {}
     }
 
-    companion object : XYCreator() {
+    companion object : XYBase() {
 
         val FAMILY_UUID = UUID.fromString("9474f7c6-47a4-11e6-beb8-9e71128cae77")
 
@@ -87,16 +90,18 @@ open class XYGpsBluetoothDevice(context: Context, scanResult: XYScanResult, hash
         fun enable(enable: Boolean) {
             if (enable) {
                 XYFinderBluetoothDevice.enable(true)
-                XYFinderBluetoothDevice.addCreator(FAMILY_UUID, this)
+                XYFinderBluetoothDevice.addCreator(FAMILY_UUID, this.creator)
             } else {
                 XYFinderBluetoothDevice.removeCreator(FAMILY_UUID)
             }
         }
 
-        override fun getDevicesFromScanResult(context:Context, scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
-            val hash = hashFromScanResult(scanResult)
-            if (hash != null) {
-                foundDevices[hash] = globalDevices[hash] ?: XYGpsBluetoothDevice(context, scanResult, hash)
+        internal val creator = object : XYCreator() {
+            override fun getDevicesFromScanResult(context: Context, scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
+                val hash = hashFromScanResult(scanResult)
+                if (hash != null) {
+                    foundDevices[hash] = globalDevices[hash] ?: XYGpsBluetoothDevice(context, scanResult, hash)
+                }
             }
         }
 

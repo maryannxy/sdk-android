@@ -360,7 +360,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
             xy4?.connection {
                 for (i in 0..10000) {
                     val text = "Hello+$i"
-                    val write = xy4.primary.lock.set(XY4BluetoothDevice.DEFAULT_LOCK_CODE).await()
+                    val write = xy4.primary.lock.set(XY4BluetoothDevice.DefaultLockCode).await()
                     if (write.error == null) {
                         logInfo("testXy4: Success: $text")
                     } else {

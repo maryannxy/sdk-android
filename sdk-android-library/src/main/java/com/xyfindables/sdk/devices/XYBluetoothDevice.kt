@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.content.Context
 import android.os.ParcelUuid
+import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.ads.XYBleAd
 import com.xyfindables.sdk.gatt.*
 import com.xyfindables.sdk.scanner.XYScanRecord
@@ -77,14 +78,14 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
                 //check if something else has already marked it as exited
                 //this should only happen if another system (exit on connection drop for example)
                 //marks this as out of range
-                if (rssi == OUTOFRANGE_RSSI) {
+                if (rssi == null) {
                     return@launch
                 }
 
                 if ((now - lastAdTime) > outOfRangeDelay && (now - lastAccessTime) > outOfRangeDelay) {
                     checkingForExit = false
-                    if (rssi != OUTOFRANGE_RSSI) {
-                        rssi = OUTOFRANGE_RSSI
+                    if (rssi != null) {
+                        rssi = null
                         onExit()
 
                         //make it thread safe
@@ -100,7 +101,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         }
     }
 
-    open fun onEnter() {
+    internal open fun onEnter() {
         logInfo("onEnter: $address")
         enterCount++
         lastAdTime = now
@@ -114,7 +115,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         checkForExit()
     }
 
-    open fun onExit() {
+    internal open fun onExit() {
         logInfo("onExit: $address")
         exitCount++
         synchronized(listeners) {
@@ -139,7 +140,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         }
     }
 
-    fun onConnectionStateChange(newState: Int) {
+    internal open fun onConnectionStateChange(newState: Int) {
         logInfo("onConnectionStateChange: $hash : $newState")
         synchronized(listeners) {
             for ((_, listener) in listeners) {
@@ -154,7 +155,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         //if a connection drop means we should mark it as out of range, then lets do it!
         if (exitAfterDisconnect) {
             launch(CommonPool) {
-                rssi = OUTOFRANGE_RSSI
+                rssi = null
                 onExit()
 
                 //make it thread safe
@@ -165,14 +166,6 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
                     }
                 }
             }
-        }
-    }
-
-    fun updateAds(record: XYScanRecord) {
-        val buffer = ByteBuffer.wrap(record.bytes)
-        while (buffer.hasRemaining()) {
-            val ad = XYBleAd(buffer)
-            ads[ad.hashCode()] = ad
         }
     }
 
@@ -202,15 +195,23 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         open fun connectionStateChanged(device: XYBluetoothDevice, newState: Int) {}
     }
 
-    companion object : XYCreator() {
+    internal fun updateAds(record: XYScanRecord) {
+        val buffer = ByteBuffer.wrap(record.bytes)
+        while (buffer.hasRemaining()) {
+            val ad = XYBleAd(buffer)
+            ads[ad.hashCode()] = ad
+        }
+    }
+
+    companion object : XYBase() {
 
         //the period of time to wait for marking something as out of range
         //if we have not gotten any ads or been connected to it
         const val OUTOFRANGE_DELAY = 1500000
 
-        var canCreate = false
-        val manufacturerToCreator = HashMap<Int, XYCreator>()
-        val serviceToCreator = HashMap<UUID, XYCreator>()
+        internal var canCreate = false
+        internal val manufacturerToCreator = HashMap<Int, XYCreator>()
+        internal val serviceToCreator = HashMap<UUID, XYCreator>()
 
         private fun getDevicesFromManufacturers(context:Context, scanResult:XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, newDevices: HashMap<Int, XYBluetoothDevice>) {
             for ((manufacturerId, creator) in manufacturerToCreator) {
@@ -231,25 +232,27 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
             }
         }
 
-        override fun getDevicesFromScanResult(context:Context, scanResult:XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
+        internal val creator = object : XYCreator() {
+            override fun getDevicesFromScanResult(context: Context, scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
 
-            getDevicesFromServices(context, scanResult, globalDevices, foundDevices)
-            getDevicesFromManufacturers(context, scanResult, globalDevices, foundDevices)
+                getDevicesFromServices(context, scanResult, globalDevices, foundDevices)
+                getDevicesFromManufacturers(context, scanResult, globalDevices, foundDevices)
 
-            if (foundDevices.size == 0) {
-                val hash = hashFromScanResult(scanResult)
+                if (foundDevices.size == 0) {
+                    val hash = hashFromScanResult(scanResult)
 
-                val device = scanResult.device
+                    val device = scanResult.device
 
-                if (canCreate && hash != null && device != null) {
-                    val createdDevice = XYBluetoothDevice(context, device, hash)
-                    foundDevices[hash] = createdDevice
-                    globalDevices[hash] = createdDevice
+                    if (canCreate && hash != null && device != null) {
+                        val createdDevice = XYBluetoothDevice(context, device, hash)
+                        foundDevices[hash] = createdDevice
+                        globalDevices[hash] = createdDevice
+                    }
                 }
             }
         }
 
-        fun hashFromScanResult(scanResult: XYScanResult): Int? {
+        internal fun hashFromScanResult(scanResult: XYScanResult): Int? {
             return scanResult.address.hashCode()
         }
 

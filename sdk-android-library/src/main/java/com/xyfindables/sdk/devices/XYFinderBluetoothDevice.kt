@@ -1,6 +1,7 @@
 package com.xyfindables.sdk.devices
 
 import android.content.Context
+import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.gatt.XYBluetoothError
 import com.xyfindables.sdk.gatt.XYBluetoothResult
 import com.xyfindables.sdk.gatt.asyncBle
@@ -35,13 +36,22 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
     }
 
     override fun compareTo(other: XYFinderBluetoothDevice): Int {
-        if (distance == other.distance) {
-            return 0
-        } else if (distance > other.distance) {
-            return 1
-        } else {
+        val d1 = distance
+        val d2 = other.distance
+        if (d1 == null) {
+            if (d2 == null) {
+                return 0
+            }
             return -1
         }
+        if (d2== null) {
+            return 1
+        } else if (d1 == d2) {
+            return 0
+        } else if (d1 > d2) {
+            return 1
+        }
+        return -1
     }
 
     override val id : String
@@ -49,24 +59,13 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
             return "$prefix:$uuid:$major.${minor.and(0xfff0).or(0x0004)}"
         }
 
-    val family: Family
-        get () {
-            return familyFromUuid(uuid)
-        }
-
-    val prefix: String
-        get () {
-            return prefixFromFamily(family)
-        }
+    internal open val prefix = "finder"
 
     val proximity: Proximity
         get() {
 
-            val distance = distance
+            val distance = distance ?: return Proximity.OutOfRange
 
-            if (distance < -1.0) {
-                return Proximity.OutOfRange
-            }
             if (distance < 0.0) {
                 return Proximity.None
             }
@@ -145,9 +144,10 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
         }
     }
 
-    open val distance : Double
+    open val distance : Double?
         get() {
-            val a = (power - rssi).toFloat()
+            val rssi = rssi ?: return null
+            val a = (power - rssi.toInt()).toFloat()
             val b = a / (10.0f * 2.0f)
             return Math.pow(10.0, b.toDouble())
         }
@@ -160,56 +160,7 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
         open fun buttonLongPressed(device: XYFinderBluetoothDevice) {}
     }
 
-    companion object : XYCreator() {
-
-        var canCreate = false
-
-        val uuid2family: HashMap<UUID, Family>
-
-        val family2uuid: HashMap<Family, UUID>
-
-        val family2prefix: HashMap<Family, String>
-
-        init {
-            uuid2family = HashMap()
-            uuid2family[UUID.fromString("a500248c-abc2-4206-9bd7-034f4fc9ed10")] = Family.XY1
-            uuid2family[UUID.fromString("07775dd0-111b-11e4-9191-0800200c9a66")] = Family.XY2
-            uuid2family[UUID.fromString("08885dd0-111b-11e4-9191-0800200c9a66")] = Family.XY3
-            uuid2family[UUID.fromString("a44eacf4-0104-0000-0000-5f784c9977b5")] = Family.XY4
-            uuid2family[UUID.fromString("735344c9-e820-42ec-9da7-f43a2b6802b9")] = Family.Mobile
-            uuid2family[UUID.fromString("9474f7c6-47a4-11e6-beb8-9e71128cae77")] = Family.Gps
-            uuid2family[UUID.fromString("eab24c98-8117-4f69-ba1b-45f4e1875858")] = Family.Webble
-
-            family2uuid = HashMap()
-            family2uuid[Family.XY1] = UUID.fromString("a500248c-abc2-4206-9bd7-034f4fc9ed10")
-            family2uuid[Family.XY2] = UUID.fromString("07775dd0-111b-11e4-9191-0800200c9a66")
-            family2uuid[Family.XY3] = UUID.fromString("08885dd0-111b-11e4-9191-0800200c9a66")
-            family2uuid[Family.XY4] = UUID.fromString("a44eacf4-0104-0000-0000-5f784c9977b5")
-            family2uuid[Family.Mobile] = UUID.fromString("735344c9-e820-42ec-9da7-f43a2b6802b9")
-            family2uuid[Family.Gps] = UUID.fromString("9474f7c6-47a4-11e6-beb8-9e71128cae77")
-            family2uuid[Family.Webble] = UUID.fromString("eab24c98-8117-4f69-ba1b-45f4e1875858")
-
-            family2prefix = HashMap()
-            family2prefix[Family.XY1] = "ibeacon"
-            family2prefix[Family.XY2] = "ibeacon"
-            family2prefix[Family.XY3] = "ibeacon"
-            family2prefix[Family.XY4] = "ibeacon"
-            family2prefix[Family.Mobile] = "mobiledevice"
-            family2prefix[Family.Gps] = "gps"
-            family2prefix[Family.Webble] = "webble"
-        }
-
-        fun familyFromUuid(uuid: UUID?): Family {
-            return uuid2family[uuid] ?: return Family.Unknown
-        }
-
-        fun uuidFromFamily(family: Family): UUID? {
-            return family2uuid[family]
-        }
-
-        fun prefixFromFamily(family: Family): String {
-            return family2prefix[family] ?: return "unknown"
-        }
+    companion object : XYBase() {
 
         fun enable(enable: Boolean) {
             if (enable) {
@@ -217,57 +168,60 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
             }
         }
 
-        fun addCreator(uuid: UUID, creator: XYCreator) {
-            XYIBeaconBluetoothDevice.uuidToCreator[uuid] = this
+        var canCreate = false
+
+        internal fun addCreator(uuid: UUID, creator: XYCreator) {
+            XYIBeaconBluetoothDevice.uuidToCreator[uuid] = this.creator
             uuidToCreator[uuid] = creator
         }
 
-        fun removeCreator(uuid: UUID) {
+        internal fun removeCreator(uuid: UUID) {
             uuidToCreator.remove(uuid)
         }
 
         private val uuidToCreator = HashMap<UUID, XYCreator>()
 
-        override fun getDevicesFromScanResult(context:Context, scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
+        internal val creator = object : XYCreator() {
+            override fun getDevicesFromScanResult(context: Context, scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
 
-            val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
-            if (bytes != null) {
-                val buffer = ByteBuffer.wrap(bytes)
-                buffer.position(2) //skip the type and size
+                val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
+                if (bytes != null) {
+                    val buffer = ByteBuffer.wrap(bytes)
+                    buffer.position(2) //skip the type and size
 
-                // get uuid
-                val high = buffer.getLong()
-                val low = buffer.getLong()
-                val uuidFromScan = UUID(high, low)
+                    // get uuid
+                    val high = buffer.getLong()
+                    val low = buffer.getLong()
+                    val uuidFromScan = UUID(high, low)
 
-                for ((uuid, creator) in uuidToCreator) {
-                    if (uuid.equals(uuidFromScan)) {
-                        creator.getDevicesFromScanResult(context, scanResult, globalDevices, foundDevices)
-                        return
+                    for ((uuid, creator) in uuidToCreator) {
+                        if (uuid.equals(uuidFromScan)) {
+                            creator.getDevicesFromScanResult(context, scanResult, globalDevices, foundDevices)
+                            return
+                        }
                     }
                 }
-            }
 
-            val hash = hashFromScanResult(scanResult)
+                val hash = hashFromScanResult(scanResult)
 
-            if (canCreate && hash != null) {
-                foundDevices[hash] = globalDevices[hash] ?: XYFinderBluetoothDevice(context, scanResult, hash)
+                if (canCreate && hash != null) {
+                    foundDevices[hash] = globalDevices[hash] ?: XYFinderBluetoothDevice(context, scanResult, hash)
+                }
             }
         }
 
-        fun hashFromScanResult(scanResult: XYScanResult): Int? {
+        internal fun hashFromScanResult(scanResult: XYScanResult): Int? {
             return XYIBeaconBluetoothDevice.hashFromScanResult(scanResult)
         }
 
-        val compareDistance = object : kotlin.Comparator<XYFinderBluetoothDevice> {
+        private val compareDistance = object : kotlin.Comparator<XYFinderBluetoothDevice> {
             override fun compare(o1: XYFinderBluetoothDevice?, o2: XYFinderBluetoothDevice?): Int {
-                if (o1 == null && o2 == null) return 0
-                if (o1 != null && o2 == null) return 1
-                if (o1 == null && o2 != null) return -1
-
-                if (o1!!.distance == o2!!.distance) return 0
-                if (o1.distance > o2.distance) return 1
-                return -1
+                if (o1 == null || o2 == null) {
+                    if (o1 != null && o2 == null) return -1
+                    if (o2 != null && o1 == null) return 1
+                    return 0
+                }
+                return o1.compareTo(o2)
             }
         }
 

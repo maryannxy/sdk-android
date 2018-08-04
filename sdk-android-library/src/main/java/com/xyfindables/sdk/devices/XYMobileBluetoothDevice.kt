@@ -24,16 +24,20 @@ open class XYMobileBluetoothDevice(context: Context, scanResult: XYScanResult, h
         var address = device?.address
         if (address == null) {
             val bluetoothManager = context.applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
-            if (bluetoothManager != null) {
-                address = bluetoothManager?.adapter?.address
-            }
+            address = bluetoothManager?.adapter?.address
         }
         _address = address ?: "00:00:00:00:00:00"
     }
 
+    override val prefix = "mobile"
+
+
+    override val uuid: UUID
+        get() = FAMILY_UUID
+
     companion object {
 
-        val FAMILY_UUID = UUID.fromString("735344c9-e820-42ec-9da7-f43a2b6802b9")
+        val FAMILY_UUID = UUID.fromString("735344c9-e820-42ec-9da7-f43a2b6802b9")!!
 
         fun create(context: Context, device: BluetoothDevice? = null) : XYMobileBluetoothDevice {
             val fakeScanResult = XYScanResultManual(device, -20, null, SystemClock.elapsedRealtimeNanos())

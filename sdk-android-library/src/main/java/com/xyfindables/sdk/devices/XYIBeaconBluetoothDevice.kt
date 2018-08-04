@@ -1,6 +1,7 @@
 package com.xyfindables.sdk.devices
 
 import android.content.Context
+import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.scanner.XYScanResult
 import unsigned.Ubyte
 import unsigned.Ushort
@@ -66,7 +67,7 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult?,
         }
     }
 
-    companion object : XYCreator() {
+    companion object : XYBase() {
 
         val APPLE_IBEACON_ID = 0x02.toByte()
 
@@ -75,7 +76,7 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult?,
         fun enable(enable: Boolean) {
             if (enable) {
                 XYAppleBluetoothDevice.enable(true)
-                XYAppleBluetoothDevice.typeToCreator[APPLE_IBEACON_ID] = this
+                XYAppleBluetoothDevice.typeToCreator[APPLE_IBEACON_ID] = this.creator
             } else {
                 XYAppleBluetoothDevice.typeToCreator.remove(APPLE_IBEACON_ID)
             }
@@ -96,22 +97,25 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult?,
             }
         }
 
-        val uuidToCreator = HashMap<UUID, XYCreator>()
-        override fun getDevicesFromScanResult(context:Context, scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
-            for ((uuid, creator) in uuidToCreator) {
-                val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
-                if (bytes != null) {
-                    if (uuid.equals(iBeaconUuidFromScanResult(scanResult))) {
-                        creator.getDevicesFromScanResult(context, scanResult, globalDevices, foundDevices)
-                        return
+        internal val uuidToCreator = HashMap<UUID, XYCreator>()
+
+        internal val creator = object : XYCreator() {
+            override fun getDevicesFromScanResult(context: Context, scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
+                for ((uuid, creator) in uuidToCreator) {
+                    val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
+                    if (bytes != null) {
+                        if (uuid.equals(iBeaconUuidFromScanResult(scanResult))) {
+                            creator.getDevicesFromScanResult(context, scanResult, globalDevices, foundDevices)
+                            return
+                        }
                     }
                 }
-            }
 
-            val hash = hashFromScanResult(scanResult)
+                val hash = hashFromScanResult(scanResult)
 
-            if (canCreate && hash != null) {
-                foundDevices[hash] = globalDevices[hash] ?: XYIBeaconBluetoothDevice(context, scanResult, hash)
+                if (canCreate && hash != null) {
+                    foundDevices[hash] = globalDevices[hash] ?: XYIBeaconBluetoothDevice(context, scanResult, hash)
+                }
             }
         }
 

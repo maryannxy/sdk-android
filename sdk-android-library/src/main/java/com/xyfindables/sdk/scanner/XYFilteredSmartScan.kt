@@ -88,7 +88,7 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
 
     fun getDevicesFromScanResult(scanResult: XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, foundDevices: HashMap<Int, XYBluetoothDevice>) {
         //only add them if they do not already exist
-        XYBluetoothDevice.getDevicesFromScanResult(context, scanResult, globalDevices, foundDevices)
+        XYBluetoothDevice.creator.getDevicesFromScanResult(context, scanResult, globalDevices, foundDevices)
 
         //add (or replace) all the found devices
         for ((_, foundDevice) in foundDevices) {
@@ -173,12 +173,12 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
     }
 
     private var handleDeviceNotifyExit = fun(device: XYBluetoothDevice) {
-        device.rssi = XYBluetoothGatt.OUTOFRANGE_RSSI
+        device.rssi = null
         devices.remove(device.hashCode())
         reportExited(device)
     }
 
-    protected fun onScanResult(scanResults: List<XYScanResult>): List<XYScanResult> {
+    internal fun onScanResult(scanResults: List<XYScanResult>): List<XYScanResult> {
         scanResultCount += scanResults.size
         for (scanResult in scanResults) {
             val foundDevices = HashMap<Int, XYBluetoothDevice>()
@@ -192,7 +192,7 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
                     if (scanResult.scanRecord != null) {
                         device.updateAds(scanResult.scanRecord!!)
                     }
-                    if (device.rssi == XYBluetoothGatt.OUTOFRANGE_RSSI) {
+                    if (device.rssi == null) {
                         reportEntered(device)
                         device.onEnter()
                         device.notifyExit = handleDeviceNotifyExit
