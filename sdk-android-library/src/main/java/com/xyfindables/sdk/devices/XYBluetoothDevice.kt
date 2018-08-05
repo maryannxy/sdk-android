@@ -210,8 +210,8 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         const val OUTOFRANGE_DELAY = 1500000
 
         internal var canCreate = false
-        internal val manufacturerToCreator = HashMap<Int, XYCreator>()
-        internal val serviceToCreator = HashMap<UUID, XYCreator>()
+        val manufacturerToCreator = HashMap<Int, XYCreator>()
+        val serviceToCreator = HashMap<UUID, XYCreator>()
 
         private fun getDevicesFromManufacturers(context:Context, scanResult:XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, newDevices: HashMap<Int, XYBluetoothDevice>) {
             for ((manufacturerId, creator) in manufacturerToCreator) {
