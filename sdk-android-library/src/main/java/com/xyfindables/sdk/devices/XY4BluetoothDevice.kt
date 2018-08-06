@@ -1,7 +1,6 @@
 package com.xyfindables.sdk.devices
 
 import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
 import com.xyfindables.core.XYBase
@@ -18,16 +17,17 @@ import unsigned.Ushort
 import java.nio.ByteBuffer
 import java.util.*
 
-open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:Int) : XYFinderBluetoothDevice(context, scanResult, hash) {
+open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash: Int) : XYFinderBluetoothDevice(context, scanResult, hash) {
 
     val alertNotification = AlertNotificationService(this)
     val batteryService = BatteryService(this)
     val currentTimeService = CurrentTimeService(this)
     val deviceInformationService = DeviceInformationService(this)
-    val genericAccess = GenericAccessService(this)
-    val genericAccessService = GenericAttributeService(this)
+    val genericAccessService = GenericAccessService(this)
+    val genericAttributeService = GenericAttributeService(this)
     val linkLossService = LinkLossService(this)
     val txPowerService = TxPowerService(this)
+
     val eddystoneService = EddystoneService(this)
     val eddystoneConfigService = EddystoneConfigService(this)
 
@@ -35,7 +35,7 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
 
     private var lastButtonPressTime = 0L
 
-    internal val buttonListener = object: XYBluetoothGattCallback() {
+    internal val buttonListener = object : XYBluetoothGattCallback() {
         override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
             logInfo("onCharacteristicChanged")
             super.onCharacteristicChanged(gatt, characteristic)
@@ -51,29 +51,34 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash:I
 
     override val prefix = "ibeacon"
 
-    override fun find() : Deferred<XYBluetoothResult<Int>> {
+    override fun find(): Deferred<XYBluetoothResult<Int>> {
         logInfo("find")
         return primary.buzzer.set(11)
     }
 
-    override fun lock() : Deferred<XYBluetoothResult<ByteArray>> {
+    override fun lock(): Deferred<XYBluetoothResult<ByteArray>> {
         logInfo("lock")
         return primary.lock.set(XY4BluetoothDevice.DefaultLockCode)
     }
 
-    override fun unlock() : Deferred<XYBluetoothResult<ByteArray>> {
+    override fun unlock(): Deferred<XYBluetoothResult<ByteArray>> {
         logInfo("unlock")
         return primary.unlock.set(XY4BluetoothDevice.DefaultLockCode)
     }
 
-    override fun stayAwake() : Deferred<XYBluetoothResult<Int>> {
+    override fun stayAwake(): Deferred<XYBluetoothResult<Int>> {
         logInfo("stayAwake")
         return primary.stayAwake.set(1)
     }
 
-    override fun fallAsleep() : Deferred<XYBluetoothResult<Int>> {
+    override fun fallAsleep(): Deferred<XYBluetoothResult<Int>> {
         logInfo("fallAsleep")
         return primary.stayAwake.set(0)
+    }
+
+    override fun batteryLevel(): Deferred<XYBluetoothResult<Int>> {
+        logInfo("batteryLevel")
+        return batteryService.level.get()
     }
 
     override fun onDetect(scanResult: XYScanResult?) {

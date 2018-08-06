@@ -11,7 +11,31 @@ class AlertNotificationService(device: XYBluetoothDevice) : Service(device) {
             return AlertNotificationService.uuid
         }
 
+    /**
+     * Control point of the Alert Notification server.
+     * Client can write the command here to request the several functions toward the server.
+     */
     val controlPoint = IntegerCharacteristic(this, characteristics.ControlPoint.uuid)
+
+    /**
+     * Number of unread alerts that exist in the specific category in the device.
+     */
+    val unreadAlertStatus = IntegerCharacteristic(this, characteristics.UnreadAlertStatus.uuid)
+
+    /**
+     * Category of the alert and how many new alerts of that category have occurred on the server device
+     */
+    val newAlert = IntegerCharacteristic(this, characteristics.NewAlert.uuid)
+
+    /**
+     * Category that the server supports for new alerts
+     */
+    val supportedNewAlertCategory = IntegerCharacteristic(this, characteristics.SupportedNewAlertCategory.uuid)
+
+    /**
+     *  Number of unread alerts that exist in the specific category in the device
+     */
+    val supportedUnreadAlertCategory = IntegerCharacteristic(this, characteristics.SupportedUnreadAlertCategory.uuid)
 
     companion object {
         val uuid = UUID.fromString("00001811-0000-1000-8000-00805F9B34FB")

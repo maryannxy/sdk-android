@@ -1,7 +1,6 @@
 package com.xyfindables.sdk.devices
 
 import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
 import com.xyfindables.core.XYBase
@@ -19,25 +18,26 @@ import java.util.*
 open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: Int) : XYFinderBluetoothDevice(context, scanResult, hash) {
 
     val alertNotification = AlertNotificationService(this)
-    val battery = BatteryService(this)
-    val currentTime = CurrentTimeService(this)
-    val deviceInformation = DeviceInformationService(this)
-    val genericAccess = GenericAccessService(this)
-    val genericAttribute = GenericAttributeService(this)
-    val linkLoss = LinkLossService(this)
-    val txPower = TxPowerService(this)
-    val basicConfig = BasicConfigService(this)
-    val control = ControlService(this)
-    val csrOta = CsrOtaService(this)
-    val extendedConfig = ExtendedConfigService(this)
-    val extendedControl = ExtendedControlService(this)
-    val sensor = SensorService(this)
+    val batteryService = BatteryService(this)
+    val currentTimeService = CurrentTimeService(this)
+    val deviceInformationService = DeviceInformationService(this)
+    val genericAccessService = GenericAccessService(this)
+    val genericAttributeService = GenericAttributeService(this)
+    val linkLossService = LinkLossService(this)
+    val txPowerService = TxPowerService(this)
+
+    val basicConfigService = BasicConfigService(this)
+    val controlService = ControlService(this)
+    val csrOtaService = CsrOtaService(this)
+    val extendedConfigService = ExtendedConfigService(this)
+    val extendedControlService = ExtendedControlService(this)
+    val sensorService = SensorService(this)
 
     internal val buttonListener = object: XYBluetoothGattCallback() {
         override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
             logInfo("onCharacteristicChanged")
             super.onCharacteristicChanged(gatt, characteristic)
-            if (characteristic?.uuid == control.button.uuid) {
+            if (characteristic?.uuid == controlService.button.uuid) {
                 reportButtonPressed(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0))
             }
         }
@@ -57,27 +57,27 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
 
     override fun find() : Deferred<XYBluetoothResult<Int>> {
         logInfo("find")
-        return control.buzzerSelect.set(3)
+        return controlService.buzzerSelect.set(3)
     }
 
     override fun lock() : Deferred<XYBluetoothResult<ByteArray>> {
         logInfo("lock")
-        return basicConfig.lock.set(XY3BluetoothDevice.DEFAULT_LOCK_CODE)
+        return basicConfigService.lock.set(XY3BluetoothDevice.DEFAULT_LOCK_CODE)
     }
 
     override fun unlock() : Deferred<XYBluetoothResult<ByteArray>> {
         logInfo("unlock")
-        return basicConfig.unlock.set(XY3BluetoothDevice.DEFAULT_LOCK_CODE)
+        return basicConfigService.unlock.set(XY3BluetoothDevice.DEFAULT_LOCK_CODE)
     }
 
     override fun stayAwake() : Deferred<XYBluetoothResult<Int>> {
         logInfo("stayAwake")
-        return extendedConfig.registration.set(1)
+        return extendedConfigService.registration.set(1)
     }
 
     override fun fallAsleep() : Deferred<XYBluetoothResult<Int>> {
         logInfo("fallAsleep")
-        return extendedConfig.registration.set(0)
+        return extendedConfigService.registration.set(0)
     }
 
     fun reportButtonPressed(state: Int) {
@@ -93,7 +93,7 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
                             3 -> xy3Listener.buttonLongPressed()
                         }
                         //everytime a notify fires, we have to re-enable it
-                        control.button.enableNotify(true)
+                        controlService.button.enableNotify(true)
                     }
                 }
             }

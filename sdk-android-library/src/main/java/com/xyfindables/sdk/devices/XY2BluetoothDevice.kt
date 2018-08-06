@@ -13,23 +13,24 @@ import java.util.*
 open class XY2BluetoothDevice(context: Context, scanResult: XYScanResult, hash: Int) : XYFinderBluetoothDevice(context, scanResult, hash) {
 
     val alertNotification = AlertNotificationService(this)
-    val battery = BatteryService(this)
-    val currentTime = CurrentTimeService(this)
-    val deviceInformation = DeviceInformationService(this)
-    val genericAccess = GenericAccessService(this)
-    val genericAttribute = GenericAttributeService(this)
-    val linkLoss = LinkLossService(this)
-    val txPower = TxPowerService(this)
-    val basicConfig = BasicConfigService(this)
-    val control = ControlService(this)
-    val csrOta = CsrOtaService(this)
-    val extendedConfig = ExtendedConfigService(this)
-    val extendedControl = ExtendedControlService(this)
-    val sensor = SensorService(this)
+    val batteryService = BatteryService(this)
+    val currentTimeService = CurrentTimeService(this)
+    val deviceInformationService = DeviceInformationService(this)
+    val genericAccessService = GenericAccessService(this)
+    val genericAttributeService = GenericAttributeService(this)
+    val linkLossService = LinkLossService(this)
+    val txPowerService = TxPowerService(this)
+
+    val basicConfigService = BasicConfigService(this)
+    val controlService = ControlService(this)
+    val csrOtaService = CsrOtaService(this)
+    val extendedConfigService = ExtendedConfigService(this)
+    val extendedControlService = ExtendedControlService(this)
+    val sensorService = SensorService(this)
 
     override fun find() : Deferred<XYBluetoothResult<Int>> {
         logInfo("find")
-        return control.buzzerSelect.set(1)
+        return controlService.buzzerSelect.set(1)
     }
 
     override val prefix = "ibeacon"
