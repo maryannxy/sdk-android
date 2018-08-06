@@ -212,7 +212,7 @@ class InfoFragment : XYAppBaseFragment(), View.OnClickListener {
         logInfo("batteryButton: onClick")
         ui {
             button_battery.isEnabled = false
-            progress_spinner.visibility = VISIBLE
+            activity?.showProgressSpinner()
         }
         job = launch(CommonPool) {
             val level = (activity?.device as? XYFinderBluetoothDevice)?.batteryLevel()?.await()
@@ -226,7 +226,7 @@ class InfoFragment : XYAppBaseFragment(), View.OnClickListener {
 
             ui {
                 button_battery.isEnabled = true
-                progress_spinner.visibility = GONE
+               activity?.hideProgressSpinner()
             }
         }
     }

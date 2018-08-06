@@ -4,7 +4,10 @@ import android.os.Bundle
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentStatePagerAdapter
+import android.support.v4.app.FragmentPagerAdapter
+import android.util.SparseArray
+import android.view.View
+import android.view.ViewGroup
 import com.xyfindables.sdk.devices.XY3BluetoothDevice
 import com.xyfindables.sdk.devices.XY4BluetoothDevice
 import com.xyfindables.sdk.devices.XYBluetoothDevice
@@ -16,7 +19,7 @@ import com.xyfindables.sdk.sample.fragments.InfoFragment
 import com.xyfindables.sdk.sample.fragments.XYAppBaseFragment
 import com.xyfindables.ui.XYBaseFragment
 import kotlinx.android.synthetic.main.device_activity.*
-import java.util.*
+
 
 /**
  * Created by arietrouw on 12/28/17.
@@ -143,9 +146,16 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         //enableButtonNotify()
     }
 
+    fun showProgressSpinner() {
+        progress_spinner.visibility = View.VISIBLE
+    }
+
+    fun hideProgressSpinner() {
+        progress_spinner.visibility = View.GONE
+    }
 
     fun update() {
-        val frag = mSectionsPagerAdapter.mapping?.get(container.currentItem)
+        val frag = mSectionsPagerAdapter.getFragmentByPosition(container.currentItem)
         (frag as? XYAppBaseFragment)?.update()
     }
 
@@ -164,10 +174,9 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
     }
 
 
-    inner class SectionsPagerAdapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
+    inner class SectionsPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
         private val size = 3
-        val mapping: HashMap<Int, XYBaseFragment>? = HashMap(size)
-
+        private var fragments: SparseArray<XYBaseFragment> = SparseArray(size)
 
         override fun getItem(position: Int): Fragment {
             lateinit var frag: XYBaseFragment
@@ -184,12 +193,21 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
                 }
             }
 
-            mapping?.put(position, frag)
             return frag
         }
 
         override fun getCount(): Int {
             return size
+        }
+
+        override fun instantiateItem(container: ViewGroup, position: Int): Any {
+            val fragment = super.instantiateItem(container, position) as XYBaseFragment
+            fragments.append(position, fragment)
+            return fragment
+        }
+
+        fun getFragmentByPosition(position: Int): XYBaseFragment {
+            return fragments.get(position)
         }
     }
 }
