@@ -22,4 +22,6 @@
     <string name="uptime">Uptime:\u0020</string>
     <string name="pulses_second">Pulses/Second:\u0020</string>
     <string name="devices">Devices:\u0020</string>
+    <string name="refresh">Refresh</string>
+
 </resources>

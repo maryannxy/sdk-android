@@ -1,9 +1,11 @@
-package com.xyfindables.sdk.sample
+package com.xyfindables.sdk.sample.activities
 
 import android.os.Bundle
 import android.widget.BaseAdapter
 import com.xyfindables.core.XYBase
 import com.xyfindables.core.XYPermissions
+import com.xyfindables.sdk.sample.R
+import com.xyfindables.sdk.sample.adapters.XYDeviceAdapter
 import kotlinx.android.synthetic.main.activity_xyfindables_sdk_sample.*
 
 class XYFindablesSdkSampleActivity : XYAppBaseActivity() {

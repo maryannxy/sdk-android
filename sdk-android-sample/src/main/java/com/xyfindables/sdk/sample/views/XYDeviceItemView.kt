@@ -1,4 +1,4 @@
-package com.xyfindables.sdk.sample
+package com.xyfindables.sdk.sample.views
 
 import android.content.Context
 import android.content.Intent
@@ -10,6 +10,8 @@ import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.devices.XYBluetoothDevice
 
 import com.xyfindables.sdk.devices.XYIBeaconBluetoothDevice
+import com.xyfindables.sdk.sample.R
+import com.xyfindables.sdk.sample.activities.XYFinderDeviceActivity
 import kotlinx.android.synthetic.main.device_item.view.*
 
 /**

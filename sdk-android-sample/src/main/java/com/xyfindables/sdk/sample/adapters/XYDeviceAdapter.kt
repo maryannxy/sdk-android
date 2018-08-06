@@ -1,4 +1,4 @@
-package com.xyfindables.sdk.sample
+package com.xyfindables.sdk.sample.adapters
 
 import android.app.Activity
 import android.view.View
@@ -6,6 +6,9 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import com.xyfindables.sdk.devices.XYBluetoothDevice
 import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
+import com.xyfindables.sdk.sample.R
+import com.xyfindables.sdk.sample.XYApplication
+import com.xyfindables.sdk.sample.views.XYDeviceItemView
 import com.xyfindables.sdk.scanner.XYFilteredSmartScan
 import com.xyfindables.ui.ui
 import java.util.*

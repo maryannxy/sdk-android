@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.xyfindables.sdk.sample.XYBLEStatsView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.xyfindables.sdk.sample.views.XYBLEStatsView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:theme="@style/XYTheme">
@@ -20,7 +20,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
-                android:text="@string/uptime" />
+                android:text="@string/uptime"
+                android:textColor="@color/black" />
 
             <TextView
                 android:id="@+id/uptime"
@@ -32,7 +33,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
-                android:text="@string/pulses" />
+                android:text="@string/pulses"
+                android:textColor="@color/black" />
 
             <TextView
                 android:id="@+id/pulses"
@@ -52,7 +54,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
-                android:text="@string/pulses_second" />
+                android:text="@string/pulses_second"
+                android:textColor="@color/black" />
 
             <TextView
                 android:id="@+id/pulsesPerSecond"
@@ -64,7 +67,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
-                android:text="@string/devices" />
+                android:text="@string/devices"
+                android:textColor="@color/black" />
 
             <TextView
                 android:id="@+id/devices"
@@ -73,4 +77,4 @@
                 android:layout_margin="4dp" />
         </LinearLayout>
     </LinearLayout>
-</com.xyfindables.sdk.sample.XYBLEStatsView>
+</com.xyfindables.sdk.sample.views.XYBLEStatsView>

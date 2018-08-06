@@ -1,5 +1,6 @@
-package com.xyfindables.sdk.sample
+package com.xyfindables.sdk.sample.activities
 
+import com.xyfindables.sdk.sample.XYApplication
 import com.xyfindables.sdk.scanner.XYFilteredSmartScan
 import com.xyfindables.ui.XYBaseActivity
 

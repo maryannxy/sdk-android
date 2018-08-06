@@ -47,4 +47,6 @@ dependencies {
     api project(path: ':sdk-android-library')
     api project(path: ':xycore')
     api project(path: ':xyui')
+    implementation 'com.android.support:design:27.1.1'
+    implementation 'com.android.support:support-v4:27.1.1'
 }

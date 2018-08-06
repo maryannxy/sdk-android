@@ -1,10 +1,12 @@
-package com.xyfindables.sdk.sample
+package com.xyfindables.sdk.sample.views
 
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.xyfindables.sdk.devices.XYBluetoothDevice
+import com.xyfindables.sdk.sample.R
+import com.xyfindables.sdk.sample.XYApplication
 
 import com.xyfindables.sdk.scanner.XYFilteredSmartScan
 
