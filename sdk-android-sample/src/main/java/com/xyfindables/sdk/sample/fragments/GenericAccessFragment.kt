@@ -8,12 +8,9 @@ import android.view.ViewGroup
 import com.xyfindables.sdk.devices.XY2BluetoothDevice
 import com.xyfindables.sdk.devices.XY3BluetoothDevice
 import com.xyfindables.sdk.devices.XY4BluetoothDevice
-import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
 import com.xyfindables.sdk.sample.R
 import com.xyfindables.ui.ui
 import kotlinx.android.synthetic.main.fragment_generic_access.*
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.launch
 
 
 class GenericAccessFragment : XYAppBaseFragment() {

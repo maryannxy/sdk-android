@@ -17,7 +17,7 @@ class XYDeviceAdapter(private val activity: Activity) : BaseAdapter() {
     private var devices: List<XYFinderBluetoothDevice>
     private var lastSort = System.currentTimeMillis()
 
-    val scanner : XYFilteredSmartScan
+    private val scanner : XYFilteredSmartScan
         get() {
             return (activity.applicationContext as XYApplication).scanner
         }
