@@ -26,7 +26,7 @@
                 android:orientation="horizontal">
 
                 <com.xyfindables.ui.views.XYButton
-                    android:id="@+id/button_refresh"
+                    android:id="@+id/button_generic_refresh"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/refresh" />

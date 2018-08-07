@@ -23,10 +23,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/layout_margin_normal"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingBottom="20dp">
 
                 <com.xyfindables.ui.views.XYButton
-                    android:id="@+id/button_refresh"
+                    android:id="@+id/button_alert_refresh"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/refresh" />
@@ -43,12 +44,13 @@
                     android:layout_width="wrap_content"
                     android:layout_height="19dp"
                     android:layout_marginTop="4dp"
-                    android:text="controlPoint: " />
+                    android:text="controlPoint: "
+                    android:textColor="@color/black" />
 
                 <TextView
-                    android:id="@+id/controlPoint"
+                    android:id="@+id/text_control_point"
                     android:layout_width="wrap_content"
-                    android:layout_height="19dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:layout_marginTop="4dp" />
             </LinearLayout>
@@ -63,10 +65,11 @@
                     android:id="@+id/unreadAlertStatusLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="unreadAlertStatus: " />
+                    android:text="unreadAlertStatus: "
+                    android:textColor="@color/black" />
 
                 <TextView
-                    android:id="@+id/unreadAlertStatus"
+                    android:id="@+id/text_unread_alert_status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>
@@ -81,10 +84,11 @@
                     android:id="@+id/newAlertLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="newAlert: " />
+                    android:text="newAlert: "
+                    android:textColor="@color/black" />
 
                 <TextView
-                    android:id="@+id/newAlert"
+                    android:id="@+id/text_new_alert"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>
@@ -99,10 +103,11 @@
                     android:id="@+id/supportedNewAlertCategoryLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="supportedNewAlertCategory: " />
+                    android:text="supportedNewAlertCategory: "
+                    android:textColor="@color/black" />
 
                 <TextView
-                    android:id="@+id/supportedNewAlertCategory"
+                    android:id="@+id/text_new_alert_category"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>
@@ -117,10 +122,11 @@
                     android:id="@+id/supportedUnreadAlertCategoryLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="supportedUnreadAlertCategory" />
+                    android:text="supportedUnreadAlertCategory"
+                    android:textColor="@color/black" />
 
                 <TextView
-                    android:id="@+id/supportedUnreadAlertCategory"
+                    android:id="@+id/text_unread_alert_category"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>

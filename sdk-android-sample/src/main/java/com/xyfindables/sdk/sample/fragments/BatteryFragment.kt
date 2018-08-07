@@ -53,7 +53,7 @@ class BatteryFragment : XYAppBaseFragment() {
                 level == null -> activity?.showToast("Unable to get battery level")
                 level.value == null -> activity?.showToast("Unable to get battery level.value")
                 else -> ui {
-                    battery_level?.text = level.value.toString()
+                    text_batteryLevel?.text = level.value.toString()
                 }
             }
 

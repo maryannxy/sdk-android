@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
 import com.xyfindables.sdk.sample.R
 import com.xyfindables.ui.ui
-import kotlinx.android.synthetic.main.fragment_alert.*
+import kotlinx.android.synthetic.main.fragment_generic_access.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
 
@@ -25,7 +25,7 @@ class GenericAccessFragment : XYAppBaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        button_refresh.setOnClickListener {
+        button_generic_refresh.setOnClickListener {
             logInfo("refresh clicked")
             update()
         }
@@ -33,19 +33,6 @@ class GenericAccessFragment : XYAppBaseFragment() {
 
     override fun update() {
 
-    }
-
-    private fun name() {
-        ui {
-            button_refresh.isEnabled = false
-        }
-        logInfo("beepButton: got xyDevice")
-        launch(CommonPool) {
-            (activity?.device as? XYFinderBluetoothDevice)?.find()?.await()
-            ui {
-                button_refresh.isEnabled = true
-            }
-        }
     }
 
     companion object {

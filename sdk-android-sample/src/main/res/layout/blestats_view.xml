@@ -37,7 +37,7 @@
                 android:textColor="@color/black" />
 
             <TextView
-                android:id="@+id/pulses"
+                android:id="@+id/text_pulses"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp" />

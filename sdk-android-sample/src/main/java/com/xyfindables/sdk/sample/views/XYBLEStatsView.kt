@@ -50,7 +50,7 @@ class XYBLEStatsView(context: Context, attrs: AttributeSet) : LinearLayout(conte
             val uptimeView = findViewById<TextView>(R.id.uptime)!!
             uptimeView.text = ("%.2f").format(scanner.uptimeSeconds)
 
-            val pulseCountView = findViewById<TextView>(R.id.pulses)!!
+            val pulseCountView = findViewById<TextView>(R.id.text_pulses)!!
             pulseCountView.text = scanner.scanResultCount.toString()
 
             val pulsePerSecView = findViewById<TextView>(R.id.pulsesPerSecond)!!

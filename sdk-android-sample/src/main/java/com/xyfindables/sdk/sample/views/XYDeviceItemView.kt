@@ -34,31 +34,31 @@ class XYDeviceItemView(context: Context, attrs: AttributeSet) : RelativeLayout(c
 
     fun update() {
         post {
-            family.text = device!!.javaClass.simpleName
-            name.text = device!!.name
-            address.text = device!!.address
-            rssi.text = device!!.rssi.toString()
+            text_family.text = device!!.javaClass.simpleName
+            text_name.text = device!!.name
+            text_address.text = device!!.address
+            text_rssi.text = device!!.rssi.toString()
             val majorLabelView = findViewById<TextView>(R.id.majorLabel)
             val minorLabelView = findViewById<TextView>(R.id.minorLabel)
 
             val ibeacon = device as? XYIBeaconBluetoothDevice
             if (ibeacon != null) {
-                major.text = ibeacon.major.toInt().toString()
-                minor.text = ibeacon.minor.toInt().toString()
-                uuid.text = ibeacon.uuid.toString()
-                major.visibility = View.VISIBLE
-                minor.visibility = View.VISIBLE
+                text_major.text = ibeacon.major.toInt().toString()
+                text_minor.text = ibeacon.minor.toInt().toString()
+                text_uuid.text = ibeacon.uuid.toString()
+                text_major.visibility = View.VISIBLE
+                text_minor.visibility = View.VISIBLE
                 majorLabelView.visibility = View.VISIBLE
                 minorLabelView.visibility = View.VISIBLE
             } else {
-                uuid.text = "N/A"
-                major.visibility = View.GONE
-                minor.visibility = View.GONE
+                text_uuid.text = "N/A"
+                text_major.visibility = View.GONE
+                text_minor.visibility = View.GONE
                 majorLabelView.visibility = View.GONE
                 minorLabelView.visibility = View.GONE
             }
 
-            pulses.text = device!!.detectCount.toString()
+            text_pulses.text = device!!.detectCount.toString()
         }
     }
 

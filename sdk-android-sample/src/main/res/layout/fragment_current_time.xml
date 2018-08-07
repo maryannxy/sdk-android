@@ -23,13 +23,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/layout_margin_normal"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingBottom="20dp">
 
                 <com.xyfindables.ui.views.XYButton
-                    android:id="@+id/button_refresh"
+                    android:id="@+id/button_time_refresh"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="20dp"
                     android:text="@string/refresh" />
             </LinearLayout>
 
@@ -48,12 +48,11 @@
                     android:textColor="@color/black" />
 
                 <TextView
-                    android:id="@+id/currentTime"
+                    android:id="@+id/text_currentTime"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:layout_marginTop="4dp"
-                    android:minLines="6" />
+                    android:layout_marginTop="4dp" />
             </LinearLayout>
 
             <LinearLayout
@@ -70,10 +69,9 @@
                     android:textColor="@color/black" />
 
                 <TextView
-                    android:id="@+id/localTimeInformation"
+                    android:id="@+id/text_localTimeInformation"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:minLines="6" />
+                    android:layout_height="wrap_content" />
             </LinearLayout>
 
             <LinearLayout
@@ -90,10 +88,9 @@
                     android:textColor="@color/black" />
 
                 <TextView
-                    android:id="@+id/referenceTimeInformation"
+                    android:id="@+id/text_referenceTimeInformation"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:minLines="6" />
+                    android:layout_height="wrap_content" />
             </LinearLayout>
 
         </LinearLayout>

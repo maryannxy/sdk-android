@@ -47,7 +47,7 @@
                     android:text="@string/family" />
 
                 <TextView
-                    android:id="@+id/family"
+                    android:id="@+id/text_family"
                     android:layout_width="wrap_content"
                     android:layout_height="19dp"
                     android:layout_marginStart="4dp"
@@ -68,7 +68,7 @@
                     android:text="@string/major" />
 
                 <TextView
-                    android:id="@+id/major"
+                    android:id="@+id/text_major"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     tools:text="11111" />
@@ -87,7 +87,7 @@
                     android:text="@string/minor" />
 
                 <TextView
-                    android:id="@+id/minor"
+                    android:id="@+id/text_minor"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     tools:text="00000" />
@@ -106,7 +106,7 @@
                     android:text="@string/rssi" />
 
                 <TextView
-                    android:id="@+id/rssi"
+                    android:id="@+id/text_rssi"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     tools:text="-999" />
@@ -125,7 +125,7 @@
                     android:text="@string/pulses" />
 
                 <TextView
-                    android:id="@+id/pulseCount"
+                    android:id="@+id/test_pulse_count"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     tools:text="99" />
@@ -144,7 +144,7 @@
                     android:text="@string/enter" />
 
                 <TextView
-                    android:id="@+id/enterCount"
+                    android:id="@+id/text_enter_count"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     tools:text="2" />
@@ -162,7 +162,7 @@
                     android:text="@string/exit" />
 
                 <TextView
-                    android:id="@+id/exitCount"
+                    android:id="@+id/text_exit_count"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     tools:text="1" />
@@ -177,11 +177,11 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:labelFor="@+id/lock_value"
+                    android:labelFor="@+id/edit_lock_value"
                     android:text="@string/lock" />
 
                 <EditText
-                    android:id="@+id/lock_value"
+                    android:id="@+id/edit_lock_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:width="120dp"
