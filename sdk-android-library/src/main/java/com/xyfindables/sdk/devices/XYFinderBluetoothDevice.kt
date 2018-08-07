@@ -61,29 +61,39 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
 
     internal open val prefix = "finder"
 
+    //the distance is in meters, so these are what we subjectively think are the fuzzy proximity values
     val proximity: Proximity
         get() {
 
             val distance = distance ?: return Proximity.OutOfRange
 
+            logInfo("Distance: $distance")
+
             if (distance < 0.0) {
                 return Proximity.None
             }
-            if (distance < 0.0173) {
+
+            if (distance < 0.5) {
                 return Proximity.Touching
             }
-            if (distance < 1.0108) {
+
+            if (distance < 2) {
                 return Proximity.VeryNear
             }
-            if (distance < 3.0639) {
+
+            if (distance < 6) {
                 return Proximity.Near
             }
-            if (distance < 8.3779) {
+
+            if (distance < 12) {
                 return Proximity.Medium
             }
-            return if (distance < 20.6086) {
-                Proximity.Far
-            } else Proximity.VeryFar
+
+            if (distance < 24) {
+                return Proximity.Far
+            }
+
+            return Proximity.VeryFar
         }
 
     //signal the user to where it is, usually make it beep
@@ -147,9 +157,9 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
     open val distance : Double?
         get() {
             val rssi = rssi ?: return null
-            val a = (power - rssi.toInt()).toFloat()
+            val a = (power - rssi).toDouble()
             val b = a / (10.0f * 2.0f)
-            return Math.pow(10.0, b.toDouble())
+            return Math.pow(10.0, b)
         }
 
     open class Listener : XYIBeaconBluetoothDevice.Listener() {
