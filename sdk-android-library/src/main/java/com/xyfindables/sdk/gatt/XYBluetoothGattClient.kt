@@ -1,11 +1,11 @@
 package com.xyfindables.sdk.gatt
 
-import android.bluetooth.*
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
 import android.os.Handler
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.Deferred
 import java.util.*
-import kotlin.coroutines.experimental.suspendCoroutine
 
 open class XYBluetoothGattClient protected constructor(
         context:Context,

@@ -1,7 +1,6 @@
 package com.xyfindables.sdk.devices
 
 import android.content.Context
-import android.util.SparseArray
 import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.scanner.XYScanResult
 

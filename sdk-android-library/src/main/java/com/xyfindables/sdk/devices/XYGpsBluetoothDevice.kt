@@ -1,7 +1,6 @@
 package com.xyfindables.sdk.devices
 
 import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
 import com.xyfindables.core.XYBase
@@ -107,21 +106,21 @@ open class XYGpsBluetoothDevice(context: Context, scanResult: XYScanResult, hash
 
         fun majorFromScanResult(scanResult: XYScanResult): Int? {
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
-            if (bytes != null) {
+            return if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
-                return buffer.getShort(18).toInt()
+                buffer.getShort(18).toInt()
             } else {
-                return null
+                null
             }
         }
 
         fun minorFromScanResult(scanResult: XYScanResult): Int? {
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
-            if (bytes != null) {
+            return if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
-                return buffer.getShort(20).toInt().and(0xfff0).or(0x0004)
+                buffer.getShort(20).toInt().and(0xfff0).or(0x0004)
             } else {
-                return null
+                null
             }
         }
 

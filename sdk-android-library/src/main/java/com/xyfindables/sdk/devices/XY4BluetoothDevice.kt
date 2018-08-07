@@ -143,7 +143,7 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
         val DefaultLockCode = byteArrayOf(0x00.toByte(), 0x01.toByte(), 0x02.toByte(), 0x03.toByte(), 0x04.toByte(), 0x05.toByte(), 0x06.toByte(), 0x07.toByte(), 0x08.toByte(), 0x09.toByte(), 0x0a.toByte(), 0x0b.toByte(), 0x0c.toByte(), 0x0d.toByte(), 0x0e.toByte(), 0x0f.toByte())
 
         //this is how long the xy4 will broadcast ads with power level 8 when a button is pressed once
-        private val BUTTON_ADVERTISEMENT_LENGTH = 30 * 1000
+        private const val BUTTON_ADVERTISEMENT_LENGTH = 30 * 1000
 
         enum class StayAwake(val state: Int) {
             Off(0),
@@ -186,31 +186,31 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
 
         fun majorFromScanResult(scanResult: XYScanResult): Ushort? {
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
-            if (bytes != null) {
+            return if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
-                return Ushort(buffer.getShort(18).toInt())
+                Ushort(buffer.getShort(18).toInt())
             } else {
-                return null
+                null
             }
         }
 
         fun pressFromScanResult(scanResult: XYScanResult): Boolean {
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
-            if (bytes != null) {
+            return if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
-                return Ushort(buffer.getShort(20)).and(0x0008) == Ushort(0x0008)
+                Ushort(buffer.getShort(20)).and(0x0008) == Ushort(0x0008)
             } else {
-                return false
+                false
             }
         }
 
         fun minorFromScanResult(scanResult: XYScanResult): Ushort? {
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
-            if (bytes != null) {
+            return if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
-                return Ushort(buffer.getShort(20).toInt()).and(0xfff0).or(0x0004)
+                Ushort(buffer.getShort(20).toInt()).and(0xfff0).or(0x0004)
             } else {
-                return null
+                null
             }
         }
 

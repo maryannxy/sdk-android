@@ -1,11 +1,8 @@
 package com.xyfindables.sdk.gatt
 
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattServer
 import android.bluetooth.BluetoothGattServerCallback
 import android.content.Context
-import android.os.Handler
 
 open class XYBluetoothGattServer(context: Context)
     : XYBluetoothBase(

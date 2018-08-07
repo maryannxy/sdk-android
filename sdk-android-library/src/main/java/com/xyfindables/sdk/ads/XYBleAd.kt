@@ -1,9 +1,7 @@
 package com.xyfindables.sdk.ads
 
 import com.xyfindables.core.XYBase
-import unsigned.Ubyte
 import java.nio.ByteBuffer
-import java.security.MessageDigest
 
 open class XYBleAd(buffer: ByteBuffer) : XYBase() {
 

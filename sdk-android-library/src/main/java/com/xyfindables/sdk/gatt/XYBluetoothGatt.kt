@@ -6,7 +6,6 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import com.xyfindables.sdk.CallByVersion
-import com.xyfindables.sdk.devices.XYBluetoothDevice
 import com.xyfindables.sdk.scanner.XYScanResult
 import kotlinx.coroutines.experimental.*
 import java.util.*
@@ -153,25 +152,28 @@ open class XYBluetoothGatt protected constructor(
                     val listener = object : XYBluetoothGattCallback() {
                         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
                             super.onConnectionStateChange(gatt, status, newState)
-                            if (status == BluetoothGatt.GATT_FAILURE) {
-                                logInfo("connect:failure: $status : $newState")
-                                error = XYBluetoothError("connect: connection failed(status): $status : $newState")
-                                removeGattListener(listenerName)
-                                resumed = true
-                                cont.resume(null)
-                            } else if (newState == BluetoothGatt.STATE_CONNECTED) {
-                                logInfo("connect:connected")
-                                removeGattListener(listenerName)
-                                resumed = true
-                                cont.resume(true)
-                            } else if (newState == BluetoothGatt.STATE_CONNECTING) {
-                                logInfo("connect:connecting")
+                            when {
+                                status == BluetoothGatt.GATT_FAILURE -> {
+                                    logInfo("connect:failure: $status : $newState")
+                                    error = XYBluetoothError("connect: connection failed(status): $status : $newState")
+                                    removeGattListener(listenerName)
+                                    resumed = true
+                                    cont.resume(null)
+                                }
+                                newState == BluetoothGatt.STATE_CONNECTED -> {
+                                    logInfo("connect:connected")
+                                    removeGattListener(listenerName)
+                                    resumed = true
+                                    cont.resume(true)
+                                }
+                                newState == BluetoothGatt.STATE_CONNECTING -> logInfo("connect:connecting")
                                 //wait some more
-                            } else {
-                                error = XYBluetoothError("connect: connection failed(state): $status : $newState")
-                                removeGattListener(listenerName)
-                                resumed = true
-                                cont.resume(null)
+                                else -> {
+                                    error = XYBluetoothError("connect: connection failed(state): $status : $newState")
+                                    removeGattListener(listenerName)
+                                    resumed = true
+                                    cont.resume(null)
+                                }
                             }
                         }
                     }
@@ -236,33 +238,40 @@ open class XYBluetoothGatt protected constructor(
                     val listener = object : XYBluetoothGattCallback() {
                         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
                             super.onConnectionStateChange(gatt, status, newState)
-                            if (status == BluetoothGatt.GATT_FAILURE) {
-                                error = XYBluetoothError("asyncDisconnect: disconnection failed(status): $status : $newState")
-                                removeGattListener(listenerName)
-                                cont.resume(null)
-                            } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                                removeGattListener(listenerName)
-                                cont.resume(true)
-                            } else if (newState == BluetoothGatt.STATE_DISCONNECTING) {
-                                //wait some more
-                            } else {
-                                //error = XYBluetoothError("asyncDisconnect: connection failed(state): $status : $newState")
-                                //cont.resume(null)
+                            when {
+                                status == BluetoothGatt.GATT_FAILURE -> {
+                                    error = XYBluetoothError("asyncDisconnect: disconnection failed(status): $status : $newState")
+                                    removeGattListener(listenerName)
+                                    cont.resume(null)
+                                }
+                                newState == BluetoothGatt.STATE_DISCONNECTED -> {
+                                    removeGattListener(listenerName)
+                                    cont.resume(true)
+                                }
+                                newState == BluetoothGatt.STATE_DISCONNECTING -> {
+                                    //wait some more
+                                }
+                                else -> {
+                                    //error = XYBluetoothError("asyncDisconnect: connection failed(state): $status : $newState")
+                                    //cont.resume(null)
+                                }
                             }
                         }
                     }
                     addGattListener(listenerName, listener)
 
-                    if (connectionState == ConnectionState.Disconnected) {
-                        logInfo("asyncDisconnect:already disconnected")
-                        removeGattListener(listenerName)
-                        cont.resume(true)
-                    } else if (connectionState == ConnectionState.Disconnecting) {
-                        logInfo("asyncDisconnect:disconnecting")
+                    when (connectionState) {
+                        ConnectionState.Disconnected -> {
+                            logInfo("asyncDisconnect:already disconnected")
+                            removeGattListener(listenerName)
+                            cont.resume(true)
+                        }
+                        ConnectionState.Disconnecting -> logInfo("asyncDisconnect:disconnecting")
                         //dont call connect since already in progress
-                    } else {
-                        logInfo("asyncDisconnect:starting disconnect")
-                        gatt.disconnect()
+                        else -> {
+                            logInfo("asyncDisconnect:starting disconnect")
+                            gatt.disconnect()
+                        }
                     }
                 }
             }
@@ -535,10 +544,10 @@ open class XYBluetoothGatt protected constructor(
                               autoConnect: Boolean,
                               transport: Int?) : BluetoothGatt? {
         logInfo("connectGatt23")
-        if (transport == null) {
-            return device.connectGatt(context, autoConnect, centralCallback)
+        return if (transport == null) {
+            device.connectGatt(context, autoConnect, centralCallback)
         } else {
-            return device.connectGatt(context, autoConnect, centralCallback, transport)
+            device.connectGatt(context, autoConnect, centralCallback, transport)
         }
     }
     @TargetApi(Build.VERSION_CODES.O)
@@ -548,14 +557,11 @@ open class XYBluetoothGatt protected constructor(
                               phy: Int?,
                               handler: Handler?) : BluetoothGatt? {
         logInfo("connectGatt26")
-        if (transport == null) {
-            return device.connectGatt(context, autoConnect, centralCallback)
-        } else if (phy == null){
-            return  device.connectGatt(context, autoConnect, centralCallback, transport)
-        } else if (handler == null) {
-            return device.connectGatt(context, autoConnect, centralCallback, transport, phy)
-        } else {
-            return device.connectGatt(context, autoConnect, centralCallback, transport, phy, handler)
+        return when {
+            transport == null -> device.connectGatt(context, autoConnect, centralCallback)
+            phy == null -> device.connectGatt(context, autoConnect, centralCallback, transport)
+            handler == null -> device.connectGatt(context, autoConnect, centralCallback, transport, phy)
+            else -> device.connectGatt(context, autoConnect, centralCallback, transport, phy, handler)
         }
     }
 
