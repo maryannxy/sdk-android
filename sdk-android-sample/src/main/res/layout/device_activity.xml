@@ -29,25 +29,62 @@
         <android.support.design.widget.TabLayout
             android:id="@+id/tabs"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:tabMode="scrollable">
 
             <android.support.design.widget.TabItem
-                android:id="@+id/tabItem"
+                android:id="@+id/tabGeneral"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Info" />
 
             <android.support.design.widget.TabItem
-                android:id="@+id/tabItem2"
+                android:id="@+id/tabAlert"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Alert" />
 
             <android.support.design.widget.TabItem
-                android:id="@+id/tabItem3"
+                android:id="@+id/tabBattery"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Battery" />
+
+            <android.support.design.widget.TabItem
+                android:id="@+id/tabTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Time" />
+
+            <android.support.design.widget.TabItem
+                android:id="@+id/tabInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Device" />
+
+            <android.support.design.widget.TabItem
+                android:id="@+id/tabGap"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="GAP" />
+
+            <android.support.design.widget.TabItem
+                android:id="@+id/tabGatt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GATT" />
+
+            <android.support.design.widget.TabItem
+                android:id="@+id/tabLinkLoss"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="linkLoss" />
+
+            <android.support.design.widget.TabItem
+                android:id="@+id/tabTx"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tx" />
 
         </android.support.design.widget.TabLayout>
     </android.support.design.widget.AppBarLayout>

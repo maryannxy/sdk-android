@@ -13,10 +13,7 @@ import com.xyfindables.sdk.devices.XY4BluetoothDevice
 import com.xyfindables.sdk.devices.XYBluetoothDevice
 import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
 import com.xyfindables.sdk.sample.R
-import com.xyfindables.sdk.sample.fragments.AlertFragment
-import com.xyfindables.sdk.sample.fragments.GAPFragment
-import com.xyfindables.sdk.sample.fragments.InfoFragment
-import com.xyfindables.sdk.sample.fragments.XYAppBaseFragment
+import com.xyfindables.sdk.sample.fragments.*
 import com.xyfindables.ui.XYBaseFragment
 import kotlinx.android.synthetic.main.device_activity.*
 
@@ -175,7 +172,7 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
 
 
     inner class SectionsPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
-        private val size = 3
+        private val size = 9
         private var fragments: SparseArray<XYBaseFragment> = SparseArray(size)
 
         override fun getItem(position: Int): Fragment {
@@ -189,7 +186,25 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
                     frag = AlertFragment.newInstance()
                 }
                 2 -> {
-                    frag = GAPFragment.newInstance()
+                    frag = BatteryFragment.newInstance()
+                }
+                3 -> {
+                    frag = CurrentTimeFragment.newInstance()
+                }
+                4 -> {
+                    frag = DeviceFragment.newInstance()
+                }
+                5 -> {
+                    frag = GenericAccessFragment.newInstance()
+                }
+                6 -> {
+                    frag = GenericAttributeFragment.newInstance()
+                }
+                7 -> {
+                    frag = LinkLossFragment.newInstance()
+                }
+                8 -> {
+                    frag = TxPowerFragment.newInstance()
                 }
             }
 

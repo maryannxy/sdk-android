@@ -254,40 +254,6 @@
 
             <View style="@style/divider" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="@dimen/layout_margin_normal"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:id="@+id/text_battery_level"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="@dimen/layout_margin_normal">
-
-                    <com.xyfindables.ui.views.XYButton
-                        android:id="@+id/button_battery"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="10dp"
-                        android:text="Get Battery Level" />
-
-                    <TextView
-                        android:id="@+id/battery_level"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@color/xy_ui_palette_primary_25"
-                        android:labelFor="@+id/lock_value"
-                        android:padding="6dp" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <View style="@style/divider" />
-
             <com.xyfindables.ui.views.XYTextView
                 android:id="@+id/adList"
                 android:layout_width="match_parent"

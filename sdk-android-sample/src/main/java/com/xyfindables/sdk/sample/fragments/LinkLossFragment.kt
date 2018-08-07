@@ -6,30 +6,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.xyfindables.sdk.sample.R
-import kotlinx.android.synthetic.main.fragment_alert.*
 
-//TODO - this is server only?
-class AlertFragment : XYAppBaseFragment() {
+
+class LinkLossFragment : XYAppBaseFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_alert, container, false)
+        return inflater.inflate(R.layout.fragment_link_loss, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        button_refresh.setOnClickListener {
-            logInfo("refresh clicked")
-            update()
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        logInfo("onResume: AlertFragment")
-        //update()
     }
 
     override fun update() {
@@ -37,9 +25,10 @@ class AlertFragment : XYAppBaseFragment() {
     }
 
     companion object {
-        private const val TAG = "AlertFragment"
+        private const val TAG = "LinkLossFragment"
 
         fun newInstance() =
-                AlertFragment()
+                LinkLossFragment()
     }
+
 }

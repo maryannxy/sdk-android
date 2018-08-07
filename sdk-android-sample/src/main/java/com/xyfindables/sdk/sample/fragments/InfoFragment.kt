@@ -4,8 +4,6 @@ package com.xyfindables.sdk.sample.fragments
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.GONE
-import android.view.View.VISIBLE
 import android.view.ViewGroup
 import com.xyfindables.sdk.devices.XY3BluetoothDevice
 import com.xyfindables.sdk.devices.XY4BluetoothDevice
@@ -38,7 +36,6 @@ class InfoFragment : XYAppBaseFragment(), View.OnClickListener {
         button_fall_asleep.setOnClickListener(this)
         button_lock.setOnClickListener(this)
         button_unlock.setOnClickListener(this)
-        button_battery.setOnClickListener(this)
     }
 
     override fun onResume() {
@@ -94,9 +91,6 @@ class InfoFragment : XYAppBaseFragment(), View.OnClickListener {
             R.id.button_unlock -> {
                 unlock()
             }
-            R.id.button_battery -> {
-                getBatteryLevel()
-            }
         }
     }
 
@@ -115,10 +109,11 @@ class InfoFragment : XYAppBaseFragment(), View.OnClickListener {
     }
 
     private fun find() {
+        logInfo("beepButton: got xyDevice")
         ui {
             button_find.isEnabled = false
         }
-        logInfo("beepButton: got xyDevice")
+
         launch(CommonPool) {
             (activity?.device as? XYFinderBluetoothDevice)?.find()?.await()
             ui {
@@ -128,11 +123,12 @@ class InfoFragment : XYAppBaseFragment(), View.OnClickListener {
     }
 
     private fun wake() {
+        logInfo("stayAwakeButton: onClick")
+        ui {
+            button_stay_awake.isEnabled = false
+        }
+
         launch(CommonPool) {
-            logInfo("stayAwakeButton: onClick")
-            ui {
-                button_stay_awake.isEnabled = false
-            }
             val stayAwake = (activity?.device as? XYFinderBluetoothDevice)?.stayAwake()?.await()
             if (stayAwake == null) {
                 activity?.showToast("Stay Awake Failed to Complete Call")
@@ -146,11 +142,12 @@ class InfoFragment : XYAppBaseFragment(), View.OnClickListener {
     }
 
     private fun sleep() {
+        logInfo("fallAsleepButton: onClick")
+        ui {
+            button_fall_asleep.isEnabled = false
+        }
+
         launch(CommonPool) {
-            logInfo("fallAsleepButton: onClick")
-            ui {
-                button_fall_asleep.isEnabled = false
-            }
             val fallAsleep = (activity?.device as? XYFinderBluetoothDevice)?.fallAsleep()
             if (fallAsleep == null) {
                 activity?.showToast("Fall Asleep Failed to Complete Call")
@@ -165,11 +162,10 @@ class InfoFragment : XYAppBaseFragment(), View.OnClickListener {
 
     private fun lock() {
         logInfo("lockButton: onClick")
-
         ui {
             button_lock.isEnabled = false
         }
-        logInfo("primaryBuzzerButton: got xyDevice")
+
         launch(CommonPool) {
             val locked = (activity?.device as? XYFinderBluetoothDevice)?.lock()?.await()
             when {
@@ -188,10 +184,10 @@ class InfoFragment : XYAppBaseFragment(), View.OnClickListener {
 
     private fun unlock() {
         logInfo("unlockButton: onClick")
-
         ui {
             button_unlock.isEnabled = false
         }
+
         launch(CommonPool) {
             val unlocked = (activity?.device as? XYFinderBluetoothDevice)?.unlock()?.await()
             when {
@@ -208,28 +204,6 @@ class InfoFragment : XYAppBaseFragment(), View.OnClickListener {
         }
     }
 
-    private fun getBatteryLevel() {
-        logInfo("batteryButton: onClick")
-        ui {
-            button_battery.isEnabled = false
-            activity?.showProgressSpinner()
-        }
-        job = launch(CommonPool) {
-            val level = (activity?.device as? XYFinderBluetoothDevice)?.batteryLevel()?.await()
-            when {
-                level == null -> activity?.showToast("Unable to get battery level")
-                level.value == null -> activity?.showToast("Unable to get battery level.value")
-                else -> ui {
-                    battery_level?.text = level.value.toString()
-                }
-            }
-
-            ui {
-                button_battery.isEnabled = true
-               activity?.hideProgressSpinner()
-            }
-        }
-    }
 
     private fun updateStayAwakeEnabledStates(): Deferred<Unit> {
         return async(CommonPool) {
@@ -351,7 +325,6 @@ class InfoFragment : XYAppBaseFragment(), View.OnClickListener {
     companion object {
         private const val TAG = "InfoFragment"
 
-        @JvmStatic
         fun newInstance() =
                 InfoFragment()
     }
