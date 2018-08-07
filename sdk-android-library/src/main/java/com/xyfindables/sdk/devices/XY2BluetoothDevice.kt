@@ -12,13 +12,10 @@ import java.util.*
 
 open class XY2BluetoothDevice(context: Context, scanResult: XYScanResult, hash: Int) : XYFinderBluetoothDevice(context, scanResult, hash) {
 
-    val alertNotification = AlertNotificationService(this)
     val batteryService = BatteryService(this)
-    val currentTimeService = CurrentTimeService(this)
     val deviceInformationService = DeviceInformationService(this)
     val genericAccessService = GenericAccessService(this)
     val genericAttributeService = GenericAttributeService(this)
-    val linkLossService = LinkLossService(this)
     val txPowerService = TxPowerService(this)
 
     val basicConfigService = BasicConfigService(this)

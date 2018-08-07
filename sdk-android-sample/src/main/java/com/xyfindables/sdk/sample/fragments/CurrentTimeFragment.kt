@@ -51,46 +51,15 @@ class CurrentTimeFragment : XYAppBaseFragment() {
                 x3?.let { getX3Values(it) }
             }
             is XY2BluetoothDevice -> {
-                val x2 = (activity?.device as? XY2BluetoothDevice)
-                x2?.let { getX2Values(it) }
+                unsupported("Not supported by XY2BluetoothDevice")
             }
             else -> {
-                activity?.showToast("unknown device")
+                unsupported("unknown device")
             }
         }
     }
 
-    //TODO - 3 below methods are redundant - how to combine ?
-    private fun getX2Values(device: XY2BluetoothDevice) {
-        launch(CommonPool) {
-            val time = device.currentTimeService.currentTime.get().await()
-            when {
-                time.value == null -> ui { currentTime.text = time.error.toString() }
-                else -> ui { currentTime.text = time.value.toString() }
-            }
-        }
-
-        launch(CommonPool) {
-            val localTime = device.currentTimeService.localTimeInformation.get().await()
-            when {
-                localTime.value == null -> ui { localTimeInformation.text = localTime.error.toString() }
-                else -> ui { localTimeInformation.text = localTime.value.toString() }
-            }
-        }
-
-        launch(CommonPool) {
-            val refTime = device.currentTimeService.referenceTimeInformation.get().await()
-            when {
-                refTime.value == null -> ui { referenceTimeInformation.text = refTime.error.toString() }
-                else -> ui { referenceTimeInformation.text = refTime.value.toString() }
-            }
-            ui {
-                button_refresh.isEnabled = true
-                activity?.hideProgressSpinner()
-            }
-        }
-    }
-
+    //TODO - 2 below methods are redundant - how to combine ?
     private fun getX3Values(device: XY3BluetoothDevice) {
         launch(CommonPool) {
             val time = device.currentTimeService.currentTime.get().await()
@@ -148,6 +117,14 @@ class CurrentTimeFragment : XYAppBaseFragment() {
                 button_refresh.isEnabled = true
                 activity?.hideProgressSpinner()
             }
+        }
+    }
+
+    private fun unsupported(text : String) {
+        activity?.showToast(text)
+        ui {
+            button_refresh.isEnabled = true
+            activity?.hideProgressSpinner()
         }
     }
 
