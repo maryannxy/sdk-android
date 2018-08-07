@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.xyfindables.sdk.devices.XY2BluetoothDevice
+import com.xyfindables.sdk.devices.XY3BluetoothDevice
+import com.xyfindables.sdk.devices.XY4BluetoothDevice
 import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
 import com.xyfindables.sdk.sample.R
 import com.xyfindables.ui.ui
@@ -26,13 +29,61 @@ class GenericAccessFragment : XYAppBaseFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         button_generic_refresh.setOnClickListener {
-            logInfo("refresh clicked")
-            update()
+            setGenericAccessValues()
         }
     }
 
-    override fun update() {
+    private fun setGenericAccessValues() {
+        ui {
+            text_device_name.text = ""
+            text_appearance.text = ""
+            text_privacy_flag.text = ""
+            text_reconnection_address.text = ""
+            text_peripheral_params.text = ""
+        }
 
+        when (activity?.device) {
+            is XY4BluetoothDevice -> {
+                val x4 = (activity?.device as? XY4BluetoothDevice)
+                x4?.let { getX4Values(it) }
+            }
+            is XY3BluetoothDevice -> {
+                val x3 = (activity?.device as? XY3BluetoothDevice)
+                x3?.let { getX3Values(it) }
+            }
+            is XY2BluetoothDevice -> {
+                val x2 = (activity?.device as? XY2BluetoothDevice)
+                x2?.let { getX2Values(it) }
+            }
+            else -> {
+                unsupported("unknown device")
+            }
+
+        }
+    }
+
+    private fun getX4Values(device: XY4BluetoothDevice) {
+        initServiceSetTextView(device.genericAccessService.deviceName, text_device_name)
+        initServiceSetTextView(device.genericAccessService.appearance, text_appearance)
+        initServiceSetTextView(device.genericAccessService.privacyFlag, text_privacy_flag)
+        initServiceSetTextView(device.genericAccessService.reconnectionAddress, text_reconnection_address)
+        initServiceSetTextView(device.genericAccessService.peripheralPreferredConnectionParameters, text_peripheral_params)
+    }
+
+    private fun getX3Values(device: XY3BluetoothDevice) {
+        initServiceSetTextView(device.genericAccessService.deviceName, text_device_name)
+        initServiceSetTextView(device.genericAccessService.appearance, text_appearance)
+        initServiceSetTextView(device.genericAccessService.privacyFlag, text_privacy_flag)
+        initServiceSetTextView(device.genericAccessService.reconnectionAddress, text_reconnection_address)
+        initServiceSetTextView(device.genericAccessService.peripheralPreferredConnectionParameters, text_peripheral_params)
+    }
+
+    private fun getX2Values(device: XY2BluetoothDevice) {
+        initServiceSetTextView(device.genericAccessService.deviceName, text_device_name)
+        initServiceSetTextView(device.genericAccessService.appearance, text_appearance)
+        initServiceSetTextView(device.genericAccessService.privacyFlag, text_privacy_flag)
+        initServiceSetTextView(device.genericAccessService.reconnectionAddress, text_reconnection_address)
+        initServiceSetTextView(device.genericAccessService.peripheralPreferredConnectionParameters, text_peripheral_params)
     }
 
     companion object {

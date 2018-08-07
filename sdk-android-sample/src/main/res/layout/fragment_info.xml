@@ -42,14 +42,15 @@
                 <TextView
                     android:id="@+id/familyLabel"
                     android:layout_width="wrap_content"
-                    android:layout_height="19dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="@string/family" />
+                    android:text="@string/family"
+                    android:textColor="@color/black" />
 
                 <TextView
                     android:id="@+id/text_family"
                     android:layout_width="wrap_content"
-                    android:layout_height="19dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:layout_marginTop="4dp"
                     tools:text="Name" />
@@ -65,7 +66,8 @@
                     android:id="@+id/majorLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/major" />
+                    android:text="@string/major"
+                    android:textColor="@color/black" />
 
                 <TextView
                     android:id="@+id/text_major"
@@ -84,7 +86,8 @@
                     android:id="@+id/minorLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/minor" />
+                    android:text="@string/minor"
+                    android:textColor="@color/black" />
 
                 <TextView
                     android:id="@+id/text_minor"
@@ -103,7 +106,8 @@
                     android:id="@+id/rssiLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/rssi" />
+                    android:text="@string/rssi"
+                    android:textColor="@color/black" />
 
                 <TextView
                     android:id="@+id/text_rssi"
@@ -122,7 +126,8 @@
                     android:id="@+id/pulsesLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/pulses" />
+                    android:text="@string/pulses"
+                    android:textColor="@color/black" />
 
                 <TextView
                     android:id="@+id/test_pulse_count"
@@ -141,7 +146,8 @@
                     android:id="@+id/enterLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/enter" />
+                    android:text="@string/enter"
+                    android:textColor="@color/black" />
 
                 <TextView
                     android:id="@+id/text_enter_count"
@@ -159,7 +165,8 @@
                     android:id="@+id/exitLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/exit" />
+                    android:text="@string/exit"
+                    android:textColor="@color/black" />
 
                 <TextView
                     android:id="@+id/text_exit_count"
@@ -178,7 +185,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:labelFor="@+id/edit_lock_value"
-                    android:text="@string/lock" />
+                    android:text="@string/lock"
+                    android:textColor="@color/black" />
 
                 <EditText
                     android:id="@+id/edit_lock_value"

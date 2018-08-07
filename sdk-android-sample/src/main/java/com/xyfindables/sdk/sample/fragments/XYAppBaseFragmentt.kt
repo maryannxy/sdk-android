@@ -41,6 +41,22 @@ abstract class XYAppBaseFragment : XYBaseFragment() {
         }
     }
 
+    open fun initServiceSetTextView(service: Service.StringCharacteristic, textView: TextView?) {
+        ui {
+            activity?.showProgressSpinner()
+        }
+        launch(CommonPool) {
+            val result = service.get().await()
+            when {
+                result.value == null -> ui { textView?.text = result.error.toString() }
+                else -> ui { textView?.text = result.value.toString() }
+            }
+            ui {
+                activity?.hideProgressSpinner()
+            }
+        }
+    }
+
     open fun unsupported(text: String) {
         activity?.showToast(text)
         ui {
