@@ -2,16 +2,19 @@ package com.xyfindables.sdk.sample.fragments
 
 import android.content.Context
 import android.widget.TextView
+import com.xyfindables.sdk.sample.R
 import com.xyfindables.sdk.sample.activities.XYFinderDeviceActivity
 import com.xyfindables.sdk.services.Service
 import com.xyfindables.ui.XYBaseFragment
 import com.xyfindables.ui.ui
 import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.launch
 
 abstract class XYAppBaseFragment : XYBaseFragment() {
 
     var activity: XYFinderDeviceActivity? = null
+    private val parentJob = Job()
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -23,18 +26,26 @@ abstract class XYAppBaseFragment : XYBaseFragment() {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        parentJob?.cancel()
+        activity?.hideProgressSpinner()
+    }
+
     open fun update() {}
 
     open fun initServiceSetTextView(service: Service.IntegerCharacteristic, textView: TextView) {
         ui {
             activity?.showProgressSpinner()
         }
-        launch(CommonPool) {
+        launch(CommonPool + parentJob) {
             val result = service.get().await()
-            when {
-                result.value == null -> ui { textView.text = result.error.toString() }
-                else -> ui { textView.text = result.value.toString() }
-            }
+                when {
+                    result.error != null -> ui { textView.text = result.error.toString() }
+                    result.value != null -> ui { textView.text = result.value.toString() }
+                    else -> ui { textView.text = getString(R.string.not_available) }
+                }
+
             ui {
                 activity?.hideProgressSpinner()
             }
@@ -45,12 +56,14 @@ abstract class XYAppBaseFragment : XYBaseFragment() {
         ui {
             activity?.showProgressSpinner()
         }
-        launch(CommonPool) {
+        launch(CommonPool + parentJob) {
             val result = service.get().await()
             when {
-                result.value == null -> ui { textView?.text = result.error.toString() }
-                else -> ui { textView?.text = result.value.toString() }
+                result.error != null -> ui { textView?.text = result.error.toString() }
+                result.value != null -> ui { textView?.text = result.value.toString() }
+                else -> ui { textView?.text = getString(R.string.not_available) }
             }
+
             ui {
                 activity?.hideProgressSpinner()
             }

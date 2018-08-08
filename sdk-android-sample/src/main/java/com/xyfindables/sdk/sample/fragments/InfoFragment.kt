@@ -19,8 +19,6 @@ import kotlin.experimental.and
 
 class InfoFragment : XYAppBaseFragment(), View.OnClickListener {
 
-    private var job: Job? = null
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
 
@@ -43,11 +41,6 @@ class InfoFragment : XYAppBaseFragment(), View.OnClickListener {
         logInfo("onResume: InfoFragment")
         updateAdList()
         update()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        job?.cancel()
     }
 
     override fun update() {

@@ -46,7 +46,6 @@ class XYFinderDeviceActivity : XYAppBaseActivity() {
         tabs.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(container))
     }
 
-
     override fun onStop() {
         super.onStop()
         device!!.removeListener(TAG)

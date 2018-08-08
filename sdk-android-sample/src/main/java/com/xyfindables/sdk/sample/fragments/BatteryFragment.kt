@@ -5,18 +5,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.xyfindables.sdk.devices.XYFinderBluetoothDevice
+import com.xyfindables.sdk.devices.XY2BluetoothDevice
+import com.xyfindables.sdk.devices.XY3BluetoothDevice
+import com.xyfindables.sdk.devices.XY4BluetoothDevice
 import com.xyfindables.sdk.sample.R
 import com.xyfindables.ui.ui
 import kotlinx.android.synthetic.main.fragment_battery.*
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Job
-import kotlinx.coroutines.experimental.launch
 
 
 class BatteryFragment : XYAppBaseFragment() {
-
-    private var job: Job? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -32,38 +29,35 @@ class BatteryFragment : XYAppBaseFragment() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        job?.cancel()
-    }
-
-    override fun update() {
-        logInfo("update")
-    }
-
     private fun getBatteryLevel() {
         logInfo("batteryButton: onClick")
         ui {
             button_battery_refresh.isEnabled = false
-            activity?.showProgressSpinner()
+            // activity?.showProgressSpinner()
         }
-        job = launch(CommonPool) {
-            val level = (activity?.device as? XYFinderBluetoothDevice)?.batteryLevel()?.await()
-            when {
-                level == null -> activity?.showToast("Unable to get battery level")
-                level.value == null -> activity?.showToast("Unable to get battery level.value")
-                else -> ui {
-                    text_battery_level?.text = level.value.toString()
+
+        when (activity?.device) {
+            is XY4BluetoothDevice -> {
+                val x4 = (activity?.device as? XY4BluetoothDevice)
+                x4?.let {
+                    initServiceSetTextView(x4.batteryService.level, text_battery_level)
                 }
             }
-
-            ui {
-                button_battery_refresh.isEnabled = true
-                activity?.hideProgressSpinner()
+            is XY3BluetoothDevice -> {
+                val x3 = (activity?.device as? XY3BluetoothDevice)
+                x3?.let {
+                    initServiceSetTextView(x3.batteryService.level, text_battery_level)
+                }
+            }
+            is XY2BluetoothDevice -> {
+                unsupported("Not supported by XY2BluetoothDevice")
+            }
+            else -> {
+                unsupported("unknown device")
             }
         }
-    }
 
+    }
 
     companion object {
         private const val TAG = "BatteryFragment"

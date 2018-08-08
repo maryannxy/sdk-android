@@ -23,5 +23,6 @@
     <string name="pulses_second">Pulses/Second:\u0020</string>
     <string name="devices">Devices:\u0020</string>
     <string name="refresh">Refresh</string>
+    <string name="not_available">Not Available</string>
 
 </resources>
