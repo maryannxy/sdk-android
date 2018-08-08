@@ -191,9 +191,10 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
             return if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
-                return Ushort(buffer.getShort(18).toInt())
+                Ushort(buffer.getShort(18).toInt())
+            } else {
+                null
             }
-            return null
         }
 
         internal fun pressFromScanResult(scanResult: XYScanResult): Boolean {
@@ -202,18 +203,20 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
                 val buffer = ByteBuffer.wrap(bytes)
                 val minor = Ushort(buffer.getShort(20))
                 val buttonBit = minor.and(0x0008)
-                return buttonBit == Ushort(0x0008)
+                buttonBit == Ushort(0x0008)
+            } else {
+                false
             }
-            return false
         }
 
         private fun minorFromScanResult(scanResult: XYScanResult): Ushort? {
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
             return if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
-                return Ushort(buffer.getShort(20).toInt()).and(0xfff0).or(0x0004)
+                Ushort(buffer.getShort(20).toInt()).and(0xfff0).or(0x0004)
+            } else {
+                null
             }
-            return null
         }
 
         internal fun hashFromScanResult(scanResult: XYScanResult): Int? {
