@@ -45,7 +45,7 @@ class TxPowerFragment : XYAppBaseFragment() {
             is XY3BluetoothDevice -> {
                 val x3 = (activity?.device as? XY3BluetoothDevice)
                 x3?.let {
-                    initServiceSetTextView(x3.txPowerService.txPowerLevel, text_service_changed)
+                    initServiceSetTextView(x3.txPowerService.txPowerLevel, text_tx_power)
                 }
             }
             is XY2BluetoothDevice -> {
