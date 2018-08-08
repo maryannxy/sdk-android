@@ -44,7 +44,7 @@ open class XYGpsBluetoothDevice(context: Context, scanResult: XYScanResult, hash
         })
     }
 
-    override val prefix = "gps"
+    override val prefix = "xy:gps"
 
     override fun find() : Deferred<XYBluetoothResult<Int>> {
         logInfo("find")

@@ -53,7 +53,7 @@ open class XY3BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
             return _minor.and(0xfff0).or(0x0004)
         }
 
-    override val prefix = "ibeacon"
+    override val prefix = "xy:ibeacon"
 
     override fun find() : Deferred<XYBluetoothResult<Int>> {
         logInfo("find")

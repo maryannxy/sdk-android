@@ -189,8 +189,10 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
                     this.devices[device.hashCode()] = device
                     device.updateBluetoothDevice(scanResult.device)
 
-                    if (scanResult.scanRecord != null) {
-                        device.updateAds(scanResult.scanRecord!!)
+                    val scanRecord = scanResult.scanRecord
+
+                    if (scanRecord != null) {
+                        device.updateAds(scanRecord)
                     }
                     if (device.rssi == null) {
                         reportEntered(device)

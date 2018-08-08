@@ -120,7 +120,12 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult?,
         }
 
         fun hashFromScanResult(scanResult: XYScanResult): Int? {
-            return scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)?.contentHashCode()
+            val data = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
+            if (data != null) {
+                data[21] = data[21].toInt().and(0x0008).toByte()
+                return data.contentHashCode()
+            }
+            return scanResult.address.hashCode()
         }
     }
 }

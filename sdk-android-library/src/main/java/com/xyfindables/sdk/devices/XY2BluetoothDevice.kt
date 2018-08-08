@@ -30,7 +30,7 @@ open class XY2BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
         return controlService.buzzerSelect.set(1)
     }
 
-    override val prefix = "ibeacon"
+    override val prefix = "xy:ibeacon"
 
     open class Listener : XYFinderBluetoothDevice.Listener() {
     }

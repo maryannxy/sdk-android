@@ -49,7 +49,7 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
         addGattListener("xy4", buttonListener)
     }
 
-    override val prefix = "ibeacon"
+    override val prefix = "xy:ibeacon"
 
     override fun find(): Deferred<XYBluetoothResult<Int>> {
         logInfo("find")
@@ -85,7 +85,9 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
         super.onDetect(scanResult)
         if (scanResult != null) {
             if (pressFromScanResult(scanResult)) {
+                logInfo("onDetect: pressFromScanResult: true")
                 if (now - lastButtonPressTime > BUTTON_ADVERTISEMENT_LENGTH) {
+                    logInfo("onDetect: pressFromScanResult: first")
                     reportButtonPressed(ButtonPress.Single)
                     lastButtonPressTime = now
                 }
@@ -97,13 +99,14 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
         logInfo("reportButtonPressed")
         synchronized(listeners) {
             for (listener in listeners) {
-                val xy4Listener = listener.value as? XY4BluetoothDevice.Listener
-                if (xy4Listener != null) {
+                val xyFinderListener = listener.value as? XYFinderBluetoothDevice.Listener
+                if (xyFinderListener != null) {
+                    logInfo("reportButtonPressed: $xyFinderListener")
                     launch(CommonPool) {
                         when (state) {
-                            ButtonPress.Single -> xy4Listener.buttonSinglePressed(this@XY4BluetoothDevice)
-                            ButtonPress.Double -> xy4Listener.buttonDoublePressed(this@XY4BluetoothDevice)
-                            ButtonPress.Long -> xy4Listener.buttonLongPressed(this@XY4BluetoothDevice)
+                            ButtonPress.Single -> xyFinderListener.buttonSinglePressed(this@XY4BluetoothDevice)
+                            ButtonPress.Double -> xyFinderListener.buttonDoublePressed(this@XY4BluetoothDevice)
+                            ButtonPress.Long -> xyFinderListener.buttonLongPressed(this@XY4BluetoothDevice)
                             else -> {}
                         }
                         if (connectionState == ConnectionState.Connected) {
@@ -184,37 +187,36 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
             }
         }
 
-        fun majorFromScanResult(scanResult: XYScanResult): Ushort? {
+        private fun majorFromScanResult(scanResult: XYScanResult): Ushort? {
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
             if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
                 return Ushort(buffer.getShort(18).toInt())
-            } else {
-                return null
             }
+            return null
         }
 
-        fun pressFromScanResult(scanResult: XYScanResult): Boolean {
+        internal fun pressFromScanResult(scanResult: XYScanResult): Boolean {
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
             if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
-                return Ushort(buffer.getShort(20)).and(0x0008) == Ushort(0x0008)
-            } else {
-                return false
+                val minor = Ushort(buffer.getShort(20))
+                val buttonBit = minor.and(0x0008)
+                return buttonBit == Ushort(0x0008)
             }
+            return false
         }
 
-        fun minorFromScanResult(scanResult: XYScanResult): Ushort? {
+        private fun minorFromScanResult(scanResult: XYScanResult): Ushort? {
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
             if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
                 return Ushort(buffer.getShort(20).toInt()).and(0xfff0).or(0x0004)
-            } else {
-                return null
             }
+            return null
         }
 
-        fun hashFromScanResult(scanResult: XYScanResult): Int? {
+        internal fun hashFromScanResult(scanResult: XYScanResult): Int? {
             val uuid = XYIBeaconBluetoothDevice.iBeaconUuidFromScanResult(scanResult)
             val major = majorFromScanResult(scanResult)
             val minor = minorFromScanResult(scanResult)

@@ -29,7 +29,7 @@ open class XYMobileBluetoothDevice(context: Context, scanResult: XYScanResult, h
         _address = address ?: "00:00:00:00:00:00"
     }
 
-    override val prefix = "mobile"
+    override val prefix = "xy:mobile"
 
 
     override val uuid: UUID

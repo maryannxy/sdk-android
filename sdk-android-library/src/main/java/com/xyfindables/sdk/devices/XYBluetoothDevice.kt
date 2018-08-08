@@ -225,7 +225,7 @@ open class XYBluetoothDevice (context: Context, device:BluetoothDevice?, private
         private fun getDevicesFromServices(context:Context, scanResult:XYScanResult, globalDevices: HashMap<Int, XYBluetoothDevice>, newDevices: HashMap<Int, XYBluetoothDevice>) {
             for ((uuid, creator) in serviceToCreator) {
                 if (scanResult.scanRecord?.serviceUuids != null){
-                    if (scanResult.scanRecord?.serviceUuids!!.contains(ParcelUuid(uuid))) {
+                    if (scanResult.scanRecord?.serviceUuids?.contains(ParcelUuid(uuid)) == true) {
                         creator.getDevicesFromScanResult(context, scanResult, globalDevices, newDevices)
                     }
                 }
