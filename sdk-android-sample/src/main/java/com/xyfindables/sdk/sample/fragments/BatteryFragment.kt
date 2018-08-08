@@ -27,7 +27,7 @@ class BatteryFragment : XYAppBaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        button_battery.setOnClickListener {
+        button_battery_refresh.setOnClickListener {
             getBatteryLevel()
         }
     }
@@ -44,7 +44,7 @@ class BatteryFragment : XYAppBaseFragment() {
     private fun getBatteryLevel() {
         logInfo("batteryButton: onClick")
         ui {
-            button_battery.isEnabled = false
+            button_battery_refresh.isEnabled = false
             activity?.showProgressSpinner()
         }
         job = launch(CommonPool) {
@@ -53,12 +53,12 @@ class BatteryFragment : XYAppBaseFragment() {
                 level == null -> activity?.showToast("Unable to get battery level")
                 level.value == null -> activity?.showToast("Unable to get battery level.value")
                 else -> ui {
-                    battery_level?.text = level.value.toString()
+                    text_battery_level?.text = level.value.toString()
                 }
             }
 
             ui {
-                button_battery.isEnabled = true
+                button_battery_refresh.isEnabled = true
                 activity?.hideProgressSpinner()
             }
         }

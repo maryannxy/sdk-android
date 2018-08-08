@@ -54,18 +54,18 @@ class InfoFragment : XYAppBaseFragment(), View.OnClickListener {
         ui {
             logInfo("update")
             if (activity?.device != null) {
-                family.text = activity?.device!!.name
-                rssi.text = activity?.device!!.rssi.toString()
+                text_family.text = activity?.device!!.name
+                text_rssi.text = activity?.device!!.rssi.toString()
 
                 val iBeaconDevice = activity?.device as XYIBeaconBluetoothDevice?
                 if (iBeaconDevice != null) {
-                    major.text = iBeaconDevice.major.toInt().toString()
-                    minor.text = iBeaconDevice.minor.toInt().toString()
+                    text_major.text = iBeaconDevice.major.toInt().toString()
+                    text_minor.text = iBeaconDevice.minor.toInt().toString()
                 }
 
-                pulseCount.text = activity?.device!!.detectCount.toString()
-                enterCount.text = activity?.device!!.enterCount.toString()
-                exitCount.text = activity?.device!!.exitCount.toString()
+                test_pulse_count.text = activity?.device!!.detectCount.toString()
+                text_enter_count.text = activity?.device!!.enterCount.toString()
+                text_exit_count.text = activity?.device!!.exitCount.toString()
             }
 
         }
@@ -268,9 +268,9 @@ class InfoFragment : XYAppBaseFragment(), View.OnClickListener {
                 logInfo("updateLock: ${lock}")
                 ui {
                     if (lock.error != null || lock.error != null) {
-                        lock_value.setText("----")
+                        edit_lock_value.setText("----")
                     } else {
-                        lock_value.setText(bytesToHex(lock.value!!))
+                        edit_lock_value.setText(bytesToHex(lock.value!!))
                     }
                 }
             }

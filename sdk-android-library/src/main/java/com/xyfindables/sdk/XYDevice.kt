@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothProfile
 import android.content.Context
-
 import com.xyfindables.core.XYBase
 import com.xyfindables.sdk.action.XYDeviceAction
 import com.xyfindables.sdk.action.XYDeviceActionGetBatterySinceCharged
@@ -21,15 +20,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
-import java.lang.ref.WeakReference
-
-import java.util.Comparator
-import java.util.Date
-import java.util.HashMap
-import java.util.Random
-import java.util.Timer
-import java.util.TimerTask
-import java.util.UUID
+import java.util.*
 
 /**
  * Created by arietrouw on 12/20/16.
@@ -182,11 +173,11 @@ class XYDevice internal constructor(id: String) : XYBase() {
                 return false
             }
             val currentTime = System.currentTimeMillis()
-            if (currentTime - _lastUpdateTime > 1800000) {
+            return if (currentTime - _lastUpdateTime > 1800000) {
                 _lastUpdateTime = currentTime
-                return true
+                true
             } else {
-                return false
+                false
             }
         }
 
@@ -196,14 +187,14 @@ class XYDevice internal constructor(id: String) : XYBase() {
     val family: Family
         get() {
             val familyFromUUID = getFamily(uuid)
-            if (familyFromUUID != Family.Unknown) {
-                return familyFromUUID
+            return if (familyFromUUID != Family.Unknown) {
+                familyFromUUID
             } else {
                 val prefix = prefix
                 when (prefix) {
-                    "near" -> return Family.Near
-                    "mobiledevice" -> return Family.Mobile
-                    else -> return Family.Unknown
+                    "near" -> Family.Near
+                    "mobiledevice" -> Family.Mobile
+                    else -> Family.Unknown
                 }
             }
         }
@@ -312,11 +303,11 @@ class XYDevice internal constructor(id: String) : XYBase() {
 
         val rssi = rssi.toDouble()
 
-        if (tx == 0 || rssi == 0.0 || rssi == outOfRangeRssi.toDouble()) {
-            return -1.0
+        return if (tx == 0 || rssi == 0.0 || rssi == outOfRangeRssi.toDouble()) {
+            -1.0
         } else {
             val ratio = rssi * 1.0 / tx
-            return if (ratio < 1.0) {
+            if (ratio < 1.0) {
                 Math.pow(ratio, 10.0)
             } else {
                 0.89976 * Math.pow(ratio, 7.7095) + 0.111
@@ -422,7 +413,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
     }
 
     private fun checkTimeSinceCharged(context: Context) {
-        var device = this
+        val device = this
         if (family == Family.Gps) {
             logExtreme(TAG, "checkTimeSinceCharged")
             val getTimeSinceCharged = object : XYDeviceActionGetBatterySinceCharged(device) {
@@ -515,7 +506,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
     }
 
     private fun startSubscribeButton() {
-        var device = this
+        val device = this
         if (_connectedContext == null) {
             return
         }
@@ -826,10 +817,10 @@ class XYDevice internal constructor(id: String) : XYBase() {
 
     companion object {
 
-        val BATTERYLEVEL_INVALID = 0
-        val BATTERYLEVEL_CHECKED = -1
-        val BATTERYLEVEL_NOTCHECKED = -2
-        val BATTERYLEVEL_SCHEDULED = -3
+        const val BATTERYLEVEL_INVALID = 0
+        const val BATTERYLEVEL_CHECKED = -1
+        const val BATTERYLEVEL_NOTCHECKED = -2
+        const val BATTERYLEVEL_SCHEDULED = -3
 
         val uuid2family: HashMap<UUID, XYFinderBluetoothDevice.Family>
 
@@ -837,9 +828,9 @@ class XYDevice internal constructor(id: String) : XYBase() {
 
         val family2prefix: HashMap<XYFinderBluetoothDevice.Family, String>
 
-        private val MAX_BLECONNECTIONS = 4
+        private const val MAX_BLECONNECTIONS = 4
 
-        private val MAX_ACTIONS = 1
+        private const val MAX_ACTIONS = 1
 
         private var missedPulsesForOutOfRange = 20
 
@@ -874,7 +865,7 @@ class XYDevice internal constructor(id: String) : XYBase() {
 
         private val TAG = XYDevice::class.java.simpleName
 
-        private val outOfRangeRssi = -999
+        private const val outOfRangeRssi = -999
         val DistanceComparator: Comparator<XYDevice> = Comparator { lhs, rhs -> Integer.compare(lhs.rssi, rhs.rssi) }
 
         fun buildId(family: Family, major: Int, minor: Int): String? {
@@ -895,22 +886,18 @@ class XYDevice internal constructor(id: String) : XYBase() {
             val uuid = getUUID(id)
             if (uuid != null) {
                 val family = getFamily(uuid)
-                if (family == Family.XY2 || family == Family.XY3 || family == Family.Gps || family == Family.XY4) {
-                    normalId = "xy:" + getPrefix(id) + ":" + uuid.toString() + "." + getMajor(id) + "." + (getMinor(id) and 0xfff0 or 0x0004)
+                normalId = if (family == Family.XY2 || family == Family.XY3 || family == Family.Gps || family == Family.XY4) {
+                    "xy:" + getPrefix(id) + ":" + uuid.toString() + "." + getMajor(id) + "." + (getMinor(id) and 0xfff0 or 0x0004)
                 } else {
-                    normalId = id
+                    id
                 }
             }
-            return if (normalId != null) {
-                normalId.toLowerCase()
-            } else {
-                id.toLowerCase()
-            }
+            return normalId?.toLowerCase() ?: id.toLowerCase()
         }
 
-        private val STATE_CONNECTED = BluetoothProfile.STATE_CONNECTED
-        private val STATE_DISCONNECTED = BluetoothProfile.STATE_DISCONNECTED
-        private val STATE_DISCONNECTING = BluetoothProfile.STATE_DISCONNECTING
+        private const val STATE_CONNECTED = BluetoothProfile.STATE_CONNECTED
+        private const val STATE_DISCONNECTED = BluetoothProfile.STATE_DISCONNECTED
+        private const val STATE_DISCONNECTING = BluetoothProfile.STATE_DISCONNECTING
 
         fun getUUID(id: String): UUID? {
             val parts = id.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
@@ -924,10 +911,10 @@ class XYDevice internal constructor(id: String) : XYBase() {
                 logError(TAG, "getUUID: wrong number of parts2 [" + id + "] : " + parts2.size, true)
                 return null
             }
-            try {
-                return UUID.fromString(parts2[0])
+            return try {
+                UUID.fromString(parts2[0])
             } catch (ex: NumberFormatException) {
-                return null
+                null
             }
 
         }

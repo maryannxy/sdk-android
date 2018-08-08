@@ -1,6 +1,5 @@
 package com.xyfindables.sdk.scanner
 
-import android.os.Build
 import android.os.ParcelUuid
 import android.util.SparseArray
 import com.xyfindables.core.XYBase

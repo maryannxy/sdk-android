@@ -5,7 +5,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.xyfindables.sdk.devices.XY2BluetoothDevice
+import com.xyfindables.sdk.devices.XY3BluetoothDevice
+import com.xyfindables.sdk.devices.XY4BluetoothDevice
 import com.xyfindables.sdk.sample.R
+import com.xyfindables.ui.ui
+import kotlinx.android.synthetic.main.fragment_link_loss.*
 
 
 class LinkLossFragment : XYAppBaseFragment() {
@@ -18,10 +23,41 @@ class LinkLossFragment : XYAppBaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        button_link_loss_refresh.setOnClickListener {
+            initLinkLossValues()
+        }
     }
 
-    override fun update() {
-        logInfo("update")
+    private fun initLinkLossValues() {
+        ui {
+            text_alert_level.text = ""
+        }
+
+        when (activity?.device) {
+            is XY4BluetoothDevice -> {
+                val x4 = (activity?.device as? XY4BluetoothDevice)
+                x4?.let {
+                    initServiceSetTextView(x4.linkLossService.alertLevel, text_alert_level)
+                }
+            }
+            is XY3BluetoothDevice -> {
+                val x3 = (activity?.device as? XY3BluetoothDevice)
+                x3?.let {
+                    initServiceSetTextView(x3.linkLossService.alertLevel, text_alert_level)
+                }
+            }
+            is XY2BluetoothDevice -> {
+                val x2 = (activity?.device as? XY3BluetoothDevice)
+                x2?.let {
+                    initServiceSetTextView(x2.linkLossService.alertLevel, text_alert_level)
+                }
+            }
+            else -> {
+                unsupported("unknown device")
+            }
+
+        }
     }
 
     companion object {

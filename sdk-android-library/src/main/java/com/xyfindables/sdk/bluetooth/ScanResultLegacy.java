@@ -42,7 +42,7 @@ public final class ScanResultLegacy implements Parcelable {
      * @param rssi           Received signal strength.
      * @param timestampNanos Device timestamp when the scan result was observed.
      */
-    public ScanResultLegacy(BluetoothDevice device, ScanRecordLegacy scanRecord, int rssi,
+    public ScanResultLegacy(BluetoothDevice device, @Nullable ScanRecordLegacy scanRecord, int rssi,
                             long timestampNanos) {
         mDevice = device;
         mScanRecord = scanRecord;

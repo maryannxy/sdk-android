@@ -13,7 +13,7 @@ open class XYAppleBluetoothDevice(context: Context, device: BluetoothDevice, has
 
     companion object : XYBase() {
 
-        val MANUFACTURER_ID = 0x004c
+        const val MANUFACTURER_ID = 0x004c
 
         var canCreate = false
 

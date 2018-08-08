@@ -5,7 +5,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import com.xyfindables.sdk.devices.XY2BluetoothDevice
+import com.xyfindables.sdk.devices.XY3BluetoothDevice
+import com.xyfindables.sdk.devices.XY4BluetoothDevice
 import com.xyfindables.sdk.sample.R
+import com.xyfindables.sdk.services.Service
+import com.xyfindables.ui.ui
 import kotlinx.android.synthetic.main.fragment_alert.*
 
 //TODO - this is server only?
@@ -20,20 +26,67 @@ class AlertFragment : XYAppBaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        button_refresh.setOnClickListener {
-            logInfo("refresh clicked")
-            update()
+        button_alert_refresh.setOnClickListener {
+            setAlertValues()
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        logInfo("onResume: AlertFragment")
-        //update()
+    private fun setAlertValues() {
+        ui {
+            button_alert_refresh.isEnabled = false
+
+            text_control_point.text = ""
+            text_unread_alert_status.text = ""
+            text_new_alert.text = ""
+            text_new_alert_category.text = ""
+            text_unread_alert_category.text = ""
+        }
+
+        when (activity?.device) {
+            is XY4BluetoothDevice -> {
+                val x4 = (activity?.device as? XY4BluetoothDevice)
+                x4?.let { getX4Values(it) }
+            }
+            is XY3BluetoothDevice -> {
+                val x3 = (activity?.device as? XY3BluetoothDevice)
+                x3?.let { getX3Values(it) }
+            }
+            is XY2BluetoothDevice -> {
+                unsupported("Not supported by XY2BluetoothDevice")
+            }
+            else -> {
+                unsupported("unknown device")
+            }
+
+        }
     }
 
-    override fun update() {
-        logInfo("update")
+    private fun getX4Values(device: XY4BluetoothDevice) {
+        initServiceSetTextView(device.alertNotification.unreadAlertStatus, text_control_point)
+        initServiceSetTextView(device.alertNotification.newAlert, text_unread_alert_status)
+        initServiceSetTextView(device.alertNotification.supportedNewAlertCategory, text_new_alert_category)
+        initServiceSetTextView(device.alertNotification.supportedUnreadAlertCategory, text_unread_alert_category)
+    }
+
+    private fun getX3Values(device: XY3BluetoothDevice) {
+        initServiceSetTextView(device.alertNotification.unreadAlertStatus, text_control_point)
+        initServiceSetTextView(device.alertNotification.newAlert, text_unread_alert_status)
+        initServiceSetTextView(device.alertNotification.supportedNewAlertCategory, text_new_alert_category)
+        initServiceSetTextView(device.alertNotification.supportedUnreadAlertCategory, text_unread_alert_category)
+    }
+
+    override fun unsupported(text: String) {
+        super.unsupported(text)
+        ui {
+            button_alert_refresh.isEnabled = true
+        }
+    }
+
+    override fun initServiceSetTextView(service: Service.IntegerCharacteristic, textView: TextView) {
+        super.initServiceSetTextView(service, textView)
+        ui {
+            button_alert_refresh.isEnabled = true
+        }
     }
 
     companion object {

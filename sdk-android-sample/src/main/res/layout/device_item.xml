@@ -24,7 +24,7 @@
                 android:text="@string/name" />
 
             <TextView
-                android:id="@+id/name"
+                android:id="@+id/text_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="@dimen/pad_device_item_tv" />
@@ -44,7 +44,7 @@
                 android:text="@string/family" />
 
             <TextView
-                android:id="@+id/family"
+                android:id="@+id/text_family"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="@dimen/pad_device_item_tv" />
@@ -63,7 +63,7 @@
                 android:text="@string/address" />
 
             <TextView
-                android:id="@+id/address"
+                android:id="@+id/text_address"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="@dimen/pad_device_item_tv" />
@@ -83,7 +83,7 @@
                 android:text="@string/major" />
 
             <TextView
-                android:id="@+id/major"
+                android:id="@+id/text_major"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="@dimen/pad_device_item_tv" />
@@ -97,7 +97,7 @@
                 android:text="@string/minor" />
 
             <TextView
-                android:id="@+id/minor"
+                android:id="@+id/text_minor"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="@dimen/pad_device_item_tv" />
@@ -116,7 +116,7 @@
                 android:text="@string/rssi" />
 
             <TextView
-                android:id="@+id/rssi"
+                android:id="@+id/text_rssi"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="@dimen/pad_device_item_tv" />
@@ -129,7 +129,7 @@
                 android:text="@string/pulses" />
 
             <TextView
-                android:id="@+id/pulses"
+                android:id="@+id/text_pulses"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="@dimen/pad_device_item_tv" />
@@ -148,7 +148,7 @@
                 android:text="@string/uuid" />
 
             <TextView
-                android:id="@+id/uuid"
+                android:id="@+id/text_uuid"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="@dimen/pad_device_item_tv" />

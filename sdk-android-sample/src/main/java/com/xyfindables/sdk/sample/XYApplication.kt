@@ -11,10 +11,10 @@ class XYApplication : Application() {
     val scanner: XYFilteredSmartScan
         get() {
             if (_scanner == null) {
-                if (Build.VERSION.SDK_INT >= 21) {
-                    _scanner = XYFilteredSmartScanModern(this.applicationContext)
+                _scanner = if (Build.VERSION.SDK_INT >= 21) {
+                    XYFilteredSmartScanModern(this.applicationContext)
                 } else {
-                    _scanner = XYFilteredSmartScanLegacy(this.applicationContext)
+                    XYFilteredSmartScanLegacy(this.applicationContext)
                 }
             }
             return _scanner!!

@@ -11,8 +11,6 @@ import com.xyfindables.sdk.devices.XY4BluetoothDevice
 import com.xyfindables.sdk.sample.R
 import com.xyfindables.ui.ui
 import kotlinx.android.synthetic.main.fragment_current_time.*
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.launch
 
 
 class CurrentTimeFragment : XYAppBaseFragment() {
@@ -26,19 +24,19 @@ class CurrentTimeFragment : XYAppBaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        button_refresh.setOnClickListener {
+        button_time_refresh.setOnClickListener {
             setTimeValues()
         }
     }
 
     private fun setTimeValues() {
         ui {
-            button_refresh.isEnabled = false
+            //button_time_refresh.isEnabled = false
             activity?.showProgressSpinner()
 
-            localTimeInformation.text = ""
-            currentTime.text = ""
-            referenceTimeInformation.text = ""
+            text_localTimeInformation.text = ""
+            text_currentTime.text = ""
+            text_referenceTimeInformation.text = ""
         }
 
         when (activity?.device) {
@@ -59,73 +57,16 @@ class CurrentTimeFragment : XYAppBaseFragment() {
         }
     }
 
-    //TODO - 2 below methods are redundant - how to combine ?
     private fun getX3Values(device: XY3BluetoothDevice) {
-        launch(CommonPool) {
-            val time = device.currentTimeService.currentTime.get().await()
-            when {
-                time.value == null -> ui { currentTime.text = time.error.toString() }
-                else -> ui { currentTime.text = time.value.toString() }
-            }
-        }
-
-        launch(CommonPool) {
-            val localTime = device.currentTimeService.localTimeInformation.get().await()
-            when {
-                localTime.value == null -> ui { localTimeInformation.text = localTime.error.toString() }
-                else -> ui { localTimeInformation.text = localTime.value.toString() }
-            }
-        }
-
-        launch(CommonPool) {
-            val refTime = device.currentTimeService.referenceTimeInformation.get().await()
-            when {
-                refTime.value == null -> ui { referenceTimeInformation.text = refTime.error.toString() }
-                else -> ui { referenceTimeInformation.text = refTime.value.toString() }
-            }
-            ui {
-                button_refresh.isEnabled = true
-                activity?.hideProgressSpinner()
-            }
-        }
+        initServiceSetTextView(device.currentTimeService.currentTime, text_currentTime)
+        initServiceSetTextView(device.currentTimeService.localTimeInformation, text_localTimeInformation)
+        initServiceSetTextView(device.currentTimeService.referenceTimeInformation, text_referenceTimeInformation)
     }
 
-    private fun getX4Values(x4: XY4BluetoothDevice) {
-        launch(CommonPool) {
-            val time = x4.currentTimeService.currentTime.get().await()
-            when {
-                time.value == null -> ui { currentTime.text = time.error.toString() }
-                else -> ui { currentTime.text = time.value.toString() }
-            }
-        }
-
-        launch(CommonPool) {
-            val localTime = x4.currentTimeService.localTimeInformation.get().await()
-            when {
-                localTime.value == null -> ui { localTimeInformation.text = localTime.error.toString() }
-                else -> ui { localTimeInformation.text = localTime.value.toString() }
-            }
-        }
-
-        launch(CommonPool) {
-            val refTime = x4.currentTimeService.referenceTimeInformation.get().await()
-            when {
-                refTime.value == null -> ui { referenceTimeInformation.text = refTime.error.toString() }
-                else -> ui { referenceTimeInformation.text = refTime.value.toString() }
-            }
-            ui {
-                button_refresh.isEnabled = true
-                activity?.hideProgressSpinner()
-            }
-        }
-    }
-
-    private fun unsupported(text : String) {
-        activity?.showToast(text)
-        ui {
-            button_refresh.isEnabled = true
-            activity?.hideProgressSpinner()
-        }
+    private fun getX4Values(device: XY4BluetoothDevice) {
+        initServiceSetTextView(device.currentTimeService.currentTime, text_currentTime)
+        initServiceSetTextView(device.currentTimeService.localTimeInformation, text_localTimeInformation)
+        initServiceSetTextView(device.currentTimeService.referenceTimeInformation, text_referenceTimeInformation)
     }
 
     companion object {

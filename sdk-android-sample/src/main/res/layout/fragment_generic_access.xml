@@ -26,7 +26,7 @@
                 android:orientation="horizontal">
 
                 <com.xyfindables.ui.views.XYButton
-                    android:id="@+id/button_refresh"
+                    android:id="@+id/button_generic_refresh"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/refresh" />
@@ -41,14 +41,15 @@
                 <TextView
                     android:id="@+id/deviceNameLabel"
                     android:layout_width="wrap_content"
-                    android:layout_height="19dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="deviceName: " />
+                    android:text="deviceName: "
+                    android:textColor="@color/black" />
 
                 <TextView
-                    android:id="@+id/deviceName"
+                    android:id="@+id/text_device_name"
                     android:layout_width="wrap_content"
-                    android:layout_height="19dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:layout_marginTop="4dp" />
             </LinearLayout>
@@ -63,10 +64,11 @@
                     android:id="@+id/appearanceLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="appearance: " />
+                    android:text="appearance: "
+                    android:textColor="@color/black" />
 
                 <TextView
-                    android:id="@+id/appearance"
+                    android:id="@+id/text_appearance"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>
@@ -81,10 +83,11 @@
                     android:id="@+id/privacyFlagLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="privacyFlag: " />
+                    android:text="privacyFlag: "
+                    android:textColor="@color/black" />
 
                 <TextView
-                    android:id="@+id/privacyFlag"
+                    android:id="@+id/text_privacy_flag"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>
@@ -99,10 +102,11 @@
                     android:id="@+id/reconnectionAddressLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="reconnectionAddress: " />
+                    android:text="reconnectionAddress: "
+                    android:textColor="@color/black" />
 
                 <TextView
-                    android:id="@+id/reconnectionAddress"
+                    android:id="@+id/text_reconnection_address"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>
@@ -117,10 +121,11 @@
                     android:id="@+id/peripheralPreferredConnectionParametersLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="peripheralPreferredConnectionParameters: " />
+                    android:text="peripheralPreferredConnectionParameters: "
+                    android:textColor="@color/black" />
 
                 <TextView
-                    android:id="@+id/peripheralPreferredConnectionParameters"
+                    android:id="@+id/text_peripheral_params"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>

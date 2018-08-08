@@ -50,7 +50,7 @@ public final class ScanRecordLegacy {
     // Raw bytes of scan record.
     private final byte[] mBytes;
 
-    private ScanRecordLegacy(List<ParcelUuid> serviceUuids,
+    private ScanRecordLegacy(@Nullable List<ParcelUuid> serviceUuids,
                              SparseArray<byte[]> manufacturerData,
                              Map<ParcelUuid, byte[]> serviceData,
                              int advertiseFlags, int txPowerLevel,

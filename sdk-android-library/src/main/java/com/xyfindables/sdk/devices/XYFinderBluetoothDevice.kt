@@ -44,14 +44,12 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
             }
             return -1
         }
-        if (d2== null) {
-            return 1
-        } else if (d1 == d2) {
-            return 0
-        } else if (d1 > d2) {
-            return 1
+        when {
+            d2== null -> return 1
+            d1 == d2 -> return 0
+            d1 > d2 -> return 1
+            else -> return -1
         }
-        return -1
     }
 
     override val id : String

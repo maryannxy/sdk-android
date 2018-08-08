@@ -69,7 +69,7 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult?,
 
     companion object : XYBase() {
 
-        val APPLE_IBEACON_ID = 0x02.toByte()
+        const val APPLE_IBEACON_ID = 0x02.toByte()
 
         var canCreate = false
 
@@ -84,16 +84,16 @@ open class XYIBeaconBluetoothDevice(context: Context, scanResult: XYScanResult?,
 
         fun iBeaconUuidFromScanResult(scanResult: XYScanResult) : UUID? {
             val bytes = scanResult.scanRecord?.getManufacturerSpecificData(XYAppleBluetoothDevice.MANUFACTURER_ID)
-            if (bytes != null) {
+            return if (bytes != null) {
                 val buffer = ByteBuffer.wrap(bytes)
                 buffer.position(2) //skip the type and size
 
                 //get uuid
                 val high = buffer.getLong()
                 val low = buffer.getLong()
-                return UUID(high, low)
+                UUID(high, low)
             } else {
-                return null
+                null
             }
         }
 

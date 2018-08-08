@@ -1,16 +1,14 @@
 package com.xyfindables.sdk.scanner
 
-import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.content.Context
 import android.location.LocationManager
-import com.xyfindables.sdk.gatt.XYBluetoothBase
 import com.xyfindables.sdk.devices.XYBluetoothDevice
 import com.xyfindables.sdk.devices.XYMobileBluetoothDevice
-import com.xyfindables.sdk.gatt.XYBluetoothGatt
+import com.xyfindables.sdk.gatt.XYBluetoothBase
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
-import java.util.HashMap
+import java.util.*
 
 abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
 
@@ -34,10 +32,10 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
 
     val uptime: Long
         get() {
-            if (startTime == 0L) {
-                return 0
+            return if (startTime == 0L) {
+                0
             } else {
-                return now - startTime
+                now - startTime
             }
         }
 
@@ -63,7 +61,7 @@ abstract class XYFilteredSmartScan(context: Context): XYBluetoothBase(context) {
             if (!(bluetoothManager.adapter.isEnabled)) {
                 return Status.BluetoothDisabled
             }
-            if (areLocationServicesAvailable() == false) {
+            if (!areLocationServicesAvailable()) {
                 return Status.LocationDisabled
             }
             return Status.Enabled
