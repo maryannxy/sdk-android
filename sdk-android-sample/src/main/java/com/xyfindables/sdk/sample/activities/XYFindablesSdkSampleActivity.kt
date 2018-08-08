@@ -30,4 +30,10 @@ class XYFindablesSdkSampleActivity : XYAppBaseActivity() {
                 XYPermissions.LOCATION_PERMISSIONS_REQ_CODE)
         adapter?.notifyDataSetChanged()
     }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        scanner.start()
+    }
 }

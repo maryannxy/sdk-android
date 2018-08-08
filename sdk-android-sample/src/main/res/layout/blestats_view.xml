@@ -24,7 +24,7 @@
                 android:textColor="@color/black" />
 
             <TextView
-                android:id="@+id/uptime"
+                android:id="@+id/text_uptime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp" />
@@ -58,7 +58,7 @@
                 android:textColor="@color/black" />
 
             <TextView
-                android:id="@+id/pulsesPerSecond"
+                android:id="@+id/text_pulses_per_second"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp" />
@@ -71,7 +71,7 @@
                 android:textColor="@color/black" />
 
             <TextView
-                android:id="@+id/devices"
+                android:id="@+id/text_devices"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp" />
