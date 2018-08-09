@@ -65,8 +65,6 @@ open class XYFinderBluetoothDevice(context: Context, scanResult: XYScanResult, h
 
             val distance = distance ?: return Proximity.OutOfRange
 
-            logInfo("Distance: $distance")
-
             if (distance < 0.0) {
                 return Proximity.None
             }

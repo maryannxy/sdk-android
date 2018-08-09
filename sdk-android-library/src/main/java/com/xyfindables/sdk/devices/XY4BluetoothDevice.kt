@@ -35,7 +35,7 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
 
     private var lastButtonPressTime = 0L
 
-    internal val buttonListener = object : XYBluetoothGattCallback() {
+    private val buttonListener = object : XYBluetoothGattCallback() {
         override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
             logInfo("onCharacteristicChanged")
             super.onCharacteristicChanged(gatt, characteristic)
@@ -83,6 +83,7 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
 
     override fun onDetect(scanResult: XYScanResult?) {
         super.onDetect(scanResult)
+        logInfo("onDetect: $scanResult")
         if (scanResult != null) {
             if (pressFromScanResult(scanResult)) {
                 logInfo("onDetect: pressFromScanResult: true")
@@ -97,26 +98,30 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
 
     fun reportButtonPressed(state: ButtonPress) {
         logInfo("reportButtonPressed")
-        synchronized(listeners) {
-            for (listener in listeners) {
-                val xyFinderListener = listener.value as? XYFinderBluetoothDevice.Listener
-                if (xyFinderListener != null) {
-                    logInfo("reportButtonPressed: $xyFinderListener")
-                    launch(CommonPool) {
-                        when (state) {
-                            ButtonPress.Single -> xyFinderListener.buttonSinglePressed(this@XY4BluetoothDevice)
-                            ButtonPress.Double -> xyFinderListener.buttonDoublePressed(this@XY4BluetoothDevice)
-                            ButtonPress.Long -> xyFinderListener.buttonLongPressed(this@XY4BluetoothDevice)
-                            else -> {}
-                        }
-                        if (connectionState == ConnectionState.Connected) {
-                            //every time a notify fires, we have to re-enable it
-                            primary.buttonState.enableNotify(true)
+        launch (CommonPool) {
+            synchronized(listeners) {
+                for (listener in listeners) {
+                    val xyFinderListener = listener.value as? XYFinderBluetoothDevice.Listener
+                    if (xyFinderListener != null) {
+                        logInfo("reportButtonPressed: $xyFinderListener")
+                        launch(CommonPool) {
+                            when (state) {
+                                ButtonPress.Single -> xyFinderListener.buttonSinglePressed(this@XY4BluetoothDevice)
+                                ButtonPress.Double -> xyFinderListener.buttonDoublePressed(this@XY4BluetoothDevice)
+                                ButtonPress.Long -> xyFinderListener.buttonLongPressed(this@XY4BluetoothDevice)
+                                else -> {
+                                }
+                            }
+                            if (connectionState == ConnectionState.Connected) {
+                                //every time a notify fires, we have to re-enable it
+                                primary.buttonState.enableNotify(true)
+                            }
                         }
                     }
                 }
             }
         }
+        XY4BluetoothDevice.reportButtonPressed(this, state)
     }
 
     override val minor : Ushort
@@ -142,6 +147,8 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
     companion object : XYBase() {
 
         private val FAMILY_UUID = UUID.fromString("a44eacf4-0104-0000-0000-5f784c9977b5")!!
+
+        protected val listeners = HashMap<String, XY4BluetoothDevice.Listener>()
 
         val DefaultLockCode = byteArrayOf(0x00.toByte(), 0x01.toByte(), 0x02.toByte(), 0x03.toByte(), 0x04.toByte(), 0x05.toByte(), 0x06.toByte(), 0x07.toByte(), 0x08.toByte(), 0x09.toByte(), 0x0a.toByte(), 0x0b.toByte(), 0x0c.toByte(), 0x0d.toByte(), 0x0e.toByte(), 0x0f.toByte())
 
@@ -175,6 +182,45 @@ open class XY4BluetoothDevice(context: Context, scanResult: XYScanResult, hash: 
                 XYFinderBluetoothDevice.addCreator(FAMILY_UUID, this.creator)
             } else {
                 XYFinderBluetoothDevice.removeCreator(FAMILY_UUID)
+            }
+        }
+
+        fun addListener(key: String, listener: XY4BluetoothDevice.Listener) {
+            launch(CommonPool){
+                synchronized(listeners) {
+                    listeners.put(key, listener)
+                }
+            }
+        }
+
+        fun removeListener(key: String) {
+            launch(CommonPool){
+                synchronized(listeners) {
+                    listeners.remove(key)
+                }
+            }
+        }
+
+        fun reportButtonPressed(device: XY4BluetoothDevice, state: ButtonPress) {
+            logInfo("reportButtonPressed (Global)")
+            launch (CommonPool) {
+                synchronized(listeners) {
+                    for (listener in listeners) {
+                        val xyFinderListener = listener.value as? XYFinderBluetoothDevice.Listener
+                        if (xyFinderListener != null) {
+                            logInfo("reportButtonPressed: $xyFinderListener")
+                            launch(CommonPool) {
+                                when (state) {
+                                    ButtonPress.Single -> xyFinderListener.buttonSinglePressed(device)
+                                    ButtonPress.Double -> xyFinderListener.buttonDoublePressed(device)
+                                    ButtonPress.Long -> xyFinderListener.buttonLongPressed(device)
+                                    else -> {
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
